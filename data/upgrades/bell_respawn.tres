@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"bell_respawn"
+display_name = "부활의 종"
+description = "몬스터 리스폰 ×0.6"
+axis = "field"
+base_cost = 60
+cost_growth = 1.0
+max_purchases = 1
+effects = {
+"respawn_delay_mult": 0.6
+}

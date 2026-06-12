@@ -1,0 +1,220 @@
+[gd_scene load_steps=28 format=3]
+
+[ext_resource type="Script" path="res://scenes/field/field.gd" id="1"]
+[ext_resource type="TileSet" path="res://data/tileset.tres" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/field/Party.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/field/BridgeGate.tscn" id="4"]
+[ext_resource type="Script" path="res://scenes/field/spawn_zone.gd" id="5"]
+[ext_resource type="Script" path="res://scenes/field/metal_slime_spawner.gd" id="6"]
+[ext_resource type="Script" path="res://scenes/field/shop_building.gd" id="7"]
+[ext_resource type="Script" path="res://scenes/field/elder_npc.gd" id="8"]
+[ext_resource type="Texture2D" path="res://assets/shop.svg" id="9"]
+[ext_resource type="Texture2D" path="res://assets/elder.svg" id="10"]
+[ext_resource type="Resource" path="res://data/monsters/slime.tres" id="11"]
+[ext_resource type="Resource" path="res://data/monsters/bat.tres" id="12"]
+[ext_resource type="Resource" path="res://data/monsters/elite_bat.tres" id="13"]
+[ext_resource type="Resource" path="res://data/monsters/metal_slime.tres" id="14"]
+[ext_resource type="Script" path="res://scenes/field/companion_preview.gd" id="15"]
+[ext_resource type="Texture2D" path="res://assets/priest_silhouette.svg" id="16"]
+[ext_resource type="Texture2D" path="res://assets/priest.svg" id="17"]
+
+[sub_resource type="RectangleShape2D" id="shop_rect"]
+size = Vector2(88, 72)
+
+[sub_resource type="CircleShape2D" id="elder_circle"]
+radius = 26.0
+
+[sub_resource type="RectangleShape2D" id="slime_h"]
+size = Vector2(512, 128)
+
+[sub_resource type="RectangleShape2D" id="slime_v"]
+size = Vector2(128, 256)
+
+[sub_resource type="RectangleShape2D" id="bat_h"]
+size = Vector2(768, 128)
+
+[sub_resource type="RectangleShape2D" id="bat_v"]
+size = Vector2(128, 512)
+
+[sub_resource type="RectangleShape2D" id="elite_top"]
+size = Vector2(1280, 48)
+
+[sub_resource type="RectangleShape2D" id="elite_bottom"]
+size = Vector2(1280, 72)
+
+[sub_resource type="RectangleShape2D" id="elite_left"]
+size = Vector2(272, 800)
+
+[sub_resource type="RectangleShape2D" id="elite_right"]
+size = Vector2(240, 800)
+
+[node name="Field" type="Node2D"]
+script = ExtResource("1")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="."]
+tile_set = ExtResource("2")
+
+[node name="Village" type="Node2D" parent="."]
+
+[node name="ShopBuilding" type="Area2D" parent="Village"]
+position = Vector2(652, 436)
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("7")
+
+[node name="Sprite2D" type="Sprite2D" parent="Village/ShopBuilding"]
+texture = ExtResource("9")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Village/ShopBuilding"]
+shape = SubResource("shop_rect")
+
+[node name="ElderNPC" type="Area2D" parent="Village"]
+position = Vector2(798, 444)
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("8")
+
+[node name="Sprite2D" type="Sprite2D" parent="Village/ElderNPC"]
+texture = ExtResource("10")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Village/ElderNPC"]
+shape = SubResource("elder_circle")
+
+[node name="Mark" type="Label" parent="Village/ElderNPC"]
+offset_left = -8.0
+offset_top = -62.0
+offset_right = 10.0
+offset_bottom = -34.0
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_colors/font_outline_color = Color(0.2, 0.12, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 24
+text = "!"
+
+[node name="Party" parent="." instance=ExtResource("3")]
+position = Vector2(720, 576)
+
+[node name="MonsterSpawner" type="Node2D" parent="."]
+
+[node name="SpawnZoneSlime" type="Area2D" parent="MonsterSpawner"]
+position = Vector2(720, 496)
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+script = ExtResource("5")
+monster_data = ExtResource("11")
+max_count = 6
+respawn_delay = 4.0
+zone_id = &"slime_zone"
+
+[node name="Top" type="CollisionShape2D" parent="MonsterSpawner/SpawnZoneSlime"]
+position = Vector2(0, -192)
+shape = SubResource("slime_h")
+disabled = true
+
+[node name="Bottom" type="CollisionShape2D" parent="MonsterSpawner/SpawnZoneSlime"]
+position = Vector2(0, 192)
+shape = SubResource("slime_h")
+disabled = true
+
+[node name="Left" type="CollisionShape2D" parent="MonsterSpawner/SpawnZoneSlime"]
+position = Vector2(-192, 0)
+shape = SubResource("slime_v")
+disabled = true
+
+[node name="Right" type="CollisionShape2D" parent="MonsterSpawner/SpawnZoneSlime"]
+position = Vector2(192, 0)
+shape = SubResource("slime_v")
+disabled = true
+
+[node name="SpawnZoneBat" type="Area2D" parent="MonsterSpawner"]
+position = Vector2(720, 496)
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+script = ExtResource("5")
+monster_data = ExtResource("12")
+max_count = 5
+respawn_delay = 6.0
+zone_id = &"bat_zone"
+unlock_milestone = {
+"slime": 15
+}
+unlock_toast = "평원 깊은 곳에서 박쥐 울음소리가 들린다..."
+
+[node name="Top" type="CollisionShape2D" parent="MonsterSpawner/SpawnZoneBat"]
+position = Vector2(0, -320)
+shape = SubResource("bat_h")
+disabled = true
+
+[node name="Bottom" type="CollisionShape2D" parent="MonsterSpawner/SpawnZoneBat"]
+position = Vector2(0, 320)
+shape = SubResource("bat_h")
+disabled = true
+
+[node name="Left" type="CollisionShape2D" parent="MonsterSpawner/SpawnZoneBat"]
+position = Vector2(-320, 0)
+shape = SubResource("bat_v")
+disabled = true
+
+[node name="Right" type="CollisionShape2D" parent="MonsterSpawner/SpawnZoneBat"]
+position = Vector2(320, 0)
+shape = SubResource("bat_v")
+disabled = true
+
+[node name="SpawnZoneElite" type="Area2D" parent="MonsterSpawner"]
+position = Vector2(720, 496)
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+script = ExtResource("5")
+monster_data = ExtResource("13")
+max_count = 3
+respawn_delay = 10.0
+zone_id = &"elite_zone"
+unlock_milestone = {
+"bat": 20
+}
+unlock_toast = "거대한 날갯짓 소리가 외곽에서 들려온다..."
+
+[node name="Top" type="CollisionShape2D" parent="MonsterSpawner/SpawnZoneElite"]
+position = Vector2(-16, -408)
+shape = SubResource("elite_top")
+disabled = true
+
+[node name="Bottom" type="CollisionShape2D" parent="MonsterSpawner/SpawnZoneElite"]
+position = Vector2(-16, 420)
+shape = SubResource("elite_bottom")
+disabled = true
+
+[node name="Left" type="CollisionShape2D" parent="MonsterSpawner/SpawnZoneElite"]
+position = Vector2(-520, 16)
+shape = SubResource("elite_left")
+disabled = true
+
+[node name="Right" type="CollisionShape2D" parent="MonsterSpawner/SpawnZoneElite"]
+position = Vector2(504, 16)
+shape = SubResource("elite_right")
+disabled = true
+
+[node name="MetalSlimeSpawner" type="Node2D" parent="MonsterSpawner"]
+script = ExtResource("6")
+monster_data = ExtResource("14")
+min_interval = 60.0
+max_interval = 120.0
+spawn_rect = Rect2(96, 800, 1216, 150)
+
+[node name="BridgeGate" parent="." instance=ExtResource("4")]
+position = Vector2(704, 976)
+
+[node name="CompanionPreview" type="Node2D" parent="."]
+position = Vector2(720, 1046)
+script = ExtResource("15")
+color_texture = ExtResource("17")
+companion_name = "승려"
+
+[node name="Sprite2D" type="Sprite2D" parent="CompanionPreview"]
+texture = ExtResource("16")

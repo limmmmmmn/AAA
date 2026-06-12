@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"banner_valor_2"
+display_name = "용맹의 깃발 II"
+description = "휘말림: 동시 3마리"
+axis = "field"
+min_region = 2
+base_cost = 650
+cost_growth = 1.0
+max_purchases = 1
+effects = {
+"max_enemies": 1,
+"encounter_pull_radius": 64.0
+}

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/monster_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/snake.svg" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"snake"
+display_name = "독사"
+sprite = ExtResource("2")
+max_hp = 30
+attack = 3
+gold_reward = 8
+exp_reward = 3
+move_speed = 35.0
+erratic_movement = false
+flees_after_sec = 0.0

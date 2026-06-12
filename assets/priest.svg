@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="24">
+  <!-- 승려 (흰 로브 + 후드) -->
+  <path d="M4 11 Q10 4 16 11 L16 13 Q10 9 4 13 Z" fill="#e9e6da"/>
+  <circle cx="10" cy="9" r="4" fill="#f2c79a"/>
+  <path d="M4 13 L16 13 L15 23 L5 23 Z" fill="#e9e6da"/>
+  <rect x="9" y="13" width="2" height="10" fill="#c9a36a"/>
+  <rect x="6" y="16" width="8" height="2" fill="#c9a36a"/>
+  <!-- 지팡이 -->
+  <rect x="16" y="6" width="1.6" height="16" fill="#9a6a3a"/>
+  <circle cx="16.8" cy="6" r="2" fill="#ffd84a"/>
+</svg>

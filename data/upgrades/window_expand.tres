@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"window_expand"
+display_name = "전열 확장"
+description = "동시 전투창 +1"
+axis = "field"
+min_region = 2
+base_cost = 500
+cost_growth = 1.0
+max_purchases = 1
+effects = {
+"max_battle_windows": 1
+}

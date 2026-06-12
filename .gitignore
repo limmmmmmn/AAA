@@ -1,0 +1,13 @@
+# Godot 4+ generated/cache files
+.godot/
+
+# Godot export/build outputs
+/android/
+/build/
+/export/
+export_presets.cfg
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+Desktop.ini

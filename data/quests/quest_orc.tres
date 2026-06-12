@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="QuestData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"quest_orc"
+description = "오크 5마리 토벌"
+target_monster = &"orc"
+target_count = 5
+reward_gold = 250
+reward_unlock = &""

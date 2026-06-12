@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="GameConfig" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/game_config.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/hero.svg" id="2"]
+
+[resource]
+script = ExtResource("1")
+hero_name = "용사"
+hero_sprite = ExtResource("2")
+base_party_attack = 3
+base_turn_interval = 1.2
+base_move_speed = 80.0
+initial_max_battle_windows = 1
+base_vision_zoom = 1.0
+elder_battles_threshold = 15
+elder_seconds_after_sword = 300.0
+elder_second_gold_threshold = 250
+metal_slime_unlock_gold_earned = 300
+autosave_interval = 30.0

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34">
+  <!-- 4인 파티 한 덩어리 (1지역: 분열 없음) -->
+  <!-- 용사 (파랑) -->
+  <rect x="3" y="3" width="10" height="7" fill="#3b6fd6"/>
+  <circle cx="8" cy="5" r="4" fill="#f2c79a"/>
+  <rect x="4" y="1" width="8" height="3" fill="#7a4a22"/>
+  <rect x="4" y="9" width="8" height="7" fill="#3b6fd6"/>
+  <!-- 전사 (빨강) -->
+  <circle cx="25" cy="6" r="4" fill="#f2c79a"/>
+  <rect x="21" y="2" width="8" height="3" fill="#3a3a3a"/>
+  <rect x="21" y="10" width="8" height="7" fill="#d64a3b"/>
+  <!-- 마법사 (보라) -->
+  <circle cx="8" cy="22" r="4" fill="#f2c79a"/>
+  <path d="M3 19 L8 12 L13 19 Z" fill="#8a4ad6"/>
+  <rect x="4" y="25" width="8" height="7" fill="#8a4ad6"/>
+  <!-- 승려 (흰색) -->
+  <circle cx="25" cy="22" r="4" fill="#f2c79a"/>
+  <rect x="21" y="25" width="8" height="7" fill="#e9e6da"/>
+  <rect x="21" y="18" width="8" height="2" fill="#e9e6da"/>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="52">
+  <rect x="8" y="20" width="48" height="30" fill="#d8b070"/>
+  <path d="M2 22 L32 2 L62 22 Z" fill="#c84a3a"/>
+  <path d="M2 22 L32 2 L62 22 L62 25 L2 25 Z" fill="#a83a2c"/>
+  <rect x="26" y="32" width="12" height="18" fill="#6e4a1f"/>
+  <circle cx="36" cy="41" r="1.2" fill="#ffd84a"/>
+  <rect x="12" y="30" width="9" height="8" fill="#8fc7e8" stroke="#6e4a1f" stroke-width="1.5"/>
+  <rect x="43" y="30" width="9" height="8" fill="#8fc7e8" stroke="#6e4a1f" stroke-width="1.5"/>
+  <rect x="22" y="22" width="20" height="6" rx="2" fill="#f4e9c9"/>
+  <text x="32" y="27" font-size="5" text-anchor="middle" fill="#5a3a16" font-family="sans-serif">SHOP</text>
+</svg>

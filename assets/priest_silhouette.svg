@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="24">
+  <!-- 승려 실루엣 (다리 건너편: 손 흔드는 사람) -->
+  <path d="M4 11 Q10 4 16 11 L16 13 Q10 9 4 13 Z" fill="#3a3f4a"/>
+  <circle cx="10" cy="9" r="4" fill="#3a3f4a"/>
+  <path d="M4 13 L16 13 L15 23 L5 23 Z" fill="#3a3f4a"/>
+  <rect x="16" y="6" width="1.6" height="16" fill="#2a2e36"/>
+</svg>

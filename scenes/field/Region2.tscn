@@ -1,0 +1,169 @@
+[gd_scene load_steps=24 format=3]
+
+[ext_resource type="Script" path="res://scenes/field/region2.gd" id="1"]
+[ext_resource type="TileSet" path="res://data/tileset.tres" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/field/Party.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/field/BridgeGate.tscn" id="4"]
+[ext_resource type="Script" path="res://scenes/field/spawn_zone.gd" id="5"]
+[ext_resource type="Script" path="res://scenes/field/metal_slime_spawner.gd" id="6"]
+[ext_resource type="Script" path="res://scenes/field/shop_building.gd" id="7"]
+[ext_resource type="Texture2D" path="res://assets/church.svg" id="8"]
+[ext_resource type="Texture2D" path="res://assets/shop.svg" id="9"]
+[ext_resource type="Resource" path="res://data/monsters/snake.tres" id="10"]
+[ext_resource type="Resource" path="res://data/monsters/wolf.tres" id="11"]
+[ext_resource type="Resource" path="res://data/monsters/orc.tres" id="12"]
+[ext_resource type="Resource" path="res://data/monsters/metal_babble.tres" id="13"]
+[ext_resource type="Script" path="res://scenes/field/inn.gd" id="14"]
+[ext_resource type="Texture2D" path="res://assets/inn.svg" id="15"]
+[ext_resource type="Script" path="res://scenes/field/quest_board.gd" id="16"]
+[ext_resource type="Texture2D" path="res://assets/board.svg" id="17"]
+
+[sub_resource type="RectangleShape2D" id="snake_rect"]
+size = Vector2(576, 416)
+
+[sub_resource type="RectangleShape2D" id="wolf_rect"]
+size = Vector2(576, 320)
+
+[sub_resource type="RectangleShape2D" id="orc_rect"]
+size = Vector2(576, 736)
+
+[sub_resource type="RectangleShape2D" id="shop_rect"]
+size = Vector2(88, 72)
+
+[sub_resource type="RectangleShape2D" id="inn_rect"]
+size = Vector2(96, 72)
+
+[sub_resource type="RectangleShape2D" id="board_rect"]
+size = Vector2(48, 56)
+
+[node name="Region2" type="Node2D"]
+script = ExtResource("1")
+map_size = Vector2i(22, 64)
+
+[node name="TileMapLayer" type="TileMapLayer" parent="."]
+tile_set = ExtResource("2")
+
+[node name="Village" type="Node2D" parent="."]
+
+[node name="Church" type="Sprite2D" parent="Village"]
+position = Vector2(150, 1036)
+texture = ExtResource("8")
+
+[node name="Inn" type="Area2D" parent="Village"]
+position = Vector2(300, 1012)
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("14")
+cost = 20
+
+[node name="Sprite2D" type="Sprite2D" parent="Village/Inn"]
+texture = ExtResource("15")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Village/Inn"]
+shape = SubResource("inn_rect")
+
+[node name="ConfirmationDialog" type="ConfirmationDialog" parent="Village/Inn"]
+title = "여관"
+ok_button_text = "묵는다"
+cancel_button_text = "그만둔다"
+
+[node name="QuestBoard" type="Area2D" parent="Village"]
+position = Vector2(430, 1040)
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("16")
+
+[node name="Sprite2D" type="Sprite2D" parent="Village/QuestBoard"]
+texture = ExtResource("17")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Village/QuestBoard"]
+shape = SubResource("board_rect")
+
+[node name="ShopBuilding" type="Area2D" parent="Village"]
+position = Vector2(560, 1036)
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("7")
+
+[node name="Sprite2D" type="Sprite2D" parent="Village/ShopBuilding"]
+texture = ExtResource("9")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Village/ShopBuilding"]
+shape = SubResource("shop_rect")
+
+[node name="Party" parent="." instance=ExtResource("3")]
+position = Vector2(336, 96)
+
+[node name="MonsterSpawner" type="Node2D" parent="."]
+
+[node name="SpawnZoneSnake" type="Area2D" parent="MonsterSpawner"]
+position = Vector2(352, 304)
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+script = ExtResource("5")
+monster_data = ExtResource("10")
+max_count = 8
+respawn_delay = 4.0
+zone_id = &"snake_zone"
+
+[node name="Shape" type="CollisionShape2D" parent="MonsterSpawner/SpawnZoneSnake"]
+shape = SubResource("snake_rect")
+disabled = true
+
+[node name="SpawnZoneWolf" type="Area2D" parent="MonsterSpawner"]
+position = Vector2(352, 704)
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+script = ExtResource("5")
+monster_data = ExtResource("11")
+max_count = 5
+respawn_delay = 6.0
+zone_id = &"wolf_zone"
+unlock_milestone = {
+"snake": 15
+}
+unlock_toast = "가도 옆 수풀에서 들개 무리의 그르렁 소리가 난다..."
+
+[node name="Shape" type="CollisionShape2D" parent="MonsterSpawner/SpawnZoneWolf"]
+shape = SubResource("wolf_rect")
+disabled = true
+
+[node name="SpawnZoneOrc" type="Area2D" parent="MonsterSpawner"]
+position = Vector2(352, 1584)
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+script = ExtResource("5")
+monster_data = ExtResource("12")
+max_count = 4
+respawn_delay = 9.0
+zone_id = &"orc_zone"
+unlock_milestone = {
+"wolf": 20
+}
+unlock_toast = "남쪽 가도에서 오크의 발걸음이 땅을 울린다..."
+
+[node name="Shape" type="CollisionShape2D" parent="MonsterSpawner/SpawnZoneOrc"]
+shape = SubResource("orc_rect")
+disabled = true
+
+[node name="MetalBabbleSpawner" type="Node2D" parent="MonsterSpawner"]
+script = ExtResource("6")
+monster_data = ExtResource("13")
+min_interval = 50.0
+max_interval = 100.0
+spawn_rect = Rect2(96, 1280, 512, 620)
+unlock_milestone = {
+"orc": 5
+}
+unlock_toast = "남쪽 들판에 무언가 금빛으로 반짝인다...?"
+
+[node name="BridgeGate" parent="." instance=ExtResource("4")]
+position = Vector2(336, 1904)
+toll = 2500
+gate_id = &"region2_south"

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/monster_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/metal_slime.svg" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"metal_slime"
+display_name = "메탈슬라임"
+sprite = ExtResource("2")
+max_hp = 30
+attack = 0
+gold_reward = 150
+exp_reward = 50
+move_speed = 120.0
+erratic_movement = true
+flees_after_sec = 15.0
