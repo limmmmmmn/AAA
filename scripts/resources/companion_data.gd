@@ -8,3 +8,4 @@ class_name CompanionData extends Resource
 @export var attack_bonus: int = 0
 @export var role: StringName            # "priest", "warrior" ...
 @export var heal_per_turn: int = 0      # priest용: 턴마다 shared_hp 회복
+@export var hp_bonus: int = 0           # 합류 시 shared_hp_max 증가분 (A-3). 0 = 밸런스 불변

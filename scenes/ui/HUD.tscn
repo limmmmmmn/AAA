@@ -48,28 +48,26 @@ theme_override_font_sizes/font_size = 9
 text = "EXP: 0   격파: 0"
 
 [node name="HPBox" type="PanelContainer" parent="."]
-visible = false
 layout_mode = 0
 offset_left = 4.0
 offset_top = 23.0
-offset_right = 170.0
-offset_bottom = 39.0
+offset_right = 232.0
+offset_bottom = 45.0
 
 [node name="HPInner" type="HBoxContainer" parent="HPBox"]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 6
 
 [node name="HPLabel" type="Label" parent="HPBox/HPInner"]
 layout_mode = 2
+size_flags_vertical = 4
 theme_override_colors/font_color = Color(1, 0.6, 0.6, 1)
 theme_override_font_sizes/font_size = 9
 text = "체력"
 
-[node name="HPBar" type="ProgressBar" parent="HPBox/HPInner"]
-custom_minimum_size = Vector2(120, 9)
+[node name="Members" type="HBoxContainer" parent="HPBox/HPInner"]
 layout_mode = 2
-size_flags_vertical = 4
-show_percentage = false
+theme_override_constants/separation = 4
 
 [node name="RemoteShopButton" type="Button" parent="."]
 visible = false

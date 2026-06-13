@@ -42,11 +42,11 @@ func _ready() -> void:
 	var dummy2 := MonsterData.new()
 	dummy2.id = &"d2"; dummy2.display_name = "허수아비2"; dummy2.max_hp = 100; dummy2.defense = 99
 	var bc := BattleManager.start_battle([dummy2])
-	bc.turn_played.connect(func(_t: int, _d: int, _i: int, crit: bool) -> void: _crit_seen = crit or _crit_seen)
+	bc.party_acted.connect(func(_t: int, _d: int, crit: bool) -> void: _crit_seen = crit or _crit_seen)
 	var hpc: int = bc.enemies[0].hp
 	bc.tick(GameState.turn_interval)
 	_check(hpc - bc.enemies[0].hp == 5, "회심: 방어99 무시하고 5 데미지")
-	_check(_crit_seen, "회심 플래그 turn_played 전달")
+	_check(_crit_seen, "회심 플래그 party_acted 전달")
 	BattleManager.abort_all()
 
 	# §2 메탈: 평타 0, 회심만 유효 / 피격 5회 도주

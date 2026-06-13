@@ -8,6 +8,7 @@ class_name GameConfig extends Resource
 @export_group("Party Base Stats")
 @export var base_party_attack: int = 3   # 용사 기본 공격력 (동료 보너스는 별도 합산)
 @export var base_turn_interval: float = 1.2
+@export var turn_beat_delay: float = 0.25 # 파티 행동 → 적 행동 사이 텀 (A-2). 텍스트 한 줄 읽는 속도
 @export var base_move_speed: float = 80.0
 @export var initial_max_battle_windows: int = 1
 @export var base_vision_zoom: float = 1.0   # 카메라 기본 줌 (작을수록 넓게 보임)

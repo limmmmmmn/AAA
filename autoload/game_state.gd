@@ -42,6 +42,7 @@ var quest_progress_base: int = 0        # 수주 시점의 target 토벌 수 (�
 # ─── 파생 스탯 (recalculate_stats만 계산) ───
 var party_attack: int = 3               # 용사 + 동료 합산
 var turn_interval: float = 1.2
+var turn_beat_delay: float = 0.25       # 라운드 내 파티→적 행동 텀 (A-2, config에서)
 var move_speed: float = 80.0
 var respawn_delay_mult: float = 1.0
 var max_battle_windows: int = 1
@@ -65,6 +66,7 @@ var _heal_accum: float = 0.0            # 공유 HP 회복 틱 누적
 func _ready() -> void:
 	config = load(CONFIG_PATH)
 	vision_zoom = config.base_vision_zoom
+	turn_beat_delay = config.turn_beat_delay
 	_load_catalog()
 	_load_companion_catalog()
 	_load_quest_catalog()
@@ -289,6 +291,10 @@ func add_companion(comp: CompanionData) -> void:
 	if comp == null or _has_companion(comp.id):
 		return
 	companions.append(comp)
+	if comp.hp_bonus > 0: # 합류 시 공유 HP 풀 확장 (A-3). 풀은 분할하지 않고 늘리기만 한다.
+		shared_hp_max += comp.hp_bonus
+		shared_hp += comp.hp_bonus
+		EventBus.shared_hp_changed.emit(shared_hp, shared_hp_max)
 	if comp.role == &"priest": # 승려 합류 = 첫 전술 해금 (v3 §9)
 		tactic_retreat_unlocked = true
 		EventBus.show_toast.emit("철수의 지혜를 배웠다!")

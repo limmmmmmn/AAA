@@ -9,6 +9,7 @@ hero_name = "용사"
 hero_sprite = ExtResource("2")
 base_party_attack = 3
 base_turn_interval = 1.2
+turn_beat_delay = 0.25
 base_move_speed = 80.0
 initial_max_battle_windows = 1
 base_vision_zoom = 1.0

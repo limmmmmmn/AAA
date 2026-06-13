@@ -1,21 +1,19 @@
 extends PanelContainer
-## BattleInstance(enemies 배열)를 구독해서 그리기만 하는 전투창. 로직 없음.
-## 좌측: 용사+동료 4슬롯(1지역엔 1칸만 채움, 나머지는 동료가 올 빈 자리).
-## 우측: 적 스프라이트(1지역 1마리). 상단: 적 전체 HP바. 데미지 팝업.
+## 1인칭 전투창 (드퀘 1~2 스타일, A-1). 아군 스프라이트를 그리지 않는다.
+## 상단: 적 스프라이트(들) + 개별 HP바. 하단: 텍스트 로그(최근 몇 줄).
+## 로직 없음 — BattleInstance의 시그널을 구독해 그리기만 한다.
 
-const SLOT_SIZE := Vector2(22, 22)
 const ENEMY_SIZE := Vector2(40, 40)
+const MAX_LOG_LINES := 3
 
 var battle: BattleInstance
 
-@onready var _name_label: Label = $Margin/VBox/Top/NameLabel
-@onready var _hp_bar: ProgressBar = $Margin/VBox/Top/HPBar
-@onready var _party_grid: GridContainer = $Margin/VBox/Arena/PartyGrid
-@onready var _enemy_box: HBoxContainer = $Margin/VBox/Arena/EnemyBox
-@onready var _status: Label = $Margin/VBox/Status
+@onready var _enemy_row: HBoxContainer = $VBox/EnemyRow
+@onready var _log: VBoxContainer = $VBox/Log
 
-var _party_slots: Array[TextureRect] = []
-var _enemy_slots: Array[TextureRect] = []
+var _enemy_sprites: Array[TextureRect] = []
+var _enemy_bars: Array[ProgressBar] = []
+var _hit_tween: Tween
 
 
 func _ready() -> void:
@@ -25,85 +23,91 @@ func _ready() -> void:
 
 func bind(new_battle: BattleInstance) -> void:
 	battle = new_battle
-	_build_party_slots()
 	_build_enemy_slots()
-	var front := battle.front_data()
-	var size := battle.group_size()
-	_name_label.text = "%s ×%d" % [front.display_name, size] if size > 1 else front.display_name
-	_hp_bar.max_value = _total_max_hp()
-	_hp_bar.value = _total_hp()
-	_status.text = "%s ×%d가 나타났다!" % [front.display_name, size] if size > 1 else "전투 중..."
-	battle.turn_played.connect(_on_turn_played)
+	_push_line(battle.intro_text())
+	battle.log_line.connect(_push_line)
+	battle.party_acted.connect(_on_party_acted)
+	battle.enemy_acted.connect(_on_enemy_acted)
 	battle.state_updated.connect(_refresh)
 	battle.finished.connect(_on_finished)
 	battle.aborted.connect(_on_aborted)
 	battle.fled.connect(_on_fled)
 
 
-func _build_party_slots() -> void:
-	var members := GameState.party_members()
-	for i in 4: # 처음부터 4칸 구조 (빈 자리는 동료가 올 자리)
-		var slot := TextureRect.new()
-		slot.custom_minimum_size = SLOT_SIZE
-		slot.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		slot.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		if i < members.size():
-			slot.texture = members[i].sprite
-		else:
-			slot.modulate = Color(1, 1, 1, 0.12) # 빈 슬롯 = 희미하게
-		_party_grid.add_child(slot)
-		_party_slots.append(slot)
-
-
 func _build_enemy_slots() -> void:
 	for e in battle.enemies:
+		var col := VBoxContainer.new()
+		col.add_theme_constant_override("separation", 1)
+		col.alignment = BoxContainer.ALIGNMENT_CENTER
 		var tex := TextureRect.new()
 		tex.custom_minimum_size = ENEMY_SIZE
 		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		tex.texture = e.data.sprite
-		_enemy_box.add_child(tex)
-		_enemy_slots.append(tex)
-
-
-func _total_hp() -> int:
-	var sum := 0
-	for e in battle.enemies:
-		sum += int(e.hp)
-	return sum
-
-
-func _total_max_hp() -> int:
-	var sum := 0
-	for e in battle.enemies:
-		sum += int(e.data.max_hp)
-	return sum
+		var bar := ProgressBar.new()
+		bar.custom_minimum_size = Vector2(ENEMY_SIZE.x, 4)
+		bar.show_percentage = false
+		bar.max_value = e.data.max_hp
+		bar.value = e.hp
+		col.add_child(tex)
+		col.add_child(bar)
+		_enemy_row.add_child(col)
+		_enemy_sprites.append(tex)
+		_enemy_bars.append(bar)
 
 
 func _refresh() -> void:
-	if battle:
-		_hp_bar.value = _total_hp()
-		# 죽은 적 슬롯은 흐리게
-		for i in _enemy_slots.size():
-			_enemy_slots[i].modulate.a = 1.0 if battle.enemies[i].hp > 0 else 0.25
+	if not battle:
+		return
+	for i in _enemy_bars.size():
+		var alive: bool = battle.enemies[i].hp > 0
+		_enemy_bars[i].value = battle.enemies[i].hp
+		_enemy_sprites[i].modulate.a = 1.0 if alive else 0.25
+		_enemy_bars[i].modulate.a = 1.0 if alive else 0.25
 
 
-func _on_turn_played(target_index: int, party_damage: int, incoming_damage: int, is_crit: bool) -> void:
+# ─── 텍스트 로그 (최근 MAX_LOG_LINES줄만 보인다) ───
+
+func _push_line(text: String) -> void:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", 8)
+	label.add_theme_color_override("font_color", Color(0.92, 0.92, 0.86))
+	label.modulate.a = 0.0
+	_log.add_child(label)
+	label.create_tween().tween_property(label, "modulate:a", 1.0, 0.12)
+	while _log.get_child_count() > MAX_LOG_LINES:
+		var oldest := _log.get_child(0)
+		_log.remove_child(oldest)
+		oldest.queue_free()
+
+
+# ─── 연출 ───
+
+func _on_party_acted(target_index: int, damage: int, is_crit: bool) -> void:
 	var color := Color(1.0, 0.85, 0.1) if is_crit else Color(1.0, 0.95, 0.4)
 	if target_index < 0:
 		# 베기라: 살아있는 모든 적에게 팝업
-		for i in _enemy_slots.size():
-			_spawn_damage_popup(_enemy_slots[i], party_damage, color, is_crit)
-			_flash(_enemy_slots[i])
+		for i in _enemy_sprites.size():
+			if battle.enemies[i].hp >= 0:
+				_spawn_damage_popup(_enemy_sprites[i], damage, color, is_crit)
+				_flash(_enemy_sprites[i])
 	else:
-		var enemy_anchor: Control = _enemy_slots[target_index] if target_index < _enemy_slots.size() else self
-		_spawn_damage_popup(enemy_anchor, party_damage, color, is_crit)
-		_flash(enemy_anchor)
+		var anchor: Control = _enemy_sprites[target_index] if target_index < _enemy_sprites.size() else self
+		_spawn_damage_popup(anchor, damage, color, is_crit)
+		_flash(anchor)
 	if is_crit:
 		_show_crit_banner()
 		EventBus.screen_shake.emit(5.0)
-	if incoming_damage > 0 and not _party_slots.is_empty():
-		_spawn_damage_popup(_party_slots[0], incoming_damage, Color(1.0, 0.45, 0.4), false)
+
+
+## 적 반격 — 1인칭이라 맞을 아군 스프라이트가 없으니 프레임을 붉게 깜빡인다.
+func _on_enemy_acted(_damage: int) -> void:
+	if _hit_tween and _hit_tween.is_valid():
+		_hit_tween.kill()
+	modulate = Color(1.0, 0.7, 0.7, modulate.a)
+	_hit_tween = create_tween()
+	_hit_tween.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.25)
 
 
 func _show_crit_banner() -> void:
@@ -123,8 +127,7 @@ func _show_crit_banner() -> void:
 
 
 func _on_fled(message: String) -> void:
-	_status.text = message
-	_status.add_theme_color_override("font_color", Color(0.7, 0.8, 1.0))
+	_push_line(message)
 	var tween := create_tween()
 	tween.tween_interval(0.5)
 	tween.tween_property(self, "modulate:a", 0.0, 0.2)
@@ -146,7 +149,7 @@ func _spawn_damage_popup(anchor: Control, amount: int, color: Color, big: bool) 
 	label.add_theme_color_override("font_outline_color", Color(0.1, 0.1, 0.15))
 	label.add_theme_font_size_override("font_size", 20 if big else 12)
 	label.z_index = 10
-	# PanelContainer/Container는 자식 위치를 강제하므로 앵커(TextureRect)에 붙인다
+	# Container가 자식 위치를 강제하므로 앵커(TextureRect)에 붙인다
 	anchor.add_child(label)
 	label.position = Vector2(anchor.size.x * 0.5 - 5.0, 0.0)
 	var tween := label.create_tween()
@@ -163,12 +166,10 @@ func _flash(target: Control) -> void:
 
 
 func _on_finished(result: Dictionary) -> void:
-	_hp_bar.value = 0
 	if result.get("one_shot", false):
-		_status.text = "회심의 일격!! +%d G" % int(result.gold)
-		_status.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
+		_push_line("회심의 일격!! +%d G" % int(result.gold))
 	else:
-		_status.text = "승리! +%d G" % int(result.gold)
+		_push_line("이겼다! +%d G" % int(result.gold))
 	# 창이 "팍" 닫히는 속도감 — 승리 연출 후 즉시 제거
 	var tween := create_tween()
 	tween.tween_property(self, "modulate", Color(1.5, 1.5, 1.2, 1.0), 0.1)

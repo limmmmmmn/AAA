@@ -8,6 +8,7 @@ class_name Party extends CharacterBody2D
 ##   3. 마을(안전지대) 타일 위에서는 자동 추적 비활성
 
 @export var auto_resume_delay: float = 1.5
+@export var trail_spacing_frames: int = 9   # 동료 줄줄이 간격 (A-4). 클수록 멤버 간 거리 ↑
 
 @onready var _encounter_area: Area2D = $EncounterArea
 @onready var _sprite: Sprite2D = $Sprite2D
@@ -15,6 +16,7 @@ class_name Party extends CharacterBody2D
 var _field: Node = null
 var _idle_time: float = 0.0   # 마지막 수동 입력 이후 경과 시간
 var _companion_sprites: Array[Sprite2D] = []
+var _trail: Array[Vector2] = []  # 용사의 과거 위치 버퍼 (A-4)
 var _retreating: bool = false
 var _retreat_target: Vector2 = Vector2.ZERO
 
@@ -58,27 +60,51 @@ func _do_retreat(_delta: float) -> void:
 		return
 	velocity = to_target.normalized() * GameState.move_speed
 	move_and_slide()
+	_update_trail()
 
 
 func _on_companion_joined(_comp: CompanionData) -> void:
 	_refresh_companions()
 
 
-## 필드 파티 스프라이트: 용사 뒤에 동료를 한 명씩 배치 (B-1)
+## 동료 줄줄이 이동 (A-4): 용사 뒤를 줄지어 따라온다 (드퀘 4 행군).
+## 동료 스프라이트는 Party의 자식 — 트레일 버퍼를 샘플링해 위치만 재생한다(물리 추적 아님).
+## 1지역(용사 1인)에선 동료가 없어 트레일도 동작하지 않는다.
 func _refresh_companions() -> void:
 	for s in _companion_sprites:
 		s.queue_free()
 	_companion_sprites.clear()
-	var offsets := [Vector2(-8, -3), Vector2(8, -3), Vector2(0, -6)]
-	for i in GameState.companions.size():
-		var comp: CompanionData = GameState.companions[i]
+	for comp: CompanionData in GameState.companions:
 		var s := Sprite2D.new()
 		s.texture = comp.sprite
-		s.position = offsets[i] if i < offsets.size() else Vector2(0, -8)
 		s.z_index = -1 # 용사 뒤
 		s.scale = Vector2(0.8, 0.8)
-		_sprite.add_child(s)
+		add_child(s)
 		_companion_sprites.append(s)
+	_reset_trail()
+
+
+## 동료를 용사의 N프레임 지연 위치로 이동 (연참 / trail-follow, A-4).
+func _update_trail() -> void:
+	if _companion_sprites.is_empty():
+		return
+	var pos := global_position
+	# 지역 전환·부활 등 순간이동은 트레일을 끊어 동료가 화면을 가로질러 날아오지 않게 한다.
+	if not _trail.is_empty() and pos.distance_to(_trail[_trail.size() - 1]) > 64.0:
+		_reset_trail()
+	_trail.append(pos)
+	var max_len := _companion_sprites.size() * trail_spacing_frames + 2
+	while _trail.size() > max_len:
+		_trail.remove_at(0)
+	for j in _companion_sprites.size():
+		var idx := _trail.size() - 1 - (j + 1) * trail_spacing_frames
+		_companion_sprites[j].global_position = _trail[idx] if idx >= 0 else _trail[0]
+
+
+func _reset_trail() -> void:
+	_trail.clear()
+	for s in _companion_sprites:
+		s.global_position = global_position
 
 
 func _physics_process(delta: float) -> void:
@@ -99,6 +125,7 @@ func _physics_process(delta: float) -> void:
 				dir = _auto_hunt_direction()
 		velocity = dir * GameState.move_speed
 	move_and_slide()
+	_update_trail()
 	_check_encounters()
 
 

@@ -1,60 +1,35 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/battle_window.gd" id="1"]
 
+[sub_resource type="StyleBoxFlat" id="frame"]
+content_margin_left = 6.0
+content_margin_top = 5.0
+content_margin_right = 6.0
+content_margin_bottom = 5.0
+bg_color = Color(0.04, 0.04, 0.06, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.95, 0.95, 1)
+
 [node name="BattleWindow" type="PanelContainer"]
-custom_minimum_size = Vector2(152, 92)
+custom_minimum_size = Vector2(152, 88)
+theme_override_styles/panel = SubResource("frame")
 script = ExtResource("1")
 
-[node name="Margin" type="MarginContainer" parent="."]
+[node name="VBox" type="VBoxContainer" parent="."]
 layout_mode = 2
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 4
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 4
+theme_override_constants/separation = 3
 
-[node name="VBox" type="VBoxContainer" parent="Margin"]
+[node name="EnemyRow" type="HBoxContainer" parent="VBox"]
 layout_mode = 2
-theme_override_constants/separation = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 6
+alignment = 1
 
-[node name="Top" type="HBoxContainer" parent="Margin/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="NameLabel" type="Label" parent="Margin/VBox/Top"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 8
-text = "몬스터"
-
-[node name="HPBar" type="ProgressBar" parent="Margin/VBox/Top"]
-custom_minimum_size = Vector2(56, 7)
-layout_mode = 2
-size_flags_vertical = 4
-show_percentage = false
-
-[node name="Arena" type="HBoxContainer" parent="Margin/VBox"]
+[node name="Log" type="VBoxContainer" parent="VBox"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 4
-
-[node name="PartyGrid" type="GridContainer" parent="Margin/VBox/Arena"]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/h_separation = 2
-theme_override_constants/v_separation = 2
-columns = 2
-
-[node name="Spacer" type="Control" parent="Margin/VBox/Arena"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="EnemyBox" type="HBoxContainer" parent="Margin/VBox/Arena"]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_constants/separation = 2
-
-[node name="Status" type="Label" parent="Margin/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 8
-text = "전투 중..."
+theme_override_constants/separation = 1

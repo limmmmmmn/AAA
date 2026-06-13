@@ -1,6 +1,6 @@
-[gd_resource type="TileSet" load_steps=3 format=3]
+[gd_resource type="TileSet" format=3 uid="uid://bmf114i0anx5o"]
 
-[ext_resource type="Texture2D" path="res://assets/tiles.svg" id="1"]
+[ext_resource type="Texture2D" uid="uid://dhwanem4ocijc" path="res://assets/tiles.svg" id="1"]
 
 [sub_resource type="TileSetAtlasSource" id="atlas"]
 texture = ExtResource("1")
@@ -19,5 +19,4 @@ texture_region_size = Vector2i(32, 32)
 [resource]
 tile_size = Vector2i(32, 32)
 physics_layer_0/collision_layer = 1
-physics_layer_0/collision_mask = 1
 sources/0 = SubResource("atlas")
