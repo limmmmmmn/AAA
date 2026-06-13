@@ -22,3 +22,8 @@ signal quest_accepted(quest: QuestData)          # 의뢰 수주 (B-4)
 signal quest_completed(quest: QuestData)         # 의뢰 완료 (B-4)
 signal inn_rested                                # 여관 숙박 (B-3)
 signal request_quest_board                       # 게시판 진입 → UI 열기 (B-4)
+# ─── v3 ───
+signal screen_shake(amount: float)               # 회심의 일격 등 화면 흔들림 (§1)
+signal hunt_list_changed                         # 사냥 허가 종 추가/변경 (§8)
+signal tactic_retreat_triggered                  # 자동 철수 발동 (§9)
+signal tactic_retreat_finished                   # 마을 귀환 완료 (§9)

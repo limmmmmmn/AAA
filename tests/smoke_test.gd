@@ -27,10 +27,10 @@ func _ready() -> void:
 
 	# A-2: 시작 시 슬라임존만 활성 (6마리), 박쥐/정예존은 잠금
 	_check(get_tree().get_nodes_in_group("monsters").size() == 6, "시작 시 슬라임존만 활성(6마리)")
-	_check(GameState.catalog.size() == 18, "업그레이드 카탈로그 18종 (1지역11 + 2지역7)")
-	# 1지역 상점엔 1지역 아이템만 노출 (2지역 7종 제외 → combat 5 + field 6)
+	_check(GameState.catalog.size() == 16, "업그레이드 카탈로그 16종 (시야 2종은 무료 보상으로 제거)")
+	# 1지역 상점엔 1지역 아이템만 노출 (시야 제거 → combat 5 + field 4)
 	_check(GameState.upgrades_for_axis("combat").size() == 5, "1지역 상점 전투 5종")
-	_check(GameState.upgrades_for_axis("field").size() == 6, "1지역 상점 필드 6종")
+	_check(GameState.upgrades_for_axis("field").size() == 4, "1지역 상점 필드 4종 (시야 제외)")
 
 	# A-1: 솔로 용사 — 파티 멤버 1명, 기본 공격력 3
 	_check(GameState.party_members().size() == 1, "파티 = 용사 1인")
@@ -57,13 +57,13 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_check(get_tree().get_nodes_in_group("monsters").size() >= 11, "박쥐존 해금 → 몬스터 증가(6+5)")
 
-	# A-4: 시야 줌 업그레이드
-	GameState.add_gold(400)
+	# v3 §6: 시야는 골드 상점이 아니라 무료 보상 (정예존 해금 등)
 	_check(is_equal_approx(GameState.vision_zoom, 1.0), "기본 시야 줌 1.0")
-	_check(GameState.purchase(GameState.catalog[&"eye_hawk"]), "매의 눈 구매")
-	_check(is_equal_approx(GameState.vision_zoom, 0.85), "시야 줌 0.85로 넓어짐")
+	GameState.widen_vision(0.85, "")
+	_check(is_equal_approx(GameState.vision_zoom, 0.85), "시야 보상으로 0.85 넓어짐")
 
 	# 상점 구매 → 스탯 재계산
+	GameState.add_gold(50)
 	var atk_before: int = GameState.party_attack
 	var sword: UpgradeData = GameState.catalog[&"sword_copper"]
 	_check(GameState.purchase(sword), "구리 검 구매")

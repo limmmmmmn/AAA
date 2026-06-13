@@ -28,14 +28,16 @@ func bind(new_battle: BattleInstance) -> void:
 	_build_party_slots()
 	_build_enemy_slots()
 	var front := battle.front_data()
-	_name_label.text = front.display_name
+	var size := battle.group_size()
+	_name_label.text = "%s ×%d" % [front.display_name, size] if size > 1 else front.display_name
 	_hp_bar.max_value = _total_max_hp()
 	_hp_bar.value = _total_hp()
-	_status.text = "전투 중..."
+	_status.text = "%s ×%d가 나타났다!" % [front.display_name, size] if size > 1 else "전투 중..."
 	battle.turn_played.connect(_on_turn_played)
 	battle.state_updated.connect(_refresh)
 	battle.finished.connect(_on_finished)
 	battle.aborted.connect(_on_aborted)
+	battle.fled.connect(_on_fled)
 
 
 func _build_party_slots() -> void:
@@ -86,19 +88,47 @@ func _refresh() -> void:
 			_enemy_slots[i].modulate.a = 1.0 if battle.enemies[i].hp > 0 else 0.25
 
 
-func _on_turn_played(target_index: int, party_damage: int, incoming_damage: int) -> void:
+func _on_turn_played(target_index: int, party_damage: int, incoming_damage: int, is_crit: bool) -> void:
+	var color := Color(1.0, 0.85, 0.1) if is_crit else Color(1.0, 0.95, 0.4)
 	if target_index < 0:
 		# 베기라: 살아있는 모든 적에게 팝업
 		for i in _enemy_slots.size():
-			if battle.enemies[i].hp >= 0:
-				_spawn_damage_popup(_enemy_slots[i], party_damage, Color(0.7, 0.9, 1.0))
-				_flash(_enemy_slots[i])
+			_spawn_damage_popup(_enemy_slots[i], party_damage, color, is_crit)
+			_flash(_enemy_slots[i])
 	else:
 		var enemy_anchor: Control = _enemy_slots[target_index] if target_index < _enemy_slots.size() else self
-		_spawn_damage_popup(enemy_anchor, party_damage, Color(1.0, 0.95, 0.4))
+		_spawn_damage_popup(enemy_anchor, party_damage, color, is_crit)
 		_flash(enemy_anchor)
+	if is_crit:
+		_show_crit_banner()
+		EventBus.screen_shake.emit(5.0)
 	if incoming_damage > 0 and not _party_slots.is_empty():
-		_spawn_damage_popup(_party_slots[0], incoming_damage, Color(1.0, 0.45, 0.4))
+		_spawn_damage_popup(_party_slots[0], incoming_damage, Color(1.0, 0.45, 0.4), false)
+
+
+func _show_crit_banner() -> void:
+	var label := Label.new()
+	label.text = "회심의 일격!"
+	label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.1))
+	label.add_theme_constant_override("outline_size", 4)
+	label.add_theme_color_override("font_outline_color", Color(0.3, 0.1, 0.0))
+	label.add_theme_font_size_override("font_size", 13)
+	label.z_index = 12
+	add_child(label)
+	label.position = Vector2(8, 4)
+	var tween := label.create_tween()
+	tween.tween_interval(0.4)
+	tween.tween_property(label, "modulate:a", 0.0, 0.3)
+	tween.tween_callback(label.queue_free)
+
+
+func _on_fled(message: String) -> void:
+	_status.text = message
+	_status.add_theme_color_override("font_color", Color(0.7, 0.8, 1.0))
+	var tween := create_tween()
+	tween.tween_interval(0.5)
+	tween.tween_property(self, "modulate:a", 0.0, 0.2)
+	tween.tween_callback(queue_free)
 
 
 func _on_aborted() -> void:
@@ -108,13 +138,13 @@ func _on_aborted() -> void:
 	tween.tween_callback(queue_free)
 
 
-func _spawn_damage_popup(anchor: Control, amount: int, color: Color) -> void:
+func _spawn_damage_popup(anchor: Control, amount: int, color: Color, big: bool) -> void:
 	var label := Label.new()
 	label.text = str(amount)
 	label.add_theme_color_override("font_color", color)
 	label.add_theme_constant_override("outline_size", 3)
 	label.add_theme_color_override("font_outline_color", Color(0.1, 0.1, 0.15))
-	label.add_theme_font_size_override("font_size", 12)
+	label.add_theme_font_size_override("font_size", 20 if big else 12)
 	label.z_index = 10
 	# PanelContainer/Container는 자식 위치를 강제하므로 앵커(TextureRect)에 붙인다
 	anchor.add_child(label)

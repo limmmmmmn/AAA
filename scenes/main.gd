@@ -14,6 +14,7 @@ var _region: RegionBase
 var _party: Node2D
 var _celebrating: bool = false
 var _busy: bool = false   # 전환/사망 연출 중 (입력성 이벤트 잠금)
+var _shake: float = 0.0
 
 
 func _ready() -> void:
@@ -25,11 +26,22 @@ func _ready() -> void:
 	EventBus.stats_changed.connect(_on_stats_changed)
 	EventBus.gate_unlocked.connect(_on_gate_unlocked)
 	EventBus.party_defeated.connect(_on_defeat)
+	EventBus.screen_shake.connect(_on_screen_shake)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if is_instance_valid(_party):
 		_camera.global_position = _party.global_position
+	# 화면 흔들림 (회심의 일격 연출, v3 §1)
+	if _shake > 0.1:
+		_shake = maxf(0.0, _shake - delta * 28.0)
+		_camera.offset = Vector2(randf_range(-_shake, _shake), randf_range(-_shake, _shake))
+	elif _camera.offset != Vector2.ZERO:
+		_camera.offset = Vector2.ZERO
+
+
+func _on_screen_shake(amount: float) -> void:
+	_shake = maxf(_shake, amount)
 
 
 # ─── 지역 로드/전환 ───

@@ -12,7 +12,10 @@ var _party_inside: bool = false
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
+	_dialog.process_mode = Node.PROCESS_MODE_WHEN_PAUSED # 정지 중에도 조작 (v3 §5)
 	_dialog.confirmed.connect(_on_confirmed)
+	# 팝업 동안 세계 정지, 닫히면 재개
+	_dialog.visibility_changed.connect(func() -> void: get_tree().paused = _dialog.visible)
 
 
 func _on_body_entered(body: Node2D) -> void:

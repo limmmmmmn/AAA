@@ -51,7 +51,7 @@ func _ready() -> void:
 	_check(GameState.purchase(GameState.catalog[&"armor_chain"]), "사슬 갑옷 구매")
 	_check(is_equal_approx(GameState.damage_reduction_mult, 0.8), "피격 경감 0.8 반영")
 	_check(GameState.purchase(GameState.catalog[&"banner_valor"]), "용맹의 깃발 구매")
-	_check(GameState.max_enemies_per_battle == 2 and GameState.encounter_pull_radius >= 48.0, "휘말림: 동시 2마리 + 반경")
+	_check(GameState.group_table.size() == 2, "무리 출현: 2마리 확률표")
 	_check(GameState.purchase(GameState.catalog[&"spell_begirama"]), "베기라 구매")
 	_check(GameState.all_attack, "베기라: 전체 공격 on")
 	_check(GameState.purchase(GameState.catalog[&"spell_catalog"]), "주문 카탈로그 구매")

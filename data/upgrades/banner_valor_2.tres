@@ -6,13 +6,12 @@
 script = ExtResource("1")
 id = &"banner_valor_2"
 display_name = "용맹의 깃발 II"
-description = "휘말림: 동시 3마리"
+description = "무리 출현: 3마리 가능"
 axis = "field"
 min_region = 2
 base_cost = 650
 cost_growth = 1.0
 max_purchases = 1
 effects = {
-"max_enemies": 1,
-"encounter_pull_radius": 64.0
+"group_table": [0.4, 0.4, 0.2]
 }

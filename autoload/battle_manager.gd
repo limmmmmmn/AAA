@@ -15,6 +15,7 @@ func start_battle(monsters: Array, world_pos: Vector2 = Vector2.ZERO) -> BattleI
 	var battle := BattleInstance.new(monsters, world_pos)
 	active_battles.append(battle)
 	battle.finished.connect(_on_battle_finished.bind(battle))
+	battle.fled.connect(_on_battle_fled.bind(battle))
 	EventBus.battle_started.emit(battle)
 	return battle
 
@@ -42,3 +43,8 @@ func _on_battle_finished(result: Dictionary, battle: BattleInstance) -> void:
 		GameState.register_kill(e.data)
 		EventBus.monster_died.emit(e.data, battle.origin_pos)
 	EventBus.battle_ended.emit(battle, result)
+
+
+## 메탈 도주 등: 보상·토벌수 없이 전투만 제거 (v3 §2)
+func _on_battle_fled(_message: String, battle: BattleInstance) -> void:
+	active_battles.erase(battle)

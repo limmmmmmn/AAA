@@ -1,32 +1,34 @@
 class_name BattleInstance extends RefCounted
 ## 전투 시뮬레이션 본체. 비주얼 없음 — BattleWindow가 시그널을 구독해 그리기만 한다.
-## BattleManager가 _physics_process에서 tick(delta)를 호출한다.
-##
-## enemies는 처음부터 Array 구조 (1지역에선 항상 길이 1).
-## 2지역 휘말림(EncounterPull)에서 구조 변경 없이 길이만 2+ 로 확장된다.
+## enemies는 같은 종의 무리(GroupEncounter, v3 §4). 1마리~3마리. 메탈은 항상 1마리.
 
 signal state_updated
-signal turn_played(target_index: int, party_damage: int, incoming_damage: int)
+signal turn_played(target_index: int, party_damage: int, incoming_damage: int, is_crit: bool)
 signal finished(result: Dictionary)
-signal aborted   # 패배 등으로 보상 없이 강제 종료 (B-2)
+signal fled(message: String)   # 메탈 도주 등 (보상 없음, v3 §2)
+signal aborted                 # 패배로 강제 종료 (B-2)
 
-var enemies: Array[Dictionary] = []   # 각 항목: {"data": MonsterData, "hp": int}
+var enemies: Array[Dictionary] = []   # 각 항목: {"data": MonsterData, "hp": int, "hits": int}
 var origin_pos: Vector2
 var turns: int = 0
 var turn_timer: float = 0.0
+var elapsed: float = 0.0
 var is_finished: bool = false
 
 
 func _init(monster_list: Array, world_pos: Vector2 = Vector2.ZERO) -> void:
 	for data: MonsterData in monster_list:
-		enemies.append({"data": data, "hp": data.max_hp})
+		enemies.append({"data": data, "hp": data.max_hp, "hits": 0})
 	origin_pos = world_pos
 
 
-## 호환/편의: 첫 적 (1지역에선 유일한 적)
 func front_data() -> MonsterData:
 	var idx := _front_index()
 	return enemies[idx].data if idx >= 0 else enemies[0].data
+
+
+func group_size() -> int:
+	return enemies.size()
 
 
 func _front_index() -> int:
@@ -43,11 +45,20 @@ func _all_dead() -> bool:
 func tick(delta: float) -> void:
 	if is_finished:
 		return
+	elapsed += delta
+	if _check_time_flee():
+		return
 	turn_timer += delta
-	# turn_interval은 GameState에서 매번 읽는다 — 전투 중 구매한 업그레이드도 즉시 반영
 	while turn_timer >= GameState.turn_interval and not is_finished:
 		turn_timer -= GameState.turn_interval
 		_play_turn()
+
+
+## 회심 여부에 따른 1회 공격 데미지 (방어력 적용/무시)
+func _roll_damage(target_defense: int) -> Array:
+	var is_crit: bool = randf() < GameState.crit_chance
+	var dmg: int = GameState.party_attack if is_crit else maxi(GameState.party_attack - target_defense, 0)
+	return [dmg, is_crit]
 
 
 func _play_turn() -> void:
@@ -55,35 +66,61 @@ func _play_turn() -> void:
 	var target := _front_index()
 	if target == -1:
 		return
-	var party_damage: int = GameState.party_attack
+	var roll := _roll_damage(enemies[target].data.defense)
+	var party_damage: int = roll[0]
+	var is_crit: bool = roll[1]
 	if GameState.all_attack:
-		# 베기라: 살아있는 모든 적을 동시에 공격
+		# 베기라: 살아있는 모든 적을 동시에 공격 (각자 방어력 적용, 회심은 공유)
 		for e in enemies:
 			if e.hp > 0:
-				e.hp = maxi(0, e.hp - party_damage)
-		target = -1 # 전체 타격 (창은 -1을 모든 적 팝업으로 해석)
+				var d: int = GameState.party_attack if is_crit else maxi(GameState.party_attack - int(e.data.defense), 0)
+				e.hp = maxi(0, e.hp - d)
+				e.hits += 1
+		target = -1
 	else:
-		# 앞에서부터 단일 타겟 공격
 		enemies[target].hp = maxi(0, enemies[target].hp - party_damage)
-	# 살아남은 모든 적이 반격 (1지역 연출용, 2지역 공유 HP 차감)
+		enemies[target].hits += 1
 	var incoming: int = 0
 	for e in enemies:
 		if e.hp > 0:
 			incoming += int(e.data.attack)
-	turn_played.emit(target, party_damage, incoming)
+	turn_played.emit(target, party_damage, incoming, is_crit)
 	state_updated.emit()
-	GameState.apply_damage(incoming) # damage_enabled일 때만 실제로 깎인다
+	GameState.apply_damage(incoming)
 	if _all_dead():
 		is_finished = true
 		finished.emit(_build_result())
+	elif _check_hit_flee():
+		pass
 
 
-## 패배 등으로 보상 없이 즉시 종료 (BattleManager.abort_all에서 호출)
-func abort() -> void:
+func _check_hit_flee() -> bool:
+	var i := _front_index()
+	if i == -1:
+		return false
+	var d: MonsterData = enemies[i].data
+	if d.flee_after_hits > 0 and enemies[i].hits >= d.flee_after_hits:
+		_flee(d.display_name)
+		return true
+	return false
+
+
+func _check_time_flee() -> bool:
+	var i := _front_index()
+	if i == -1:
+		return false
+	var d: MonsterData = enemies[i].data
+	if d.flee_after_seconds > 0.0 and elapsed >= d.flee_after_seconds:
+		_flee(d.display_name)
+		return true
+	return false
+
+
+func _flee(monster_name: String) -> void:
 	if is_finished:
 		return
 	is_finished = true
-	aborted.emit()
+	fled.emit("%s — 도망쳤다!" % monster_name)
 
 
 func _build_result() -> Dictionary:
@@ -96,5 +133,13 @@ func _build_result() -> Dictionary:
 		"gold": gold,
 		"exp": exp,
 		"turns": turns,
-		"one_shot": turns == 1, # "회심의 일격!" 연출 플래그
+		"group": enemies.size(),
+		"one_shot": turns == 1,
 	}
+
+
+func abort() -> void:
+	if is_finished:
+		return
+	is_finished = true
+	aborted.emit()

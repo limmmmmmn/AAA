@@ -15,13 +15,49 @@ class_name Party extends CharacterBody2D
 var _field: Node = null
 var _idle_time: float = 0.0   # 마지막 수동 입력 이후 경과 시간
 var _companion_sprites: Array[Sprite2D] = []
+var _retreating: bool = false
+var _retreat_target: Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
 	add_to_group("party")
-	_field = get_tree().get_first_node_in_group("field")
+	_field = _find_region()
 	EventBus.companion_joined.connect(_on_companion_joined)
+	EventBus.tactic_retreat_triggered.connect(_on_retreat)
 	_refresh_companions()
+
+
+## 소속 지역(RegionBase)을 조상에서 찾는다. 그룹 등록은 부모 _ready보다 늦으므로
+## 그룹 조회 대신 트리 조상을 거슬러 올라간다 (지역 로드 시점 안전).
+func _find_region() -> RegionBase:
+	var n := get_parent()
+	while n != null:
+		if n is RegionBase:
+			return n
+		n = n.get_parent()
+	return null
+
+
+## 자동 철수 (v3 §9): 전투 일제 종료 → 마을로 자동 귀환 (귀환 중 인카운트 없음)
+func _on_retreat() -> void:
+	if _retreating:
+		return
+	BattleManager.abort_all()
+	_retreating = true
+	_retreat_target = _field.entrance(&"church") if _field else global_position
+	EventBus.show_toast.emit("위험! 전투를 멈추고 마을로 철수한다...")
+
+
+func _do_retreat(_delta: float) -> void:
+	var to_target := _retreat_target - global_position
+	if to_target.length() < 10.0 or (_field and _field.is_village(global_position)):
+		_retreating = false
+		velocity = Vector2.ZERO
+		EventBus.tactic_retreat_finished.emit()
+		EventBus.show_toast.emit("마을로 무사히 돌아왔다.")
+		return
+	velocity = to_target.normalized() * GameState.move_speed
+	move_and_slide()
 
 
 func _on_companion_joined(_comp: CompanionData) -> void:
@@ -46,6 +82,9 @@ func _refresh_companions() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _retreating: # 자동 철수 중에는 다른 이동/인카운트 무시
+		_do_retreat(delta)
+		return
 	# 전투 중 이동 규칙: 해금 전엔 전투 활성 중 정지
 	var battle_locked := not BattleManager.active_battles.is_empty() and not GameState.can_move_in_battle
 	if battle_locked:
@@ -74,13 +113,17 @@ func _can_auto_hunt() -> bool:
 
 
 func _auto_hunt_direction() -> Vector2:
+	# 사냥 허가 리스트에 체크된 종만 목표로 삼는다 (v3 §8)
 	var nearest: Node2D = null
 	var best := INF
-	for monster: Node2D in get_tree().get_nodes_in_group("monsters"):
-		var dist := global_position.distance_squared_to(monster.global_position)
+	for node: Node2D in get_tree().get_nodes_in_group("monsters"):
+		var m := node as Monster
+		if m == null or m.data == null or not GameState.is_hunted(m.data.id):
+			continue
+		var dist := global_position.distance_squared_to(m.global_position)
 		if dist < best:
 			best = dist
-			nearest = monster
+			nearest = m
 	if nearest == null:
 		return Vector2.ZERO
 	var to_target := nearest.global_position - global_position
@@ -99,21 +142,14 @@ func _check_encounters() -> void:
 			_start_encounter(monster)
 
 
-## 충돌 몬스터 + (2지역) 반경 내 휘말린 몬스터를 한 전투로 묶어 시작 (A-3 구조).
+## 무리 출현 (v3 §4): 필드 몬스터 1마리와 충돌 → 전투창 안에서 같은 종이 무리로 출현.
+## 필드의 다른 몬스터는 끌어들이지 않는다. 무리 규모는 전투창이 정한다.
 func _start_encounter(primary: Monster) -> void:
-	var pulled: Array[Monster] = [primary]
-	if GameState.max_enemies_per_battle > 1 and GameState.encounter_pull_radius > 0.0:
-		var r2 := GameState.encounter_pull_radius * GameState.encounter_pull_radius
-		for node: Node2D in get_tree().get_nodes_in_group("monsters"):
-			if pulled.size() >= GameState.max_enemies_per_battle:
-				break
-			var m := node as Monster
-			if m and m != primary and not m.is_leaving() and m.data \
-					and primary.global_position.distance_squared_to(m.global_position) <= r2:
-				pulled.append(m)
+	var count := 1
+	if primary.data.allow_group: # 메탈은 항상 1마리
+		count = GameState.roll_group_size()
 	var datas: Array = []
-	for m in pulled:
-		datas.append(m.data)
+	for i in count:
+		datas.append(primary.data)
 	if BattleManager.start_battle(datas, primary.global_position) != null:
-		for m in pulled:
-			m.consume()
+		primary.consume()

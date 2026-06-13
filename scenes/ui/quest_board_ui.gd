@@ -9,6 +9,7 @@ extends Control
 
 func _ready() -> void:
 	visible = false
+	process_mode = Node.PROCESS_MODE_WHEN_PAUSED # 정지 중에도 조작 가능 (v3 §5)
 	EventBus.request_quest_board.connect(_open)
 	EventBus.party_exited_village.connect(_close)
 	EventBus.quest_accepted.connect(_on_quest_changed)
@@ -19,11 +20,15 @@ func _ready() -> void:
 
 func _open() -> void:
 	visible = true
+	get_tree().paused = true # 메뉴를 열면 세계가 멈춘다 (v3 §5)
 	_rebuild()
 
 
 func _close() -> void:
+	if not visible:
+		return
 	visible = false
+	get_tree().paused = false
 
 
 func _on_quest_changed(_quest: QuestData) -> void:

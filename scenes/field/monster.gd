@@ -5,12 +5,10 @@ signal vanished(monster: Monster)
 
 @export var data: MonsterData
 @export var wander_radius: float = 96.0
-@export var flee_detect_range: float = 160.0 # 도주형 몬스터가 파티를 피하는 감지 거리
 
 var _origin: Vector2
 var _target: Vector2
 var _wait_time: float = 0.0
-var _alive_time: float = 0.0
 var _leaving: bool = false
 var _field: Node = null
 
@@ -19,30 +17,27 @@ var _field: Node = null
 
 func _ready() -> void:
 	add_to_group("monsters")
-	_field = get_tree().get_first_node_in_group("field")
+	_field = _find_region()
 	_origin = global_position
 	if data:
 		_sprite.texture = data.sprite
+		GameState.ensure_hunt_entry(data) # 사냥 허가 리스트에 종 등록 (v3 §8)
 	_pick_new_target()
+
+
+## 소속 지역(RegionBase)을 조상에서 찾는다 (그룹 등록 타이밍과 무관하게 안전).
+func _find_region() -> RegionBase:
+	var n := get_parent()
+	while n != null:
+		if n is RegionBase:
+			return n
+		n = n.get_parent()
+	return null
 
 
 func _physics_process(delta: float) -> void:
 	if data == null or _leaving:
 		return
-	if data.flees_after_sec > 0.0:
-		_alive_time += delta
-		if _alive_time >= data.flees_after_sec:
-			flee_away()
-			return
-		if _alive_time >= data.flees_after_sec - 3.0:
-			_sprite.modulate.a = 0.55 + 0.45 * sin(_alive_time * 18.0) # 사라지기 전 반짝임
-		# 파티가 다가오면 반대로 도망 — 초기 이속으론 못 잡는 게 의도.
-		# 단, 물/산은 못 넘는다 (벽에 막히면 파티가 구석으로 몰 수 있다).
-		var party := get_tree().get_first_node_in_group("party") as Node2D
-		if party and global_position.distance_to(party.global_position) < flee_detect_range:
-			var away := (global_position - party.global_position).normalized()
-			_move_blocked(away * data.move_speed * delta)
-			return
 	if _wait_time > 0.0:
 		_wait_time -= delta
 		return
@@ -51,7 +46,7 @@ func _physics_process(delta: float) -> void:
 		_pick_new_target()
 		_wait_time = randf_range(0.0, 0.3) if data.erratic_movement else randf_range(0.3, 1.2)
 		return
-	# 다음 칸이 막혀 있으면 새 목표를 고른다 (벽에 붙어 떨지 않게)
+	# 다음 칸이 막혀 있으면(벽 또는 마을) 새 목표를 고른다
 	if not _move_blocked(to_target.normalized() * data.move_speed * delta):
 		_pick_new_target()
 
@@ -61,19 +56,23 @@ func _pick_new_target() -> void:
 	_target = _origin + Vector2(randf_range(-spread, spread), randf_range(-spread, spread))
 
 
+## 몬스터가 들어갈 수 있는 칸인가: 물/산 막힘 + 마을 진입 금지 (v3 §3).
+func _can_enter(pos: Vector2) -> bool:
+	if _field == null:
+		return true
+	return _field.is_walkable(pos) and not _field.is_village(pos)
+
+
 ## 충돌을 존중하며 motion만큼 이동. 막히면 축별로 미끄러진다.
 ## 조금이라도 이동했으면 true, 완전히 막혔으면 false.
 func _move_blocked(motion: Vector2) -> bool:
-	if _field == null:
+	if _can_enter(global_position + motion):
 		global_position += motion
 		return true
-	if _field.is_walkable(global_position + motion):
-		global_position += motion
-		return true
-	if absf(motion.x) > 0.01 and _field.is_walkable(global_position + Vector2(motion.x, 0.0)):
+	if absf(motion.x) > 0.01 and _can_enter(global_position + Vector2(motion.x, 0.0)):
 		global_position.x += motion.x
 		return true
-	if absf(motion.y) > 0.01 and _field.is_walkable(global_position + Vector2(0.0, motion.y)):
+	if absf(motion.y) > 0.01 and _can_enter(global_position + Vector2(0.0, motion.y)):
 		global_position.y += motion.y
 		return true
 	return false
@@ -91,15 +90,3 @@ func consume() -> void:
 	_leaving = true
 	vanished.emit(self)
 	queue_free()
-
-
-## 도주 (메탈슬라임): 반짝이며 사라짐
-func flee_away() -> void:
-	if _leaving:
-		return
-	_leaving = true
-	vanished.emit(self)
-	var tween := create_tween()
-	tween.tween_property(_sprite, "modulate:a", 0.0, 0.4)
-	tween.parallel().tween_property(self, "scale", Vector2(0.2, 1.4), 0.4)
-	tween.tween_callback(queue_free)

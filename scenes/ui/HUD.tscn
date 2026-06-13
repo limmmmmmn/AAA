@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/hud.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/vignette.svg" id="2"]
 
 [node name="HUD" type="Control"]
 layout_mode = 3
@@ -83,6 +84,49 @@ offset_bottom = 22.0
 grow_horizontal = 0
 theme_override_font_sizes/font_size = 9
 text = "상점 (원격)"
+
+[node name="HuntPanel" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -116.0
+offset_top = 26.0
+offset_right = -4.0
+offset_bottom = 120.0
+grow_horizontal = 0
+
+[node name="VBox" type="VBoxContainer" parent="HuntPanel"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Title" type="Label" parent="HuntPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.9, 0.7, 1)
+theme_override_font_sizes/font_size = 9
+text = "사냥 허가"
+
+[node name="HuntList" type="VBoxContainer" parent="HuntPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 1
+
+[node name="RetreatToggle" type="CheckButton" parent="HuntPanel/VBox"]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 9
+text = "자동 철수"
+
+[node name="DangerVignette" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2")
+modulate = Color(1, 1, 1, 0)
 
 [node name="ToastLabel" type="Label" parent="."]
 visible = false

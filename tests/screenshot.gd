@@ -57,6 +57,17 @@ func _ready() -> void:
 	EventBus.party_entered_village.emit()
 	await get_tree().create_timer(0.3).timeout
 	get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path("user://screenshot_shop2.png"))
+	EventBus.party_exited_village.emit()
+
+	# 죽음의 예고 (v3 §7) + 회심(§1) + 철수 토글(§9) + 사냥 허가(§8)
+	GameState.tactic_retreat_enabled = false # 토글은 보이되 발동은 막아 연출 캡처
+	GameState.crit_chance = 1.0
+	GameState.party_attack = 12
+	GameState.shared_hp = 7 # max 50 → 위험 (붉은 비네트)
+	EventBus.shared_hp_changed.emit(7, GameState.shared_hp_max)
+	BattleManager.start_battle([load("res://data/monsters/snake.tres")])
+	await get_tree().create_timer(1.4).timeout # 첫 턴(회심) 연출이 뜨는 시점
+	get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path("user://screenshot_danger.png"))
 
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://save.json"))
 	get_tree().quit()
