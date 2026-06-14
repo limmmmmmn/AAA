@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="CompanionData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/companion_data.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/priest.svg" id="2"]
+[ext_resource type="Texture2D" path="res://assets/characters/priest.png" id="2"]
 
 [resource]
 script = ExtResource("1")
@@ -9,5 +9,6 @@ id = &"priest"
 display_name = "승려"
 sprite = ExtResource("2")
 attack_bonus = 4
+max_hp = 20
 role = &"priest"
 heal_per_turn = 2

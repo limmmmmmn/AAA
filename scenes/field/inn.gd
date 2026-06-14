@@ -22,7 +22,7 @@ func _on_body_entered(body: Node2D) -> void:
 	if not body is Party:
 		return
 	_party_inside = true
-	if GameState.shared_hp >= GameState.shared_hp_max:
+	if GameState.total_hp() >= GameState.total_max_hp():
 		EventBus.show_toast.emit("여관: 아직 쌩쌩하구먼. 다음에 오게.")
 		return
 	if GameState.gold < cost:

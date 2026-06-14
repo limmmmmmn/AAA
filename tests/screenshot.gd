@@ -63,8 +63,10 @@ func _ready() -> void:
 	GameState.tactic_retreat_enabled = false # 토글은 보이되 발동은 막아 연출 캡처
 	GameState.crit_chance = 1.0
 	GameState.party_attack = 12
-	GameState.shared_hp = 7 # max 50 → 위험 (붉은 비네트)
-	EventBus.shared_hp_changed.emit(7, GameState.shared_hp_max)
+	if GameState.member_hps.size() >= 2:
+		GameState.member_hps[0] = 8
+		GameState.member_hps[1] = 6 # 총 14 / 60 → 위험 (붉은 비네트)
+	EventBus.party_hp_changed.emit()
 	BattleManager.start_battle([load("res://data/monsters/snake.tres")])
 	await get_tree().create_timer(1.4).timeout # 첫 턴(회심) 연출이 뜨는 시점
 	get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path("user://screenshot_danger.png"))

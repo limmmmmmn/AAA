@@ -29,9 +29,9 @@ var dual_battle_celebrated: bool = false
 var gate_paid: bool = false
 var first_sword_time: float = -1.0      # 동검 첫 구매 시점 (play_time 기준)
 
-# ─── PART B: 공유 HP / 지역 / 의뢰 (저장 대상) ───
-var shared_hp: int = 50
-var shared_hp_max: int = 50
+# ─── PART B: 멤버별 HP / 지역 / 의뢰 (저장 대상) ───
+var member_hps: Array[int] = []         # 멤버별 현재 HP (0=용사, 1+=동료 순서)
+var member_max_hps: Array[int] = []     # 멤버별 최대 HP
 var damage_enabled: bool = false        # 1지역 off, 2지역 진입 시 on (B-2)
 var tactic_retreat_unlocked: bool = false # 승려 합류 시 해금 (v3 §9)
 var tactic_retreat_enabled: bool = false  # HUD 토글
@@ -40,7 +40,8 @@ var active_quest_id: StringName = &""   # 동시 수주 1개
 var quest_progress_base: int = 0        # 수주 시점의 target 토벌 수 (이후 증가분만 카운트)
 
 # ─── 파생 스탯 (recalculate_stats만 계산) ───
-var party_attack: int = 3               # 용사 + 동료 합산
+var party_attack: int = 3               # 용사 + 동료 합산 (파티 총 공격력)
+var hero_attack: int = 3                # 용사 단독 공격력 (기본 + 무기/주문 업그레이드, 동료 제외)
 var turn_interval: float = 1.2
 var turn_beat_delay: float = 0.25       # 라운드 내 파티→적 행동 텀 (A-2, config에서)
 var move_speed: float = 80.0
@@ -62,6 +63,14 @@ var quest_catalog: Dictionary = {}      # id(StringName) -> QuestData
 
 var _heal_accum: float = 0.0            # 공유 HP 회복 틱 누적
 
+# ─── 디버그 (저장 안 함 — 실행마다 off로 시작) ───
+var debug_mode: bool = false
+
+
+func set_debug_mode(on: bool) -> void:
+	debug_mode = on
+	EventBus.debug_mode_changed.emit(on)
+
 
 func _ready() -> void:
 	config = load(CONFIG_PATH)
@@ -72,6 +81,7 @@ func _ready() -> void:
 	_load_quest_catalog()
 	load_game()
 	recalculate_stats()
+	_ensure_member_hp() # 멤버별 HP 배열을 멤버 수에 맞춰 정리 (로드 값 보존, 부족분 가득)
 	EventBus.zone_unlocked.connect(_on_zone_unlocked) # 정예존 해금 → 시야 보상 (v3 §6)
 	var autosave := Timer.new()
 	autosave.wait_time = config.autosave_interval
@@ -85,9 +95,9 @@ func _process(delta: float) -> void:
 	_tick_heal(delta)
 
 
-## 동료(승려)의 상시 회복 — 전역으로 turn_interval 주기마다 shared_hp 회복 (B-2)
+## 동료(승려)의 상시 회복 — turn_interval 주기마다 가장 다친 멤버를 회복 (B-2)
 func _tick_heal(delta: float) -> void:
-	if not damage_enabled or shared_hp <= 0 or shared_hp >= shared_hp_max:
+	if not damage_enabled or total_hp() <= 0 or total_hp() >= total_max_hp():
 		return
 	var heal_per_turn := 0
 	for c in companions:
@@ -97,7 +107,7 @@ func _tick_heal(delta: float) -> void:
 	_heal_accum += delta
 	while _heal_accum >= turn_interval:
 		_heal_accum -= turn_interval
-		heal(heal_per_turn)
+		heal_lowest(heal_per_turn)
 
 
 func _notification(what: int) -> void:
@@ -291,10 +301,7 @@ func add_companion(comp: CompanionData) -> void:
 	if comp == null or _has_companion(comp.id):
 		return
 	companions.append(comp)
-	if comp.hp_bonus > 0: # 합류 시 공유 HP 풀 확장 (A-3). 풀은 분할하지 않고 늘리기만 한다.
-		shared_hp_max += comp.hp_bonus
-		shared_hp += comp.hp_bonus
-		EventBus.shared_hp_changed.emit(shared_hp, shared_hp_max)
+	_ensure_member_hp() # 새 동료가 자기 HP를 가득 채운 채 합류
 	if comp.role == &"priest": # 승려 합류 = 첫 전술 해금 (v3 §9)
 		tactic_retreat_unlocked = true
 		EventBus.show_toast.emit("철수의 지혜를 배웠다!")
@@ -318,39 +325,147 @@ func party_members() -> Array[Dictionary]:
 	return list
 
 
-# ─── 공유 HP / 패배 / 부활 (B-2) ───
+func member_count() -> int:
+	return 1 + companions.size()
 
-## BattleInstance가 턴마다 호출. damage_enabled일 때만 공유 풀을 깎는다.
-func apply_damage(raw: int) -> void:
-	if not damage_enabled or raw <= 0 or shared_hp <= 0:
+
+## 멤버별 단독 공격력 (용사, 동료1, 동료2 ...). 합 = party_attack (총 공격력에서 파생).
+## 용사 = party_attack - 동료 보너스 합 (= 기본 + 무기/주문 업그레이드).
+func member_attacks() -> Array[int]:
+	var bonus := 0
+	for c in companions:
+		bonus += c.attack_bonus
+	var arr: Array[int] = [maxi(0, party_attack - bonus)]
+	for c in companions:
+		arr.append(c.attack_bonus)
+	return arr
+
+
+# ─── 멤버별 개별 HP (각자 자기 HP) ───
+
+## index번째 멤버의 최대 HP (0=용사=config, 1+=동료=CompanionData.max_hp).
+func member_max_hp_for(index: int) -> int:
+	if index == 0:
+		return config.hero_max_hp
+	var ci := index - 1
+	return companions[ci].max_hp if ci < companions.size() else 0
+
+
+## 멤버 수에 맞춰 HP 배열을 정리 — 최대치는 항상 갱신, 현재 HP는 기존값 보존(없으면 가득).
+func _ensure_member_hp() -> void:
+	var n := member_count()
+	var old := member_hps.duplicate()
+	member_max_hps.resize(n)
+	member_hps.resize(n)
+	for i in n:
+		member_max_hps[i] = member_max_hp_for(i)
+		if i < old.size():
+			member_hps[i] = clampi(old[i], 0, member_max_hps[i])
+		else:
+			member_hps[i] = member_max_hps[i] # 새 멤버는 가득 찬 상태로 합류
+	EventBus.party_hp_changed.emit()
+
+
+func member_hp(index: int) -> int:
+	return member_hps[index] if index >= 0 and index < member_hps.size() else 0
+
+
+func member_max_hp(index: int) -> int:
+	return member_max_hps[index] if index >= 0 and index < member_max_hps.size() else 0
+
+
+## 해당 멤버가 행동 가능한가 (1지역은 죽지 않으므로 항상 true).
+func member_alive(index: int) -> bool:
+	if not damage_enabled:
+		return true
+	return index >= 0 and index < member_hps.size() and member_hps[index] > 0
+
+
+func total_hp() -> int:
+	var s := 0
+	for h in member_hps:
+		s += h
+	return s
+
+
+func total_max_hp() -> int:
+	var s := 0
+	for h in member_max_hps:
+		s += h
+	return s
+
+
+func front_living_member() -> int:
+	for i in member_hps.size():
+		if member_hps[i] > 0:
+			return i
+	return 0
+
+
+func random_living_member() -> int:
+	var alive: Array[int] = []
+	for i in member_hps.size():
+		if member_hps[i] > 0:
+			alive.append(i)
+	return alive[randi() % alive.size()] if not alive.is_empty() else front_living_member()
+
+
+# ─── 피격 / 회복 / 패배 / 부활 ───
+
+## 특정 멤버를 공격 (BattleInstance가 적 반격마다 호출). damage_enabled일 때만.
+func damage_member(index: int, raw: int) -> void:
+	if not damage_enabled or raw <= 0:
+		return
+	if index < 0 or index >= member_hps.size() or member_hps[index] <= 0:
+		index = front_living_member()
+	if index >= member_hps.size() or member_hps[index] <= 0:
 		return
 	var dmg := maxi(1, int(round(raw * damage_reduction_mult)))
-	shared_hp = maxi(0, shared_hp - dmg)
-	EventBus.shared_hp_changed.emit(shared_hp, shared_hp_max)
-	if shared_hp <= 0:
+	member_hps[index] = maxi(0, member_hps[index] - dmg)
+	EventBus.party_hp_changed.emit()
+	if total_hp() <= 0:
 		EventBus.party_defeated.emit()
-	elif tactic_retreat_enabled and not _retreat_active and shared_hp <= 0.25 * shared_hp_max:
-		# 자동 철수 전술 발동 (v3 §9) — 죽기 전에 발을 뺀다
-		_retreat_active = true
+	elif tactic_retreat_enabled and not _retreat_active and total_hp() <= 0.25 * total_max_hp():
+		_retreat_active = true # 자동 철수 (v3 §9) — 죽기 전에 발을 뺀다
 		EventBus.tactic_retreat_triggered.emit()
 
 
-func heal(amount: int) -> void:
-	if amount <= 0:
+## 외부/테스트 호환: 앞 멤버부터 피해
+func apply_damage(raw: int) -> void:
+	damage_member(front_living_member(), raw)
+
+
+func heal_member(index: int, amount: int) -> void:
+	if amount <= 0 or index < 0 or index >= member_hps.size() or member_hps[index] <= 0:
 		return
-	shared_hp = mini(shared_hp_max, shared_hp + amount)
-	if shared_hp > 0.3 * shared_hp_max:
+	member_hps[index] = mini(member_max_hps[index], member_hps[index] + amount)
+	if total_hp() > 0.3 * total_max_hp():
 		_retreat_active = false # 위험 구간을 벗어나면 다음 철수 재무장
-	EventBus.shared_hp_changed.emit(shared_hp, shared_hp_max)
+	EventBus.party_hp_changed.emit()
+
+
+## 가장 다친(비율 최저) 살아있는 멤버 1명 회복 (승려)
+func heal_lowest(amount: int) -> void:
+	var target := -1
+	var worst := 2.0
+	for i in member_hps.size():
+		if member_hps[i] > 0 and member_hps[i] < member_max_hps[i]:
+			var ratio := float(member_hps[i]) / float(maxi(1, member_max_hps[i]))
+			if ratio < worst:
+				worst = ratio
+				target = i
+	if target >= 0:
+		heal_member(target, amount)
 
 
 func full_heal() -> void:
-	shared_hp = shared_hp_max
+	for i in member_hps.size():
+		member_hps[i] = member_max_hps[i]
 	_retreat_active = false
-	EventBus.shared_hp_changed.emit(shared_hp, shared_hp_max)
+	EventBus.party_hp_changed.emit()
 
 
-## 패배 처리: 소지금 절반 차감 + 전량 회복 (창 닫기/이동은 호출측 연출이 담당)
+## 패배 처리: 소지금 절반 차감 + 전원 부활 (창 닫기/이동은 호출측 연출이 담당)
 func apply_defeat_penalty() -> void:
 	gold = gold / 2
 	EventBus.gold_changed.emit(gold)
@@ -455,7 +570,8 @@ func recalculate_stats() -> void:
 					remote_shop_unlocked = bool(value)              # 주문 카탈로그
 				_:
 					push_warning("알 수 없는 효과 키: %s (%s)" % [key, upgrade.id])
-	# 동료 공격력 기여 (용사 + 동료 합산)
+	hero_attack = party_attack # 용사 = 기본 + 무기/주문 업그레이드 (동료 보너스 제외)
+	# 동료 공격력 기여 (용사 + 동료 합산 = 파티 총 공격력)
 	for c in companions:
 		party_attack += c.attack_bonus
 	EventBus.stats_changed.emit()
@@ -471,6 +587,45 @@ func advance_elder_stage() -> void:
 		elder_window_bonus = 2
 		EventBus.show_toast.emit("동시 전투창이 3개로 늘었다!")
 	recalculate_stats()
+
+
+# ─── 처음부터 다시하기 (메뉴) ───
+## 세이브를 지우고 모든 상태를 기본값으로 되돌린다. 오토로드는 씬 리로드로 재초기화되지
+## 않으므로 여기서 직접 리셋한다. 호출 후 호출측이 get_tree().reload_current_scene()로 재구성.
+func reset_to_new_game() -> void:
+	if FileAccess.file_exists(SAVE_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	# 진행 상태
+	gold = 0
+	total_gold_earned = 0
+	total_exp = 0
+	total_battles_won = 0
+	play_time = 0.0
+	purchases.clear()
+	kill_count.clear()
+	companions.clear()
+	hunt_list.clear()
+	monster_catalog.clear()
+	elder_stage = 0
+	can_move_in_battle = false
+	elder_window_bonus = 0
+	dual_battle_celebrated = false
+	gate_paid = false
+	first_sword_time = -1.0
+	# 멤버 HP / 지역 / 의뢰 / 전술
+	member_hps.clear()
+	member_max_hps.clear()
+	damage_enabled = false
+	tactic_retreat_unlocked = false
+	tactic_retreat_enabled = false
+	current_region = &"region1"
+	active_quest_id = &""
+	quest_progress_base = 0
+	vision_zoom = config.base_vision_zoom
+	_retreat_active = false
+	_heal_accum = 0.0
+	recalculate_stats()
+	_ensure_member_hp() # 용사만, 가득
 
 
 # ─── 저장/로드 ───
@@ -507,8 +662,7 @@ func save_game() -> void:
 		"dual_battle_celebrated": dual_battle_celebrated,
 		"gate_paid": gate_paid,
 		"first_sword_time": first_sword_time,
-		"shared_hp": shared_hp,
-		"shared_hp_max": shared_hp_max,
+		"member_hps": member_hps.duplicate(),
 		"damage_enabled": damage_enabled,
 		"current_region": String(current_region),
 		"active_quest_id": String(active_quest_id),
@@ -543,8 +697,9 @@ func load_game() -> void:
 	dual_battle_celebrated = bool(data.get("dual_battle_celebrated", false))
 	gate_paid = bool(data.get("gate_paid", false))
 	first_sword_time = float(data.get("first_sword_time", -1.0))
-	shared_hp = int(data.get("shared_hp", 50))
-	shared_hp_max = int(data.get("shared_hp_max", 50))
+	member_hps.clear()
+	for h in data.get("member_hps", []):
+		member_hps.append(int(h)) # _ensure_member_hp가 멤버 수에 맞춰 정리
 	damage_enabled = bool(data.get("damage_enabled", false))
 	current_region = StringName(data.get("current_region", "region1"))
 	active_quest_id = StringName(data.get("active_quest_id", ""))

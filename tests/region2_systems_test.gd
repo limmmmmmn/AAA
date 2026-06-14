@@ -58,12 +58,12 @@ func _ready() -> void:
 	_check(GameState.remote_shop_unlocked, "원격 구매 해금")
 
 	# B-3: 여관
-	GameState.shared_hp = 10
+	GameState.member_hps[0] = 10 # 용사 부상
 	GameState.gold = 100
 	var inn := _field().get_node("Village/Inn")
 	inn._party_inside = true
 	inn._on_confirmed()
-	_check(GameState.shared_hp == GameState.shared_hp_max and GameState.gold == 80, "여관: 20G로 전량 회복")
+	_check(GameState.total_hp() == GameState.total_max_hp() and GameState.gold == 80, "여관: 20G로 전량 회복")
 
 	# B-4: 게시판 의뢰
 	var snake: MonsterData = load("res://data/monsters/snake.tres")

@@ -53,14 +53,16 @@ func _ready() -> void:
 			snakes += 1
 	_check(snakes > 0, "2지역 독사존 활성 (%d마리)" % snakes)
 
-	# 패배 → 교회 부활
+	# 패배 → 교회 부활 (전원 KO)
 	GameState.gold = 80
-	GameState.shared_hp = 1
-	GameState.apply_damage(99)  # → 0, party_defeated
+	for i in GameState.member_count():
+		GameState.member_hps[i] = 0
+	GameState.member_hps[0] = 1
+	GameState.apply_damage(99)  # 마지막 멤버 KO → party_defeated
 	await get_tree().create_timer(2.4).timeout  # 사망 연출 + 부활
 
 	_check(GameState.gold == 40, "패배: 소지금 절반 (80→40)")
-	_check(GameState.shared_hp == GameState.shared_hp_max, "부활: 전량 회복")
+	_check(GameState.total_hp() == GameState.total_max_hp(), "부활: 전량 회복")
 	var church := _current_region().entrance(&"church")
 	var p2: Node2D = get_tree().get_first_node_in_group("party")
 	_check(p2.global_position.distance_to(church) < 2.0, "교회 부활 지점에 배치됨")

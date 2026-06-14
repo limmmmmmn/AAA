@@ -32,6 +32,8 @@ text = "00:00"
 
 [node name="GoldLabel" type="Label" parent="TopBar/HBox"]
 layout_mode = 2
+mouse_filter = 0
+mouse_default_cursor_shape = 2
 theme_override_colors/font_color = Color(1, 0.9, 0.45, 1)
 theme_override_font_sizes/font_size = 9
 text = "골드: 0 G"
@@ -69,15 +71,28 @@ text = "체력"
 layout_mode = 2
 theme_override_constants/separation = 4
 
+[node name="MenuButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -48.0
+offset_top = 4.0
+offset_right = -4.0
+offset_bottom = 22.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 9
+text = "메뉴"
+
 [node name="RemoteShopButton" type="Button" parent="."]
 visible = false
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -84.0
+offset_left = -150.0
 offset_top = 4.0
-offset_right = -4.0
+offset_right = -52.0
 offset_bottom = 22.0
 grow_horizontal = 0
 theme_override_font_sizes/font_size = 9

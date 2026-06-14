@@ -47,12 +47,14 @@ func _ready() -> void:
 	GameState.set_hunted(&"snake", false)
 	_check(not GameState.is_hunted(&"snake"), "독사 사냥 허가 토글 OFF")
 
-	# §9 자동 철수 발동
+	# §9 자동 철수 발동 (총 HP가 25% 이하로 떨어지면)
 	GameState.tactic_retreat_enabled = true
 	GameState.full_heal()
-	GameState.shared_hp = 20            # max 50 → 25%=12.5
+	var quarter := int(GameState.total_max_hp() * 0.25)
+	GameState.member_hps[0] = quarter # 용사
+	GameState.member_hps[1] = 3        # 승려 → 총 HP가 25%보다 살짝 위
 	BattleManager.start_battle([snake]) # 철수가 중단시킬 전투
-	GameState.apply_damage(10)          # → 10 (≤25%) → 철수 발동
+	GameState.apply_damage(quarter)    # 용사 KO → 총 HP 25% 아래 → 철수 발동
 	await get_tree().process_frame
 	_check(_retreat_triggered, "HP 25% 이하 → 자동 철수 발동")
 	_check(BattleManager.active_battles.is_empty(), "철수: 전투 일제 종료")
@@ -67,9 +69,9 @@ func _ready() -> void:
 	_check(_retreat_finished and not party._retreating, "마을 도착 → 철수 완료")
 
 	# 여관 회복 → 위험 해제 (재무장)
-	GameState.shared_hp = 5
+	GameState.member_hps[0] = 5
 	GameState.full_heal()
-	_check(GameState.shared_hp == GameState.shared_hp_max, "여관 전량 회복")
+	_check(GameState.total_hp() == GameState.total_max_hp(), "여관 전량 회복")
 
 	print("RESULT: " + ("ALL PASS" if _fails == 0 else "%d FAILED" % _fails))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://save.json"))

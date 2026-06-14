@@ -8,6 +8,7 @@ extends Control
 @onready var _hp_box: PanelContainer = $HPBox
 @onready var _members: HBoxContainer = $HPBox/HPInner/Members
 @onready var _remote_shop_button: Button = $RemoteShopButton
+@onready var _menu_button: Button = $MenuButton
 @onready var _hunt_panel: PanelContainer = $HuntPanel
 @onready var _hunt_list: VBoxContainer = $HuntPanel/VBox/HuntList
 @onready var _retreat_toggle: CheckButton = $HuntPanel/VBox/RetreatToggle
@@ -28,20 +29,23 @@ func _ready() -> void:
 	EventBus.battle_started.connect(_on_battle_started)
 	EventBus.battle_ended.connect(_on_battle_ended)
 	EventBus.show_toast.connect(_show_toast)
-	EventBus.shared_hp_changed.connect(_on_shared_hp_changed)
+	EventBus.party_hp_changed.connect(_on_party_hp_changed)
 	EventBus.hunt_list_changed.connect(_rebuild_hunt_list)
 	EventBus.companion_joined.connect(_on_companion_joined)
 	_remote_shop_button.pressed.connect(func() -> void: EventBus.party_entered_village.emit())
+	_menu_button.pressed.connect(func() -> void: EventBus.request_menu.emit())
 	_retreat_toggle.toggled.connect(func(on: bool) -> void: GameState.tactic_retreat_enabled = on)
+	_gold_label.gui_input.connect(_on_gold_input)              # 디버그: 골드 클릭 +100
+	EventBus.debug_mode_changed.connect(func(_on: bool) -> void: _refresh())
 	_refresh()
 	_rebuild_hunt_list()
-	# A-3: 1지역에서도 HP를 보여준다 (용사 한 칸, damage off라 줄지 않음)
+	# 1지역에서도 HP를 보여준다 (용사 한 칸, damage off라 줄지 않음)
 	_rebuild_members()
-	_refresh_hp()
+	_on_party_hp_changed()
 
 
-# ─── 멤버별 HP 표시 (A-3) ───
-## shared_hp 단일 풀은 그대로. 표시만 멤버 수로 나눠, 앞(용사) 멤버부터 깎이게 그린다.
+# ─── 멤버별 개별 HP 표시 ───
+## 각 멤버가 자기 HP 바를 갖는다. 적은 멤버 1명을 노려 그 멤버 HP를 깎는다.
 
 func _on_companion_joined(_comp: CompanionData) -> void:
 	_refresh()
@@ -74,25 +78,12 @@ func _rebuild_members() -> void:
 		_member_names.append(m.name)
 
 
-## 받은 데미지를 앞 멤버 칸부터 채워 깎는다. 한 칸이 0이면 "쓰러짐", 다음 칸이 깎인다.
+## 멤버별 개별 HP를 각자 바에 그린다. HP 0이면 "쓰러짐".
 func _refresh_hp() -> void:
-	var count := _member_bars.size()
-	if count == 0:
-		return
-	var maxv := GameState.shared_hp_max
-	var cur := clampi(GameState.shared_hp, 0, maxv)
-	var base := int(maxv / count)
-	var seg_max: Array[int] = []
-	for i in count:
-		seg_max.append(base)
-	seg_max[count - 1] += maxv - base * count   # 나머지는 마지막 멤버가 흡수
-	var dmg := maxv - cur                         # 파티 전체가 받은 누적 데미지
-	for i in count:
-		var loss := clampi(dmg, 0, seg_max[i])
-		dmg -= loss
-		_member_bars[i].max_value = maxi(1, seg_max[i])
-		_member_bars[i].value = seg_max[i] - loss
-		if seg_max[i] > 0 and seg_max[i] - loss == 0:
+	for i in _member_bars.size():
+		_member_bars[i].max_value = maxi(1, GameState.member_max_hp(i))
+		_member_bars[i].value = GameState.member_hp(i)
+		if GameState.damage_enabled and GameState.member_hp(i) <= 0:
 			_member_labels[i].text = "쓰러짐"
 			_member_labels[i].modulate = Color(0.7, 0.35, 0.35)
 		else:
@@ -139,19 +130,28 @@ func _on_battle_ended(_battle: BattleInstance, _result: Dictionary) -> void:
 	_refresh()
 
 
+## 디버그 모드에서 골드 라벨 좌클릭 → 100골드 획득
+func _on_gold_input(event: InputEvent) -> void:
+	if not GameState.debug_mode:
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		GameState.add_gold(100)
+
+
 func _refresh() -> void:
-	_gold_label.text = "골드: %d G" % GameState.gold
+	_gold_label.text = "골드: %d G  [+100]" % GameState.gold if GameState.debug_mode else "골드: %d G" % GameState.gold
 	_battle_label.text = "전투: %d / %d" % [BattleManager.active_battles.size(), GameState.max_battle_windows]
 	_exp_label.text = "EXP: %d   격파: %d" % [GameState.total_exp, GameState.total_battles_won]
 	_remote_shop_button.visible = GameState.remote_shop_unlocked # 주문 카탈로그 (B-6)
 	_retreat_toggle.visible = GameState.tactic_retreat_unlocked   # 자동 철수 (v3 §9)
 
 
-func _on_shared_hp_changed(current: int, maximum: int) -> void:
+func _on_party_hp_changed() -> void:
 	_refresh_hp()
-	# 죽음의 예고 (v3 §7): HP ≤ 30%면 붉은 비네트 + HP바 점멸
-	var ratio := float(current) / float(maxi(1, maximum))
-	var danger := GameState.damage_enabled and current > 0 and ratio <= 0.3
+	# 죽음의 예고 (v3 §7): 파티 총 HP ≤ 30%면 붉은 비네트 + HP바 점멸
+	var cur := GameState.total_hp()
+	var ratio := float(cur) / float(maxi(1, GameState.total_max_hp()))
+	var danger := GameState.damage_enabled and cur > 0 and ratio <= 0.3
 	if danger and not _in_danger:
 		_enter_danger()
 	elif not danger and _in_danger:

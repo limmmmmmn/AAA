@@ -2,20 +2,18 @@ class_name BattleInstance extends RefCounted
 ## 전투 시뮬레이션 본체. 비주얼 없음 — BattleWindow가 시그널을 구독해 그리기만 한다.
 ## enemies는 같은 종의 무리(GroupEncounter, v3 §4). 1마리~3마리. 메탈은 항상 1마리.
 ##
-## A-2 전투 리듬: 한 라운드 = 파티 행동 → (turn_beat_delay 텀) → 적 행동.
-## 라운드 전체 시간은 여전히 turn_interval (전투 길이 불변). 비트 사이 텀만 끼워
-## 누가 때리는지 또렷해지고 A-1 텍스트 로그가 한 줄씩 읽힌다.
+## 전투 리듬 (JRPG): 한 라운드 = 멤버들이 차례로 공격(용사 → 동료 → ...) → 적 반격.
+## 각 행동(비트)이 텍스트 로그 한 줄 + 데미지 팝업으로 또렷이 보인다.
+## 라운드 전체 시간은 여전히 turn_interval (전투 길이 불변) — 비트가 늘면 비트당 시간이 짧아질 뿐.
+## 라운드 총 데미지 = sum(member_attacks) = party_attack 이라 밸런스도 불변.
 
 signal state_updated
-signal party_acted(target_index: int, damage: int, is_crit: bool)  # 파티 행동 (적 -1 = 전체 공격)
+signal party_acted(target_index: int, damage: int, is_crit: bool)  # 멤버 1명의 행동 (적 -1 = 전체 공격)
 signal enemy_acted(damage: int)                                     # 적 반격
-signal log_line(text: String)                                      # 1인칭 전투창 텍스트 로그 (A-1)
+signal log_line(text: String)                                      # 1인칭 전투창 텍스트 로그
 signal finished(result: Dictionary)
 signal fled(message: String)   # 메탈 도주 등 (보상 없음, v3 §2)
 signal aborted                 # 패배로 강제 종료 (B-2)
-
-const _PHASE_WINDUP := 0       # 라운드 시작 대기 (직전 줄을 읽는 시간)
-const _PHASE_PARTY_DONE := 1   # 파티 행동 완료 → 적 행동까지 텀 대기
 
 var enemies: Array[Dictionary] = []   # 각 항목: {"data": MonsterData, "hp": int, "hits": int}
 var origin_pos: Vector2
@@ -23,7 +21,8 @@ var turns: int = 0
 var elapsed: float = 0.0
 var is_finished: bool = false
 
-var _phase: int = _PHASE_WINDUP
+var _beats: Array = []           # 이번 라운드에 남은 행동 큐 (멤버들 → 적)
+var _beats_per_round: int = 2
 var _phase_timer: float = 0.0
 
 
@@ -79,7 +78,7 @@ static func _eulreul(s: String) -> String:
 	return s + ("을" if _has_batchim(s) else "를")
 
 
-# ─── 틱: 라운드 비트 진행 (A-2) ───
+# ─── 틱: 라운드 비트 진행 (멤버별 순차 행동) ───
 
 func tick(delta: float) -> void:
 	if is_finished:
@@ -90,61 +89,65 @@ func tick(delta: float) -> void:
 	_phase_timer += delta
 	# 큰 수동 틱(테스트)도 정확히 처리되도록 while로 비트를 소진한다.
 	while not is_finished:
-		var beat := _beat_delay()
-		var windup: float = maxf(0.0, GameState.turn_interval - beat)
-		if _phase == _PHASE_WINDUP:
-			if _phase_timer < windup:
-				break
-			_phase_timer -= windup
-			_party_beat()
-			_phase = _PHASE_PARTY_DONE
-		else:
-			if _phase_timer < beat:
-				break
-			_phase_timer -= beat
-			_enemy_beat()
-			_phase = _PHASE_WINDUP
+		if _beats.is_empty():
+			_start_round()
+		var beat_time: float = GameState.turn_interval / float(maxi(1, _beats_per_round))
+		if _phase_timer < beat_time:
+			break
+		_phase_timer -= beat_time
+		_run_beat(_beats.pop_front())
 
 
-## 비트 텀은 turn_interval 절반을 넘지 않게 (라운드 총합 = turn_interval 보장, windup>0 보장).
-func _beat_delay() -> float:
-	return minf(GameState.turn_beat_delay, GameState.turn_interval * 0.5)
-
-
-## 회심 여부에 따른 1회 공격 데미지 (방어력 적용/무시)
-func _roll_damage(target_defense: int) -> Array:
-	var is_crit: bool = randf() < GameState.crit_chance
-	var dmg: int = GameState.party_attack if is_crit else maxi(GameState.party_attack - target_defense, 0)
-	return [dmg, is_crit]
-
-
-func _party_beat() -> void:
+## 새 라운드: 멤버들이 차례로 공격 → 적들이 각자 멤버 1명씩 반격.
+func _start_round() -> void:
 	turns += 1
+	_beats.clear()
+	for i in GameState.member_count():
+		_beats.append({"t": "member", "i": i})
+	for j in enemies.size():
+		_beats.append({"t": "enemy", "i": j})
+	_beats_per_round = _beats.size()
+
+
+func _run_beat(beat: Dictionary) -> void:
+	if beat.t == "member":
+		_member_attack(int(beat.i))
+	else:
+		_enemy_attack(int(beat.i))
+
+
+## 멤버 1명의 공격 (회심은 멤버별로 굴린다). 쓰러진 멤버는 행동하지 않는다.
+func _member_attack(index: int) -> void:
 	var target := _front_index()
-	if target == -1:
+	if target == -1 or not GameState.member_alive(index):
 		return
-	var roll := _roll_damage(enemies[target].data.defense)
-	var party_damage: int = roll[0]
-	var is_crit: bool = roll[1]
+	var attacks := GameState.member_attacks()
+	if index >= attacks.size():
+		return
+	var atk: int = attacks[index]
+	var mname: String = _member_name(index)
+	var is_crit: bool = randf() < GameState.crit_chance
 	var before: Array[int] = []
 	for e in enemies:
 		before.append(int(e.hp))
+	var shown := 0
 	if GameState.all_attack:
-		# 베기라: 살아있는 모든 적을 동시에 공격 (각자 방어력 적용, 회심은 공유)
+		# 베기라: 살아있는 모든 적을 동시에 공격 (각자 방어력 적용)
 		for e in enemies:
 			if e.hp > 0:
-				var d: int = GameState.party_attack if is_crit else maxi(GameState.party_attack - int(e.data.defense), 0)
+				var d: int = atk if is_crit else maxi(atk - int(e.data.defense), 0)
 				e.hp = maxi(0, e.hp - d)
 				e.hits += 1
-		log_line.emit(_attack_text(is_crit, party_damage, true))
-		party_acted.emit(-1, party_damage, is_crit)
+		shown = atk if is_crit else maxi(atk - int(enemies[target].data.defense), 0)
+		log_line.emit(_member_attack_text(mname, is_crit, shown, true))
+		party_acted.emit(-1, shown, is_crit)
 	else:
-		enemies[target].hp = maxi(0, enemies[target].hp - party_damage)
+		shown = atk if is_crit else maxi(atk - int(enemies[target].data.defense), 0)
+		enemies[target].hp = maxi(0, enemies[target].hp - shown)
 		enemies[target].hits += 1
-		log_line.emit(_attack_text(is_crit, party_damage, false))
-		party_acted.emit(target, party_damage, is_crit)
+		log_line.emit(_member_attack_text(mname, is_crit, shown, false))
+		party_acted.emit(target, shown, is_crit)
 	state_updated.emit()
-	# 이번 비트에 쓰러진 적 처리 (kill 로그)
 	for i in enemies.size():
 		if before[i] > 0 and enemies[i].hp == 0:
 			log_line.emit("%s 쓰러뜨렸다!" % _eulreul(enemies[i].data.display_name))
@@ -155,33 +158,38 @@ func _party_beat() -> void:
 	_check_hit_flee()
 
 
-func _enemy_beat() -> void:
-	if is_finished:
-		return
-	var attacker := _front_index()
-	var incoming: int = 0
-	for e in enemies:
-		if e.hp > 0:
-			incoming += int(e.data.attack)
-	if incoming <= 0:
-		return
-	var attacker_name: String = enemies[attacker].data.display_name if attacker >= 0 else "적"
+## 적 1마리의 반격 — 살아있는 멤버 1명을 노려 그 멤버의 HP를 깎는다.
+func _enemy_attack(j: int) -> void:
+	if is_finished or j < 0 or j >= enemies.size() or enemies[j].hp <= 0:
+		return # 죽은 적은 반격하지 않는다
+	var aname: String = enemies[j].data.display_name
+	var atk: int = int(enemies[j].data.attack)
+	if atk <= 0:
+		return # 공격력 0 (메탈) — 반격 없음
 	if not GameState.damage_enabled:
-		# 1지역은 죽을 위험이 없다 — 반격은 가볍게 막아낸다(허수 데미지 표시 안 함)
-		log_line.emit("%s의 공격! 가볍게 막아냈다" % attacker_name)
+		# 1지역은 죽을 위험이 없다 — 반격은 가볍게 막아낸다
+		log_line.emit("%s의 공격! 파티가 가볍게 막아냈다" % aname)
 		return
-	log_line.emit("%s의 공격! %d의 데미지" % [attacker_name, incoming])
-	enemy_acted.emit(incoming)
-	GameState.apply_damage(incoming)
+	var target := GameState.random_living_member()
+	var tname := _member_name(target)
+	log_line.emit("%s의 공격! %s에게 %d의 데미지" % [aname, tname, atk])
+	enemy_acted.emit(atk)
+	GameState.damage_member(target, atk)
 
 
-func _attack_text(is_crit: bool, dmg: int, all_hit: bool) -> String:
+func _member_name(index: int) -> String:
+	var members := GameState.party_members()
+	return members[index].name if index >= 0 and index < members.size() else "동료"
+
+
+func _member_attack_text(mname: String, is_crit: bool, dmg: int, all_hit: bool) -> String:
 	if is_crit:
-		return "회심의 일격! %d의 데미지" % dmg
-	var who := GameState.config.hero_name
+		return "%s의 회심의 일격! %d의 데미지" % [mname, dmg]
+	if dmg <= 0:
+		return "%s의 공격! 통하지 않는다" % mname
 	if all_hit:
-		return "%s 일행의 일제 공격! %d의 데미지" % [who, dmg]
-	return "%s의 공격! %d의 데미지" % [who, dmg]
+		return "%s의 일제 공격! %d의 데미지" % [mname, dmg]
+	return "%s의 공격! %d의 데미지" % [mname, dmg]
 
 
 func _check_hit_flee() -> bool:

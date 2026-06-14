@@ -5,25 +5,29 @@ class_name Party extends CharacterBody2D
 ## 자동이동 우선순위 (A-5):
 ##   1. 수동 입력이 항상 최우선 — 입력 중엔 자동 추적 정지
 ##   2. 입력이 멈춘 뒤 auto_resume_delay 경과 시 자동 추적 재개
-##   3. 마을(안전지대) 타일 위에서는 자동 추적 비활성
+## (마을 안에서도 자동 추적은 동작한다 — 몬스터가 마을에 못 들어오므로 가까운 바깥 사냥감으로 향한다)
 
 @export var auto_resume_delay: float = 1.5
-@export var trail_spacing_frames: int = 9   # 동료 줄줄이 간격 (A-4). 클수록 멤버 간 거리 ↑
+@export var follow_gap: float = 15.0   # 동료 줄줄이 행군 간격(px) — 멤버 간 거리
 
 @onready var _encounter_area: Area2D = $EncounterArea
-@onready var _sprite: Sprite2D = $Sprite2D
+@onready var _sprite: DirSprite = $Sprite2D
 
 var _field: Node = null
 var _idle_time: float = 0.0   # 마지막 수동 입력 이후 경과 시간
-var _companion_sprites: Array[Sprite2D] = []
-var _trail: Array[Vector2] = []  # 용사의 과거 위치 버퍼 (A-4)
+var _companion_sprites: Array[DirSprite] = []
+var _companion_prev: Array[Vector2] = []   # 동료 방향 애니용 직전 위치
+var _path: Array[Vector2] = []   # 용사가 지나온 경로 점(촘촘), 끝이 최신 — 동료 줄줄이 추적용
+var _last_pos: Vector2 = Vector2.ZERO
 var _retreating: bool = false
 var _retreat_target: Vector2 = Vector2.ZERO
+var _retreat_hold: bool = false   # 철수 직후 마을에서 대기 — 수동 입력 전엔 자동으로 다시 나가지 않는다
 
 
 func _ready() -> void:
 	add_to_group("party")
 	_field = _find_region()
+	_sprite.z_index = 1 # 용사는 동료보다 앞에 그린다 (동료 z=0, 바닥 타일맵 z=0보다 위)
 	EventBus.companion_joined.connect(_on_companion_joined)
 	EventBus.tactic_retreat_triggered.connect(_on_retreat)
 	_refresh_companions()
@@ -54,79 +58,128 @@ func _do_retreat(_delta: float) -> void:
 	var to_target := _retreat_target - global_position
 	if to_target.length() < 10.0 or (_field and _field.is_village(global_position)):
 		_retreating = false
+		_retreat_hold = true # 직접 움직이기 전까지 자동 추적으로 다시 나가지 않는다
 		velocity = Vector2.ZERO
 		EventBus.tactic_retreat_finished.emit()
 		EventBus.show_toast.emit("마을로 무사히 돌아왔다.")
 		return
 	velocity = to_target.normalized() * GameState.move_speed
 	move_and_slide()
-	_update_trail()
+	_update_hero_anim()
+	_update_follow()
+
+
+## 용사 스프라이트를 실제 이동 속도로 방향·걷기 애니 갱신.
+func _update_hero_anim() -> void:
+	var moving := velocity.length() > 4.0
+	if moving:
+		_sprite.face(velocity)
+	_sprite.set_moving(moving)
 
 
 func _on_companion_joined(_comp: CompanionData) -> void:
 	_refresh_companions()
 
 
-## 동료 줄줄이 이동 (A-4): 용사 뒤를 줄지어 따라온다 (드퀘 4 행군).
-## 동료 스프라이트는 Party의 자식 — 트레일 버퍼를 샘플링해 위치만 재생한다(물리 추적 아님).
-## 1지역(용사 1인)에선 동료가 없어 트레일도 동작하지 않는다.
+## 동료 줄줄이 이동 (고전 JRPG 행군): 용사가 지나온 경로를 따라 일정 간격으로 줄지어 따라온다.
+## 동료 스프라이트는 Party의 자식이지만 매 프레임 글로벌 위치를 경로 점으로 덮어써 배치한다.
 func _refresh_companions() -> void:
 	for s in _companion_sprites:
 		s.queue_free()
 	_companion_sprites.clear()
 	for comp: CompanionData in GameState.companions:
-		var s := Sprite2D.new()
+		var s := DirSprite.new()
 		s.texture = comp.sprite
-		s.z_index = -1 # 용사 뒤
-		s.scale = Vector2(0.8, 0.8)
+		s.z_index = 0       # 바닥 타일맵(z=0) 위, 용사(z=1) 아래 — z_index -1이면 바닥에 가려졌었다
+		s.z_as_relative = false
+		s.scale = Vector2(0.85, 0.85)
 		add_child(s)
 		_companion_sprites.append(s)
-	_reset_trail()
+	_reset_follow()
 
 
-## 동료를 용사의 N프레임 지연 위치로 이동 (연참 / trail-follow, A-4).
-func _update_trail() -> void:
+## 거리 기반 브레드크럼: 용사 경로에 점을 촘촘히 남기고, 멤버 i를 경로상
+## (i+1)*follow_gap 만큼 뒤의 점에 놓는다 (속도·프레임레이트와 무관하게 간격 일정).
+func _update_follow() -> void:
 	if _companion_sprites.is_empty():
 		return
-	var pos := global_position
-	# 지역 전환·부활 등 순간이동은 트레일을 끊어 동료가 화면을 가로질러 날아오지 않게 한다.
-	if not _trail.is_empty() and pos.distance_to(_trail[_trail.size() - 1]) > 64.0:
-		_reset_trail()
-	_trail.append(pos)
-	var max_len := _companion_sprites.size() * trail_spacing_frames + 2
-	while _trail.size() > max_len:
-		_trail.remove_at(0)
-	for j in _companion_sprites.size():
-		var idx := _trail.size() - 1 - (j + 1) * trail_spacing_frames
-		_companion_sprites[j].global_position = _trail[idx] if idx >= 0 else _trail[0]
+	var head := global_position
+	# 지역 전환·부활·철수 등 순간이동이면 줄을 끊고 용사에게 모은다.
+	if head.distance_to(_last_pos) > 64.0:
+		_reset_follow()
+		return
+	_last_pos = head
+	if _path.is_empty() or _path[_path.size() - 1].distance_to(head) >= 3.0:
+		_path.append(head)
+		var max_points := int(follow_gap * (_companion_sprites.size() + 1) / 3.0) + 8
+		while _path.size() > max_points:
+			_path.remove_at(0)
+	for i in _companion_sprites.size():
+		var pos := _path_point_back((i + 1) * follow_gap)
+		var prev: Vector2 = _companion_prev[i] if i < _companion_prev.size() else pos
+		var move := pos - prev
+		_companion_sprites[i].global_position = pos
+		var moving := move.length() > 0.4
+		if moving:
+			_companion_sprites[i].face(move)
+		_companion_sprites[i].set_moving(moving)
+		if i < _companion_prev.size():
+			_companion_prev[i] = pos
 
 
-func _reset_trail() -> void:
-	_trail.clear()
+## 경로 끝(용사)에서 dist 만큼 거슬러 올라간 지점 (선분 보간).
+func _path_point_back(dist: float) -> Vector2:
+	var remaining := dist
+	var i := _path.size() - 1
+	while i > 0:
+		var a := _path[i]
+		var b := _path[i - 1]
+		var seg := a.distance_to(b)
+		if seg >= remaining:
+			return a.lerp(b, remaining / seg) if seg > 0.0 else a
+		remaining -= seg
+		i -= 1
+	return _path[0] if not _path.is_empty() else global_position
+
+
+func _reset_follow() -> void:
+	_path.clear()
+	_path.append(global_position)
+	_last_pos = global_position
+	_companion_prev.clear()
 	for s in _companion_sprites:
 		s.global_position = global_position
+		s.set_moving(false)
+		_companion_prev.append(global_position)
 
 
 func _physics_process(delta: float) -> void:
 	if _retreating: # 자동 철수 중에는 다른 이동/인카운트 무시
 		_do_retreat(delta)
 		return
-	# 전투 중 이동 규칙: 해금 전엔 전투 활성 중 정지
-	var battle_locked := not BattleManager.active_battles.is_empty() and not GameState.can_move_in_battle
-	if battle_locked:
+	# 전투창이 가득 차면 정지. 멀티창 해금 전엔 1칸=가득이라 첫 전투부터 멈추고,
+	# 2칸이면 1개 떠 있을 땐 걸을 수 있으며 2개로 가득 차면 멈춘다.
+	if _movement_locked():
 		velocity = Vector2.ZERO
 	else:
 		var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 		if dir != Vector2.ZERO:
 			_idle_time = 0.0
+			_retreat_hold = false # 플레이어가 조작을 잡으면 대기 해제
 		else:
 			_idle_time += delta
 			if _can_auto_hunt():
 				dir = _auto_hunt_direction()
 		velocity = dir * GameState.move_speed
 	move_and_slide()
-	_update_trail()
+	_update_hero_anim()
+	_update_follow()
 	_check_encounters()
+
+
+## 전투창이 가득 찼는가 (= 새 전투를 더 못 여는 상태). 가득이면 필드 이동을 멈춘다.
+func _movement_locked() -> bool:
+	return BattleManager.active_battles.size() >= GameState.max_battle_windows
 
 
 func _can_auto_hunt() -> bool:
@@ -134,7 +187,7 @@ func _can_auto_hunt() -> bool:
 		return false
 	if _idle_time < auto_resume_delay:           # 수동 입력 직후 유예
 		return false
-	if _field and _field.is_village(global_position): # 마을 = 안전지대
+	if _retreat_hold:                            # 자동 철수 직후 마을 대기 (v3 §9)
 		return false
 	return true
 
