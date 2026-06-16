@@ -16,3 +16,6 @@ class_name MonsterData extends Resource
 @export var flee_after_seconds: float = 0.0 # 전투 시작 N초 경과 시 도주 (0이면 시간 도주 없음)
 @export var allow_group: bool = true        # 무리 출현 허용 (메탈은 false → 항상 1마리, v3 §4)
 @export var hunt_default: bool = true       # 사냥 허가 기본값 (오크처럼 위협적이면 false, v3 §8)
+# ─── 드롭 (전투 → 마을 재료 루프) ───
+@export var stone_drop: float = 0.0         # 처치 시 돌멩이 1개 드롭 확률
+@export var sword_drop: float = 0.0         # 처치 시 녹슨 검 1개 드롭 확률

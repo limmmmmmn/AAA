@@ -10,8 +10,10 @@ extends Control
 func _ready() -> void:
 	visible = false
 	process_mode = Node.PROCESS_MODE_WHEN_PAUSED # 정지 중에도 조작 가능 (v3 §5)
+	add_to_group("closable_modal") # Esc로 닫히는 모달
 	EventBus.request_quest_board.connect(_open)
 	EventBus.party_exited_village.connect(_close)
+	EventBus.request_close_modals.connect(_close) # Esc
 	EventBus.quest_accepted.connect(_on_quest_changed)
 	EventBus.quest_completed.connect(_on_quest_changed)
 	EventBus.monster_died.connect(_on_monster_died)

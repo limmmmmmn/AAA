@@ -1,27 +1,20 @@
-extends Area2D
-## 2지역 여관 (B-3). 파티 진입 → "하룻밤 N G" 확인 팝업 → 지불 시 전량 회복.
+extends "res://scenes/field/interactable.gd"
+## 2지역 여관 (B-3). 가까이 가서 Space/[여관]로 "하룻밤 N G" 확인 → 지불 시 전량 회복.
 ## 자동 귀환/자동 숙박은 넣지 않는다 — HP를 보고 플레이어가 스스로 내리는 결정.
 
 @export var cost: int = 20
 
 @onready var _dialog: ConfirmationDialog = $ConfirmationDialog
 
-var _party_inside: bool = false
 
-
-func _ready() -> void:
-	body_entered.connect(_on_body_entered)
-	body_exited.connect(_on_body_exited)
+func _setup() -> void:
 	_dialog.process_mode = Node.PROCESS_MODE_WHEN_PAUSED # 정지 중에도 조작 (v3 §5)
 	_dialog.confirmed.connect(_on_confirmed)
 	# 팝업 동안 세계 정지, 닫히면 재개
 	_dialog.visibility_changed.connect(func() -> void: get_tree().paused = _dialog.visible)
 
 
-func _on_body_entered(body: Node2D) -> void:
-	if not body is Party:
-		return
-	_party_inside = true
+func _interact() -> void:
 	if GameState.total_hp() >= GameState.total_max_hp():
 		EventBus.show_toast.emit("여관: 아직 쌩쌩하구먼. 다음에 오게.")
 		return
@@ -32,15 +25,12 @@ func _on_body_entered(body: Node2D) -> void:
 	_dialog.popup_centered()
 
 
-func _on_body_exited(body: Node2D) -> void:
-	if body is Party:
-		_party_inside = false
-
-
 func _on_confirmed() -> void:
-	if not _party_inside:
-		return
 	if GameState.try_spend(cost):
 		GameState.full_heal()
 		EventBus.inn_rested.emit()
 		EventBus.show_toast.emit("♪ 푹 잤다! 체력이 가득 찼다.")
+
+
+func _prompt_text() -> String:
+	return "여관 [Space]"

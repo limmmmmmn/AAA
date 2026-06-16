@@ -70,4 +70,4 @@ theme_override_constants/v_separation = 4
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 9
-text = "닫기 (마을을 떠나면 자동으로 닫힘)"
+text = "닫기 (Esc / 멀어지면)"

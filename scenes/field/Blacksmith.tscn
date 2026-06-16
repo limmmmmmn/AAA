@@ -1,0 +1,40 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/field/blacksmith.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/anvil.svg" id="2"]
+
+[sub_resource type="RectangleShape2D" id="shape"]
+size = Vector2(58, 54)
+
+[node name="Blacksmith" type="Area2D"]
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("1")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("shape")
+
+[node name="Label" type="Label" parent="."]
+offset_left = -30.0
+offset_top = -40.0
+offset_right = 30.0
+offset_bottom = -28.0
+theme_override_colors/font_color = Color(0.9, 0.9, 1, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.1, 0.15, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 1
+text = "대장간"
+
+[node name="Prompt" type="Button" parent="."]
+visible = false
+offset_left = -40.0
+offset_top = 22.0
+offset_right = 40.0
+offset_bottom = 38.0
+focus_mode = 0
+theme_override_font_sizes/font_size = 8
+text = "대장간 열기 [Space]"

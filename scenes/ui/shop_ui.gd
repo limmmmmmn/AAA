@@ -9,25 +9,29 @@ extends Control
 
 func _ready() -> void:
 	visible = false
-	process_mode = Node.PROCESS_MODE_WHEN_PAUSED # 정지 중에도 조작 가능 (v3 §5)
-	EventBus.party_entered_village.connect(_open)
+	add_to_group("closable_modal") # Esc로 닫히는 모달
+	EventBus.party_entered_village.connect(_open) # 원격 상점 버튼/호환
+	EventBus.request_shop.connect(_open)          # 상점 [열기]/Space
+	EventBus.request_shop_close.connect(_close)   # 상점 [닫기]/멀어짐
 	EventBus.party_exited_village.connect(_close)
+	EventBus.request_close_modals.connect(_close) # Esc
 	EventBus.gold_changed.connect(_on_gold_changed)
 	EventBus.upgrade_purchased.connect(_on_upgrade_purchased)
 	_close_button.pressed.connect(_close)
 
 
+## 상점 패널만 띄운다. 일시정지 안 함 (대장간처럼 계속 움직일 수 있음).
 func _open() -> void:
 	visible = true
-	get_tree().paused = true # 메뉴를 열면 세계가 멈춘다 (v3 §5)
 	_rebuild()
 
 
+## [닫기]/Esc/멀어짐 → 패널을 내린다. 상점 버튼 동기화를 위해 shop_closed 통지.
 func _close() -> void:
 	if not visible:
 		return
 	visible = false
-	get_tree().paused = false
+	EventBus.shop_closed.emit()
 
 
 func _on_gold_changed(_amount: int) -> void:

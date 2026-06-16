@@ -58,4 +58,4 @@ theme_override_constants/separation = 5
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 9
-text = "닫기"
+text = "닫기 (Esc)"

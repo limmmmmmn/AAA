@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3]
+[gd_scene load_steps=32 format=3]
 
 [ext_resource type="Script" path="res://scenes/field/field.gd" id="1"]
 [ext_resource type="TileSet" path="res://data/tileset.tres" id="2"]
@@ -17,6 +17,10 @@
 [ext_resource type="Script" path="res://scenes/field/companion_preview.gd" id="15"]
 [ext_resource type="Texture2D" path="res://assets/priest_silhouette.svg" id="16"]
 [ext_resource type="Texture2D" path="res://assets/priest.svg" id="17"]
+[ext_resource type="PackedScene" path="res://scenes/field/Pot.tscn" id="18"]
+[ext_resource type="PackedScene" path="res://scenes/field/TreasureChest.tscn" id="19"]
+[ext_resource type="PackedScene" path="res://scenes/field/Blacksmith.tscn" id="20"]
+[ext_resource type="PackedScene" path="res://scenes/field/SparkleGround.tscn" id="21"]
 
 [sub_resource type="RectangleShape2D" id="shop_rect"]
 size = Vector2(88, 72)
@@ -68,6 +72,16 @@ texture = ExtResource("9")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Village/ShopBuilding"]
 shape = SubResource("shop_rect")
 
+[node name="Prompt" type="Button" parent="Village/ShopBuilding"]
+visible = false
+offset_left = -46.0
+offset_top = 40.0
+offset_right = 46.0
+offset_bottom = 56.0
+focus_mode = 0
+theme_override_font_sizes/font_size = 8
+text = "상점 열기 [Space]"
+
 [node name="ElderNPC" type="Area2D" parent="Village"]
 position = Vector2(798, 444)
 collision_layer = 0
@@ -90,6 +104,19 @@ theme_override_colors/font_outline_color = Color(0.2, 0.12, 0, 1)
 theme_override_constants/outline_size = 6
 theme_override_font_sizes/font_size = 24
 text = "!"
+
+[node name="Pot" parent="Village" instance=ExtResource("18")]
+position = Vector2(615, 550)
+
+[node name="TreasureChest" parent="Village" instance=ExtResource("19")]
+position = Vector2(810, 550)
+
+[node name="Blacksmith" parent="Village" instance=ExtResource("20")]
+position = Vector2(710, 500)
+
+[node name="SparkleGround" parent="Village" instance=ExtResource("21")]
+position = Vector2(625, 620)
+region_id = &"region1"
 
 [node name="Party" parent="." instance=ExtResource("3")]
 position = Vector2(720, 576)

@@ -61,8 +61,7 @@ func _ready() -> void:
 	GameState.member_hps[0] = 10 # 용사 부상
 	GameState.gold = 100
 	var inn := _field().get_node("Village/Inn")
-	inn._party_inside = true
-	inn._on_confirmed()
+	inn._on_confirmed() # 확인 팝업 승낙 → 숙박 결제
 	_check(GameState.total_hp() == GameState.total_max_hp() and GameState.gold == 80, "여관: 20G로 전량 회복")
 
 	# B-4: 게시판 의뢰

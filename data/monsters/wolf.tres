@@ -14,4 +14,5 @@ gold_reward = 14
 exp_reward = 5
 move_speed = 60.0
 erratic_movement = false
-flees_after_sec = 0.0
+stone_drop = 0.3
+sword_drop = 0.1

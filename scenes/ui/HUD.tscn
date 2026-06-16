@@ -17,7 +17,7 @@ script = ExtResource("1")
 layout_mode = 0
 offset_left = 4.0
 offset_top = 4.0
-offset_right = 320.0
+offset_right = 400.0
 offset_bottom = 20.0
 
 [node name="HBox" type="HBoxContainer" parent="TopBar"]
@@ -37,6 +37,12 @@ mouse_default_cursor_shape = 2
 theme_override_colors/font_color = Color(1, 0.9, 0.45, 1)
 theme_override_font_sizes/font_size = 9
 text = "골드: 0 G"
+
+[node name="GemLabel" type="Label" parent="TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 9
+text = "보석: 0"
 
 [node name="BattleLabel" type="Label" parent="TopBar/HBox"]
 layout_mode = 2
@@ -129,6 +135,23 @@ visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 9
 text = "자동 철수"
+
+[node name="DigButton" type="Button" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -132.0
+offset_top = -28.0
+offset_right = -4.0
+offset_bottom = -4.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 10
+text = "땅파기"
 
 [node name="DangerVignette" type="TextureRect" parent="."]
 layout_mode = 1

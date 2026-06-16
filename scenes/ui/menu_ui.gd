@@ -20,14 +20,31 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"): # Esc
-		_toggle()
-		get_viewport().set_input_as_handled()
+		if _handle_escape():
+			get_viewport().set_input_as_handled()
 
 
-func _toggle() -> void:
+## Esc 한 방으로: 메뉴 열려 있으면 닫고, 다른 모달이 열려 있으면 그걸 닫고,
+## 아무것도 없으면(필드) 메뉴를 연다. 처리했으면 true.
+func _handle_escape() -> bool:
 	if visible:
 		_close()
-	elif not get_tree().paused: # 다른 UI(상점/게시판/여관)가 열려 있으면(=paused) 메뉴는 열지 않는다
+		return true
+	var open_modals := get_tree().get_nodes_in_group("closable_modal").filter(
+		func(m: Node) -> bool: return m.visible)
+	if not open_modals.is_empty(): # 상점/대장간/게시판 등 → 닫기
+		EventBus.request_close_modals.emit()
+		return true
+	if get_tree().paused: # 여관 팝업 등 다른 정지 요소는 스스로 Esc 처리하게 둔다
+		return false
+	_open() # 필드에서 Esc → 메뉴
+	return true
+
+
+func _toggle() -> void: # HUD "메뉴" 버튼용
+	if visible:
+		_close()
+	elif not get_tree().paused:
 		_open()
 
 

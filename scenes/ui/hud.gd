@@ -3,6 +3,7 @@ extends Control
 
 @onready var _time_label: Label = $TopBar/HBox/TimeLabel
 @onready var _gold_label: Label = $TopBar/HBox/GoldLabel
+@onready var _gem_label: Label = $TopBar/HBox/GemLabel
 @onready var _battle_label: Label = $TopBar/HBox/BattleLabel
 @onready var _exp_label: Label = $TopBar/HBox/ExpLabel
 @onready var _hp_box: PanelContainer = $HPBox
@@ -13,6 +14,7 @@ extends Control
 @onready var _hunt_list: VBoxContainer = $HuntPanel/VBox/HuntList
 @onready var _retreat_toggle: CheckButton = $HuntPanel/VBox/RetreatToggle
 @onready var _vignette: TextureRect = $DangerVignette
+@onready var _dig_button: Button = $DigButton
 @onready var _toast: Label = $ToastLabel
 
 var _member_bars: Array[ProgressBar] = []
@@ -30,14 +32,19 @@ func _ready() -> void:
 	EventBus.battle_ended.connect(_on_battle_ended)
 	EventBus.show_toast.connect(_show_toast)
 	EventBus.party_hp_changed.connect(_on_party_hp_changed)
+	EventBus.gems_changed.connect(func(_g: int) -> void: _refresh())
 	EventBus.hunt_list_changed.connect(_rebuild_hunt_list)
 	EventBus.companion_joined.connect(_on_companion_joined)
 	_remote_shop_button.pressed.connect(func() -> void: EventBus.party_entered_village.emit())
 	_menu_button.pressed.connect(func() -> void: EventBus.request_menu.emit())
 	_retreat_toggle.toggled.connect(func(on: bool) -> void: GameState.tactic_retreat_enabled = on)
+	_dig_button.pressed.connect(_on_dig_pressed)
+	_dig_button.focus_mode = Control.FOCUS_NONE # Space는 상호작용 전용 (땅파기 재발동 방지)
+	EventBus.dig_changed.connect(_refresh_dig)
 	_gold_label.gui_input.connect(_on_gold_input)              # 디버그: 골드 클릭 +100
 	EventBus.debug_mode_changed.connect(func(_on: bool) -> void: _refresh())
 	_refresh()
+	_refresh_dig()
 	_rebuild_hunt_list()
 	# 1지역에서도 HP를 보여준다 (용사 한 칸, damage off라 줄지 않음)
 	_rebuild_members()
@@ -116,6 +123,40 @@ func _process(_delta: float) -> void:
 		_time_label.text = "%d:%02d:%02d" % [total / 3600, (total % 3600) / 60, total % 60]
 	else:
 		_time_label.text = "%02d:%02d" % [total / 60, total % 60]
+	if GameState.has_shovel:
+		_refresh_dig() # 쿨타임 카운트다운 갱신
+
+
+# ─── 땅파기 (삽 보유 시 노출) ───
+
+func _on_dig_pressed() -> void:
+	var r := GameState.do_dig()
+	if not r.ok:
+		return
+	if r.sparkle:
+		_show_toast("✨ 반짝이는 땅에서 %s!" % r.msg)
+	elif r.msg != "":
+		_show_toast("땅속에서 %s!" % r.msg)
+	else:
+		_show_toast("아무것도 나오지 않았다...")
+
+
+func _refresh_dig() -> void:
+	_dig_button.visible = GameState.has_shovel
+	if not GameState.has_shovel:
+		return
+	if not GameState.dig_ready():
+		_dig_button.disabled = true
+		_dig_button.text = "땅파기 (%s)" % TownFmt.time(GameState.dig_remaining())
+		_dig_button.modulate = Color(1, 1, 1)
+	elif GameState.has_sparkling_ground and GameState.party_on_sparkle:
+		_dig_button.disabled = false
+		_dig_button.text = "✨ 반짝임! 파기"
+		_dig_button.modulate = Color(1, 0.95, 0.5)
+	else:
+		_dig_button.disabled = false
+		_dig_button.text = "땅파기"
+		_dig_button.modulate = Color(1, 1, 1)
 
 
 func _on_gold_changed(_amount: int) -> void:
@@ -140,10 +181,12 @@ func _on_gold_input(event: InputEvent) -> void:
 
 func _refresh() -> void:
 	_gold_label.text = "골드: %d G  [+100]" % GameState.gold if GameState.debug_mode else "골드: %d G" % GameState.gold
+	_gem_label.text = "보석: %d" % GameState.gems
 	_battle_label.text = "전투: %d / %d" % [BattleManager.active_battles.size(), GameState.max_battle_windows]
 	_exp_label.text = "EXP: %d   격파: %d" % [GameState.total_exp, GameState.total_battles_won]
 	_remote_shop_button.visible = GameState.remote_shop_unlocked # 주문 카탈로그 (B-6)
 	_retreat_toggle.visible = GameState.tactic_retreat_unlocked   # 자동 철수 (v3 §9)
+	_refresh_dig()                                               # 삽 구매 시 버튼 노출
 
 
 func _on_party_hp_changed() -> void:

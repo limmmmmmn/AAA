@@ -27,10 +27,10 @@ func _ready() -> void:
 
 	# A-2: 시작 시 슬라임존만 활성 (6마리), 박쥐/정예존은 잠금
 	_check(get_tree().get_nodes_in_group("monsters").size() == 6, "시작 시 슬라임존만 활성(6마리)")
-	_check(GameState.catalog.size() == 16, "업그레이드 카탈로그 16종 (시야 2종은 무료 보상으로 제거)")
-	# 1지역 상점엔 1지역 아이템만 노출 (시야 제거 → combat 5 + field 4)
+	_check(GameState.catalog.size() == 19, "업그레이드 카탈로그 19종 (+삽/좋은 삽/꼬마돼지)")
+	# 1지역 상점엔 1지역 아이템만 노출. 삽 노출, 좋은 삽/꼬마돼지는 삽 보유 전엔 숨김
 	_check(GameState.upgrades_for_axis("combat").size() == 5, "1지역 상점 전투 5종")
-	_check(GameState.upgrades_for_axis("field").size() == 4, "1지역 상점 필드 4종 (시야 제외)")
+	_check(GameState.upgrades_for_axis("field").size() == 5, "1지역 상점 필드 5종 (+삽, 좋은 삽/꼬마돼지는 삽 후)")
 
 	# A-1: 솔로 용사 — 파티 멤버 1명, 기본 공격력 3
 	_check(GameState.party_members().size() == 1, "파티 = 용사 1인")

@@ -25,5 +25,26 @@ class_name GameConfig extends Resource
 @export_group("Metal Slime")
 @export var metal_slime_unlock_gold_earned: int = 300 # 누적 획득 골드 도달 시 등장 시작
 
+@export_group("Town Objects")
+@export var pot_cooldown: float = 30.0          # 항아리 복구 쿨타임(초, play_time 기준)
+@export var chest_cooldown: float = 180.0       # 보물상자 복구 쿨타임
+@export var sword_max_level: int = 5            # 녹슨 검 최대 강화
+@export var sword_sell_gems: int = 1           # +최대 녹슨 검 판매 시 보석
+@export var auto_pot_gem_cost: int = 1         # 자동 항아리꾼 보석 가격
+@export var auto_enhance_gem_cost: int = 3     # 자동 강화 보석 가격
+@export var auto_deliver_gem_cost: int = 5     # 자동 납품 보석 가격
+@export var auto_forge_interval: float = 1.5   # 자동 강화/납품 1스텝 간격(초)
+@export var sword_attack_per_level: int = 2    # 장착 검: 강화 수치당 파티 공격력
+@export var chest_key_unlock_opens: int = 3    # 보물상자를 N번 열면 열쇠 시스템 해금
+
+@export_group("Digging")
+@export var dig_base_cooldown: float = 60.0     # 삽 기본 쿨타임(초). 항아리보다 길게
+@export var dig_cooldown_per_level: float = 10.0 # 좋은 삽 1단계당 쿨타임 감소
+@export var dig_min_cooldown: float = 20.0      # 쿨타임 하한
+@export var dig_success_chance: float = 0.15    # 일반 땅 보상 확률 (대부분 꽝)
+@export var sparkle_base_chance: float = 0.0    # 반짝이는 땅 기본 생성 확률
+@export var wisdom_sparkle_per: float = 0.005   # 지혜 1당 반짝임 확률 +
+@export var pig_sparkle_bonus: float = 0.10     # 꼬마돼지 보유 시 반짝임 확률 +
+
 @export_group("Save")
 @export var autosave_interval: float = 30.0

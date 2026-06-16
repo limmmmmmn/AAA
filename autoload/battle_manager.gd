@@ -38,9 +38,10 @@ func _on_battle_finished(result: Dictionary, battle: BattleInstance) -> void:
 	GameState.add_gold(result.gold)
 	GameState.total_exp += result.exp
 	GameState.total_battles_won += 1
-	# 적별로 사망 처리 (kill_count·존 해금이 여기에 반응)
+	# 적별로 사망 처리 (kill_count·존 해금·재료 드롭이 여기에 반응)
 	for e in battle.enemies:
 		GameState.register_kill(e.data)
+		GameState.roll_monster_drops(e.data)
 		EventBus.monster_died.emit(e.data, battle.origin_pos)
 	EventBus.battle_ended.emit(battle, result)
 

@@ -62,6 +62,16 @@ texture = ExtResource("15")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Village/Inn"]
 shape = SubResource("inn_rect")
 
+[node name="Prompt" type="Button" parent="Village/Inn"]
+visible = false
+offset_left = -40.0
+offset_top = 40.0
+offset_right = 40.0
+offset_bottom = 56.0
+focus_mode = 0
+theme_override_font_sizes/font_size = 8
+text = "여관 [Space]"
+
 [node name="ConfirmationDialog" type="ConfirmationDialog" parent="Village/Inn"]
 title = "여관"
 ok_button_text = "묵는다"
@@ -79,6 +89,16 @@ texture = ExtResource("17")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Village/QuestBoard"]
 shape = SubResource("board_rect")
 
+[node name="Prompt" type="Button" parent="Village/QuestBoard"]
+visible = false
+offset_left = -44.0
+offset_top = 32.0
+offset_right = 44.0
+offset_bottom = 48.0
+focus_mode = 0
+theme_override_font_sizes/font_size = 8
+text = "게시판 열기 [Space]"
+
 [node name="ShopBuilding" type="Area2D" parent="Village"]
 position = Vector2(560, 1036)
 collision_layer = 0
@@ -90,6 +110,16 @@ texture = ExtResource("9")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Village/ShopBuilding"]
 shape = SubResource("shop_rect")
+
+[node name="Prompt" type="Button" parent="Village/ShopBuilding"]
+visible = false
+offset_left = -46.0
+offset_top = 40.0
+offset_right = 46.0
+offset_bottom = 56.0
+focus_mode = 0
+theme_override_font_sizes/font_size = 8
+text = "상점 열기 [Space]"
 
 [node name="Party" parent="." instance=ExtResource("3")]
 position = Vector2(336, 96)

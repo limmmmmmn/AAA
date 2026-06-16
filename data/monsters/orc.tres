@@ -15,3 +15,5 @@ exp_reward = 12
 move_speed = 30.0
 erratic_movement = false
 hunt_default = false
+stone_drop = 0.4
+sword_drop = 0.25
