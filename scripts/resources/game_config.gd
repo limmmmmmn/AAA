@@ -12,10 +12,7 @@ class_name GameConfig extends Resource
 @export var base_move_speed: float = 80.0
 @export var initial_max_battle_windows: int = 1
 @export var hero_max_hp: int = 40           # 용사 최대 HP (멤버별 개별 HP)
-@export var base_vision_zoom: float = 1.0   # 카메라 기본 줌 (작을수록 넓게 보임)
 @export var base_crit_chance: float = 0.02  # 회심의 일격 확률 (방어 무시, v3 §1)
-@export var elite_vision_zoom: float = 0.85 # 정예존 해금 보상 시야 (v3 §6)
-@export var quest_vision_zoom: float = 0.7  # 2지역 의뢰 보상 시야 (v3 §6)
 
 @export_group("Elder Events")
 @export var elder_battles_threshold: int = 15        # 누적 전투 N회

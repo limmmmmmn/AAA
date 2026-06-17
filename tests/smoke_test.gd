@@ -57,11 +57,6 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_check(get_tree().get_nodes_in_group("monsters").size() >= 11, "박쥐존 해금 → 몬스터 증가(6+5)")
 
-	# v3 §6: 시야는 골드 상점이 아니라 무료 보상 (정예존 해금 등)
-	_check(is_equal_approx(GameState.vision_zoom, 1.0), "기본 시야 줌 1.0")
-	GameState.widen_vision(0.85, "")
-	_check(is_equal_approx(GameState.vision_zoom, 0.85), "시야 보상으로 0.85 넓어짐")
-
 	# 상점 구매 → 스탯 재계산
 	GameState.add_gold(50)
 	var atk_before: int = GameState.party_attack

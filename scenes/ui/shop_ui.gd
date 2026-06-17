@@ -1,10 +1,22 @@
 extends Control
-## 마을 상점 UI. 슬롯은 UpgradeData .tres에서 자동 생성 (수동 버튼 배치 금지).
-## 윗줄 = 전투 축, 아랫줄 = 필드 축. 살 수 없는 항목도 가격과 함께 회색으로 보인다.
+## 상점 UI — 검정 JRPG 메뉴창 (제목/목록/설명). 아이템·가격·설명은 전부 실제
+## 업그레이드 데이터(UpgradeData)에서 가져온다 (하드코딩 금지).
+## 비일시정지: 마우스 호버로 선택/미리보기, 클릭 또는 Enter로 구매. 멀어지면/Esc로 닫힘.
+## (방향키는 용사를 움직이므로 목록 이동에 쓰지 않는다.)
 
-@onready var _combat_row: HFlowContainer = $Panel/Margin/VBox/CombatRow
-@onready var _field_row: HFlowContainer = $Panel/Margin/VBox/FieldRow
-@onready var _close_button: Button = $Panel/Margin/VBox/CloseButton
+@onready var _title: Label = $Center/Layout/TitleBox/Title
+@onready var _list: VBoxContainer = $Center/Layout/Body/ListBox/Scroll/List
+@onready var _d_name: Label = $Center/Layout/Body/DescBox/Desc/DName
+@onready var _d_level: Label = $Center/Layout/Body/DescBox/Desc/DLevel
+@onready var _d_text: Label = $Center/Layout/Body/DescBox/Desc/DText
+@onready var _d_status: Label = $Center/Layout/Body/DescBox/Desc/DStatus
+@onready var _close_button: Button = $Center/Layout/CloseButton
+
+var _items: Array[UpgradeData] = []
+var _cursors: Array[Label] = []
+var _names: Array[Label] = []
+var _prices: Array[Label] = []
+var _selected: int = 0
 
 
 func _ready() -> void:
@@ -15,8 +27,8 @@ func _ready() -> void:
 	EventBus.request_shop_close.connect(_close)   # 상점 [닫기]/멀어짐
 	EventBus.party_exited_village.connect(_close)
 	EventBus.request_close_modals.connect(_close) # Esc
-	EventBus.gold_changed.connect(_on_gold_changed)
-	EventBus.upgrade_purchased.connect(_on_upgrade_purchased)
+	EventBus.gold_changed.connect(func(_g: int) -> void: if visible: _refresh_prices())
+	EventBus.upgrade_purchased.connect(func(_u: UpgradeData) -> void: if visible: _refresh_prices())
 	_close_button.pressed.connect(_close)
 
 
@@ -34,49 +46,124 @@ func _close() -> void:
 	EventBus.shop_closed.emit()
 
 
-func _on_gold_changed(_amount: int) -> void:
-	if visible:
-		_refresh()
+func _input(event: InputEvent) -> void:
+	if not visible:
+		return
+	# Enter = 선택 아이템 구매 (Space는 '상호작용'이라 상점 토글에 쓰여 충돌 → 제외)
+	if event is InputEventKey and event.pressed and not event.echo \
+			and event.keycode in [KEY_ENTER, KEY_KP_ENTER]:
+		_buy()
+		get_viewport().set_input_as_handled()
 
 
-func _on_upgrade_purchased(_upgrade: UpgradeData) -> void:
-	if visible:
-		_refresh()
-
+# ─── 목록 구성 (실제 업그레이드 데이터) ───
 
 func _rebuild() -> void:
-	_fill_row(_combat_row, "combat")
-	_fill_row(_field_row, "field")
-	_refresh()
-
-
-func _fill_row(row: Container, axis: String) -> void:
-	for child in row.get_children():
-		row.remove_child(child)
+	for child in _list.get_children():
+		_list.remove_child(child)
 		child.queue_free()
-	for upgrade in GameState.upgrades_for_axis(axis):
-		var button := Button.new()
-		button.custom_minimum_size = Vector2(84, 62)
-		button.clip_text = false
-		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		button.add_theme_font_size_override("font_size", 8)
-		button.set_meta("upgrade", upgrade)
-		button.pressed.connect(_on_slot_pressed.bind(upgrade))
-		row.add_child(button)
+	_cursors.clear()
+	_names.clear()
+	_prices.clear()
+	# 현재 지역 상점 = 전투 축 + 필드 축 (각각 가격순 정렬됨)
+	_items = GameState.upgrades_for_axis("combat")
+	_items.append_array(GameState.upgrades_for_axis("field"))
+	for i in _items.size():
+		_list.add_child(_make_row(i))
+	_selected = clampi(_selected, 0, maxi(0, _items.size() - 1))
+	_select(_selected)
 
 
-func _refresh() -> void:
-	for row in [_combat_row, _field_row]:
-		for button: Button in row.get_children():
-			var upgrade: UpgradeData = button.get_meta("upgrade")
-			if GameState.owned_count(upgrade) >= upgrade.max_purchases:
-				button.text = "%s\n[보유중]" % upgrade.display_name
-				button.disabled = true
-			else:
-				var cost := GameState.current_cost(upgrade)
-				button.text = "%s\n%d G\n%s" % [upgrade.display_name, cost, upgrade.description]
-				button.disabled = GameState.gold < cost # 회색이어도 가격은 보인다 — 다음 목표 제시
+## "> 이름 ............ 가격" 한 줄.
+func _make_row(i: int) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_STOP
+	row.custom_minimum_size = Vector2(0, 17)
+	row.add_theme_constant_override("separation", 2)
+
+	var cursor := Label.new()
+	cursor.custom_minimum_size = Vector2(11, 0)
+	cursor.add_theme_font_size_override("font_size", 11)
+	cursor.add_theme_color_override("font_color", Color(1, 0.9, 0.4))
+
+	var nm := Label.new()
+	nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	nm.add_theme_font_size_override("font_size", 11)
+	nm.text = _items[i].display_name
+
+	var price := Label.new()
+	price.custom_minimum_size = Vector2(52, 0)
+	price.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	price.add_theme_font_size_override("font_size", 11)
+
+	row.add_child(cursor)
+	row.add_child(nm)
+	row.add_child(price)
+	row.mouse_entered.connect(_select.bind(i))
+	row.gui_input.connect(func(e: InputEvent) -> void:
+		if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
+			_select(i)
+			_buy())
+	_cursors.append(cursor)
+	_names.append(nm)
+	_prices.append(price)
+	return row
 
 
-func _on_slot_pressed(upgrade: UpgradeData) -> void:
-	GameState.purchase(upgrade)
+func _select(i: int) -> void:
+	if _items.is_empty():
+		return
+	_selected = clampi(i, 0, _items.size() - 1)
+	for j in _cursors.size():
+		_cursors[j].text = ">" if j == _selected else ""
+		_names[j].add_theme_color_override("font_color",
+			Color(1, 1, 1) if j == _selected else Color(0.7, 0.7, 0.7))
+	_refresh_prices()
+	_update_desc()
+
+
+## 가격/품절 표시 갱신 (구매·골드 변동 시).
+func _refresh_prices() -> void:
+	for i in _prices.size():
+		var up := _items[i]
+		if GameState.owned_count(up) >= up.max_purchases:
+			_prices[i].text = "MAX"
+			_prices[i].add_theme_color_override("font_color", Color(0.55, 0.55, 0.55))
+		else:
+			var cost := GameState.current_cost(up)
+			_prices[i].text = "%d" % cost
+			_prices[i].add_theme_color_override("font_color",
+				Color(1, 0.95, 0.5) if GameState.gold >= cost else Color(0.7, 0.45, 0.45))
+	if _selected < _items.size():
+		_update_status(_items[_selected])
+
+
+## 설명창: 이름 / Lv x/y / 효과 설명 / 구매 상태.
+func _update_desc() -> void:
+	if _selected >= _items.size():
+		return
+	var up := _items[_selected]
+	_d_name.text = up.display_name
+	_d_level.text = "Lv %d/%d" % [GameState.owned_count(up), up.max_purchases]
+	_d_text.text = up.description
+	_update_status(up)
+
+
+func _update_status(up: UpgradeData) -> void:
+	if GameState.owned_count(up) >= up.max_purchases:
+		_d_status.text = "보유 완료"
+		_d_status.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		return
+	var cost := GameState.current_cost(up)
+	if GameState.gold >= cost:
+		_d_status.text = "%d G — 구매 가능" % cost
+		_d_status.add_theme_color_override("font_color", Color(0.7, 0.95, 0.7))
+	else:
+		_d_status.text = "%d G — 골드 부족" % cost
+		_d_status.add_theme_color_override("font_color", Color(0.9, 0.55, 0.55))
+
+
+func _buy() -> void:
+	if _selected >= _items.size():
+		return
+	GameState.purchase(_items[_selected]) # 골드 차감·레벨업·재계산은 기존 로직

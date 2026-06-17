@@ -9,4 +9,3 @@ description = "오크 5마리 토벌"
 target_monster = &"orc"
 target_count = 5
 reward_gold = 250
-reward_unlock = &"vision_eagle"

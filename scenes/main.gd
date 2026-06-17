@@ -1,5 +1,5 @@
 extends Node
-## 메인 씬. 지역(Region)을 동적으로 로드/전환하고, 카메라 추종·시야 줌·
+## 메인 씬. 지역(Region)을 동적으로 로드/전환하고, 카메라 추종(고정 640×360 줌)·
 ## 첫 동시 전투 연출·지역 전환 페이드·패배/부활을 담당한다.
 
 const REGION1 := preload("res://scenes/field/Field.tscn")
@@ -12,7 +12,6 @@ const REGION2 := preload("res://scenes/field/Region2.tscn")
 
 var _region: RegionBase
 var _party: Node2D
-var _celebrating: bool = false
 var _busy: bool = false   # 전환/사망 연출 중 (입력성 이벤트 잠금)
 var _shake: float = 0.0
 
@@ -23,7 +22,6 @@ func _ready() -> void:
 	var entrance := &"church" if start_id == &"region2" else &""
 	await _swap_region(start_id, entrance)
 	EventBus.battle_started.connect(_on_battle_started)
-	EventBus.stats_changed.connect(_on_stats_changed)
 	EventBus.gate_unlocked.connect(_on_gate_unlocked)
 	EventBus.party_defeated.connect(_on_defeat)
 	EventBus.screen_shake.connect(_on_screen_shake)
@@ -61,7 +59,7 @@ func _swap_region(region_id: StringName, entrance_id: StringName) -> void:
 	_camera.limit_top = int(lim.position.y)
 	_camera.limit_right = int(lim.end.x)
 	_camera.limit_bottom = int(lim.end.y)
-	_camera.zoom = Vector2.ONE * GameState.vision_zoom
+	_camera.zoom = Vector2.ONE # 고정 640×360 시야 (자동 줌 없음)
 	_camera.global_position = _party.global_position
 	_camera.reset_smoothing()
 
@@ -116,26 +114,14 @@ func _do_fade(target_alpha: float) -> void:
 
 # ─── 카메라 연출 ───
 
-func _on_stats_changed() -> void:
-	if _celebrating:
-		return
-	var target := Vector2.ONE * GameState.vision_zoom
-	if _camera.zoom.is_equal_approx(target):
-		return
-	create_tween().tween_property(_camera, "zoom", target, 0.5) \
-		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-
-
 func _on_battle_started(_battle: BattleInstance) -> void:
 	if BattleManager.active_battles.size() >= 2 and not GameState.dual_battle_celebrated:
 		GameState.dual_battle_celebrated = true
-		_celebrating = true
-		var base_zoom := Vector2.ONE * GameState.vision_zoom
+		# 첫 동시 전투 한정: 잠깐 줌아웃해 두 전투를 보여주고 다시 640×360으로 복귀
 		var tween := create_tween()
-		tween.tween_property(_camera, "zoom", base_zoom * 0.82, 0.35) \
+		tween.tween_property(_camera, "zoom", Vector2.ONE * 0.82, 0.35) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 		tween.tween_interval(1.2)
-		tween.tween_property(_camera, "zoom", base_zoom, 0.5) \
+		tween.tween_property(_camera, "zoom", Vector2.ONE, 0.5) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-		tween.tween_callback(func() -> void: _celebrating = false)
 		EventBus.show_toast.emit("동시 전투 발생! 파티는 멈추지 않는다!")

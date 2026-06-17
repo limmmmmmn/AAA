@@ -28,7 +28,7 @@ func _ready() -> void:
 	add_child(main)
 	await get_tree().process_frame
 	var hud := main.get_node("UILayer/HUD")
-	var gold_label: Label = hud.get_node("TopBar/HBox/GoldLabel")
+	var gold_label: Label = hud.get_node("TopInfo") # 미니멀 골드/정보 라벨 (클릭 시 디버그 +100)
 	EventBus.debug_mode_changed.connect(func(on: bool) -> void: _signal_on = on)
 
 	GameState.gold = 0

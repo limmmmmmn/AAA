@@ -1,6 +1,17 @@
 extends Node
 ## 전역 시그널 허브. 노드 간 직접 참조 금지 — 전부 여기를 경유한다.
 
+
+func _ready() -> void:
+	# 픽셀 폰트(PixelifySans, 라틴 전용)에 한글 폴백을 붙인다.
+	# → UI 골격(G 360, HERO, Lv, ON/OFF 등)은 픽셀, 한글 데이터(아이템·몬스터명)는 시스템 폰트.
+	var pixel := load("res://assets/Fonts/PixelifySans-Bold.ttf") as FontFile
+	if pixel:
+		var kr := SystemFont.new()
+		kr.font_names = PackedStringArray([
+			"Malgun Gothic", "Noto Sans CJK KR", "Apple SD Gothic Neo", "NanumGothic", "sans-serif"])
+		pixel.fallbacks = [kr]
+
 signal gold_changed(amount: int)
 signal stats_changed
 signal battle_started(battle: BattleInstance)
@@ -27,6 +38,7 @@ signal quest_completed(quest: QuestData)         # 의뢰 완료 (B-4)
 signal inn_rested                                # 여관 숙박 (B-3)
 signal request_quest_board                       # 게시판 진입 → UI 열기 (B-4)
 signal request_menu                              # HUD 메뉴 버튼 → 메뉴 열기
+signal request_monsters                          # 우측 MON 슬롯 → 몬스터 허가 패널 열기
 signal debug_mode_changed(on: bool)              # 디버그 모드 토글
 # ─── 마을 오브젝트 (항아리/상자/대장간) ───
 signal gems_changed(amount: int)                 # 보석 변동

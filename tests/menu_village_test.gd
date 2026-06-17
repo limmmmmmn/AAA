@@ -51,7 +51,6 @@ func _ready() -> void:
 	GameState.tactic_retreat_unlocked = true
 	GameState.purchases[&"sword_copper"] = 1
 	GameState.hunt_list[&"orc"] = false
-	GameState.vision_zoom = 0.7
 	GameState.save_game()
 	_check(FileAccess.file_exists(GameState.SAVE_PATH), "리셋 전 세이브 존재")
 
@@ -69,7 +68,6 @@ func _ready() -> void:
 	_check(not GameState.tactic_retreat_unlocked, "리셋: 자동 철수 잠금")
 	_check(GameState.purchases.is_empty(), "리셋: 구매 초기화")
 	_check(GameState.hunt_list.is_empty(), "리셋: 사냥 허가 초기화")
-	_check(is_equal_approx(GameState.vision_zoom, GameState.config.base_vision_zoom), "리셋: 시야 기본값")
 	_check(GameState.party_attack == GameState.config.base_party_attack, "리셋: 파티 공격력 기본값(재계산)")
 
 	# 리셋 후 다시 저장하면 깨끗한 상태가 적힌다

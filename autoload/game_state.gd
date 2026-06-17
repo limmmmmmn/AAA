@@ -70,7 +70,6 @@ var move_speed: float = 80.0
 var respawn_delay_mult: float = 1.0
 var max_battle_windows: int = 1
 var auto_hunt_unlocked: bool = false
-var vision_zoom: float = 1.0            # 카메라 줌 (작을수록 넓게)
 var crit_chance: float = 0.02          # 회심의 일격 확률 (v3 §1)
 var damage_reduction_mult: float = 1.0 # 사슬 갑옷 등 피격 경감 (B-6)
 var all_attack: bool = false           # 베기라: 전체 공격 (B-6)
@@ -100,7 +99,6 @@ func set_debug_mode(on: bool) -> void:
 
 func _ready() -> void:
 	config = load(CONFIG_PATH)
-	vision_zoom = config.base_vision_zoom
 	turn_beat_delay = config.turn_beat_delay
 	_load_catalog()
 	_load_companion_catalog()
@@ -110,7 +108,6 @@ func _ready() -> void:
 	_ensure_member_hp() # 멤버별 HP 배열을 멤버 수에 맞춰 정리 (로드 값 보존, 부족분 가득)
 	if chest_keys_unlocked and chest_required_key == &"":
 		_assign_chest_key() # 해금됐는데 열쇠 미지정이면 보정 (구 세이브 대비)
-	EventBus.zone_unlocked.connect(_on_zone_unlocked) # 정예존 해금 → 시야 보상 (v3 §6)
 	var autosave := Timer.new()
 	autosave.wait_time = config.autosave_interval
 	autosave.timeout.connect(save_game)
@@ -312,21 +309,6 @@ func is_hunted(id: StringName) -> bool:
 
 func set_hunted(id: StringName, on: bool) -> void:
 	hunt_list[id] = on
-
-
-# ─── 시야 보상 (v3 §6): 골드 상점 대신 무료 보상으로 시야가 넓어진다 ───
-
-func _on_zone_unlocked(zone_id: StringName) -> void:
-	if zone_id == &"elite_zone":
-		widen_vision(config.elite_vision_zoom, "시야가 트였다!")
-
-
-func widen_vision(zoom: float, msg: String) -> void:
-	if zoom < vision_zoom:
-		vision_zoom = zoom
-		EventBus.stats_changed.emit()
-		if msg != "":
-			EventBus.show_toast.emit(msg)
 
 
 func kills(id: StringName) -> int:
@@ -562,8 +544,6 @@ func _check_quest_progress(monster_id: StringName) -> void:
 		var done := q
 		active_quest_id = &""
 		quest_progress_base = 0
-		if done.reward_unlock == &"vision_eagle": # 시야 보상 (v3 §6)
-			widen_vision(config.quest_vision_zoom, "독수리의 시야를 얻었다!")
 		EventBus.quest_completed.emit(done)
 
 
@@ -1047,7 +1027,6 @@ func reset_to_new_game() -> void:
 	current_region = &"region1"
 	active_quest_id = &""
 	quest_progress_base = 0
-	vision_zoom = config.base_vision_zoom
 	_retreat_active = false
 	_heal_accum = 0.0
 	# 마을 오브젝트
@@ -1119,7 +1098,6 @@ func save_game() -> void:
 		"current_region": String(current_region),
 		"active_quest_id": String(active_quest_id),
 		"quest_progress_base": quest_progress_base,
-		"vision_zoom": vision_zoom,
 		"hunt_list": _hunt_list_out(),
 		"tactic_retreat_unlocked": tactic_retreat_unlocked,
 		"tactic_retreat_enabled": tactic_retreat_enabled,
@@ -1173,7 +1151,6 @@ func load_game() -> void:
 	current_region = StringName(data.get("current_region", "region1"))
 	active_quest_id = StringName(data.get("active_quest_id", ""))
 	quest_progress_base = int(data.get("quest_progress_base", 0))
-	vision_zoom = float(data.get("vision_zoom", config.base_vision_zoom))
 	tactic_retreat_unlocked = bool(data.get("tactic_retreat_unlocked", false))
 	tactic_retreat_enabled = bool(data.get("tactic_retreat_enabled", false))
 	gems = int(data.get("gems", 0))

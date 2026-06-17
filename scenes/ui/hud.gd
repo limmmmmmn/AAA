@@ -1,135 +1,171 @@
 extends Control
-## 골드, 활성 전투창 수, EXP 표시 + 토스트 메시지 + 멤버별 HP 표시(A-3).
+## 좌상단 골드(미니멀), 좌하단 파티 HP 카드, 우측 Quick Slot Bar, 토스트, 위험 비네트.
+## 데이터는 전부 GameState에서 읽는다 (하드코딩 금지).
 
-@onready var _time_label: Label = $TopBar/HBox/TimeLabel
-@onready var _gold_label: Label = $TopBar/HBox/GoldLabel
-@onready var _gem_label: Label = $TopBar/HBox/GemLabel
-@onready var _battle_label: Label = $TopBar/HBox/BattleLabel
-@onready var _exp_label: Label = $TopBar/HBox/ExpLabel
-@onready var _hp_box: PanelContainer = $HPBox
-@onready var _members: HBoxContainer = $HPBox/HPInner/Members
-@onready var _remote_shop_button: Button = $RemoteShopButton
+@onready var _info: Label = $TopInfo
+@onready var _members: HBoxContainer = $Members
 @onready var _menu_button: Button = $MenuButton
-@onready var _hunt_panel: PanelContainer = $HuntPanel
-@onready var _hunt_list: VBoxContainer = $HuntPanel/VBox/HuntList
-@onready var _retreat_toggle: CheckButton = $HuntPanel/VBox/RetreatToggle
+@onready var _slots: VBoxContainer = $QuickSlots
 @onready var _vignette: TextureRect = $DangerVignette
-@onready var _dig_button: Button = $DigButton
 @onready var _toast: Label = $ToastLabel
 
-var _member_bars: Array[ProgressBar] = []
-var _member_labels: Array[Label] = []
-var _member_names: Array[String] = []
+# 파티 멤버 4글자 코드 (캐릭터 데이터에 코드가 없으니 위치 기준 폴백 — 스펙의 기본값)
+const MEMBER_CODES := ["HERO", "PRST", "KNIG", "MAGE"]
+const PANEL_BG := Color(0.04, 0.04, 0.06, 0.96)
+const PANEL_BORDER := Color(0.95, 0.95, 0.95)
+
+var _card_codes: Array[Label] = []
+var _card_hps: Array[Label] = []
+var _dig_slot: Button = null
 var _toast_tween: Tween
 var _danger_tween: Tween
 var _in_danger: bool = false
 
 
 func _ready() -> void:
-	EventBus.gold_changed.connect(_on_gold_changed)
-	EventBus.stats_changed.connect(_refresh)
-	EventBus.battle_started.connect(_on_battle_started)
-	EventBus.battle_ended.connect(_on_battle_ended)
+	EventBus.gold_changed.connect(func(_g: int) -> void: _refresh_info())
+	EventBus.gems_changed.connect(func(_g: int) -> void: _refresh_info())
+	EventBus.stats_changed.connect(_on_stats_changed)
 	EventBus.show_toast.connect(_show_toast)
 	EventBus.party_hp_changed.connect(_on_party_hp_changed)
-	EventBus.gems_changed.connect(func(_g: int) -> void: _refresh())
-	EventBus.hunt_list_changed.connect(_rebuild_hunt_list)
 	EventBus.companion_joined.connect(_on_companion_joined)
-	_remote_shop_button.pressed.connect(func() -> void: EventBus.party_entered_village.emit())
+	EventBus.dig_changed.connect(func() -> void: _update_dig_slot())
+	EventBus.debug_mode_changed.connect(func(_on: bool) -> void: _refresh_info())
+	_menu_button.focus_mode = Control.FOCUS_NONE
 	_menu_button.pressed.connect(func() -> void: EventBus.request_menu.emit())
-	_retreat_toggle.toggled.connect(func(on: bool) -> void: GameState.tactic_retreat_enabled = on)
-	_dig_button.pressed.connect(_on_dig_pressed)
-	_dig_button.focus_mode = Control.FOCUS_NONE # Space는 상호작용 전용 (땅파기 재발동 방지)
-	EventBus.dig_changed.connect(_refresh_dig)
-	_gold_label.gui_input.connect(_on_gold_input)              # 디버그: 골드 클릭 +100
-	EventBus.debug_mode_changed.connect(func(_on: bool) -> void: _refresh())
-	_refresh()
-	_refresh_dig()
-	_rebuild_hunt_list()
-	# 1지역에서도 HP를 보여준다 (용사 한 칸, damage off라 줄지 않음)
+	_info.gui_input.connect(_on_gold_input) # 디버그: 골드 라벨 클릭 +100
 	_rebuild_members()
+	_rebuild_slots()
 	_on_party_hp_changed()
 
 
-# ─── 멤버별 개별 HP 표시 ───
-## 각 멤버가 자기 HP 바를 갖는다. 적은 멤버 1명을 노려 그 멤버 HP를 깎는다.
+func _process(_delta: float) -> void:
+	_refresh_info() # 골드/보석/시간 (시간은 매 프레임 갱신)
+	if GameState.has_shovel and _dig_slot:
+		_update_dig_slot()
 
-func _on_companion_joined(_comp: CompanionData) -> void:
-	_refresh()
-	_rebuild_members()
-	_refresh_hp()
+
+# ─── 좌상단 미니멀 정보 (G 360   GEM 2   02:15) ───
+
+func _refresh_info() -> void:
+	var t := "G %d" % GameState.gold
+	if GameState.gems > 0:
+		t += "   GEM %d" % GameState.gems
+	var sec := int(GameState.play_time)
+	t += "   %02d:%02d" % [sec / 60, sec % 60]
+	if GameState.debug_mode:
+		t += "   [+100]"
+	_info.text = t
+
+
+## 디버그 모드에서 골드 라벨 좌클릭 → 100골드
+func _on_gold_input(event: InputEvent) -> void:
+	if not GameState.debug_mode:
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		GameState.add_gold(100)
+
+
+# ─── 좌하단 파티 HP 카드 (검정창 + 흰 테두리, 코드 + cur/max) ───
+
+func _member_code(index: int) -> String:
+	return MEMBER_CODES[index] if index < MEMBER_CODES.size() else "P%d" % (index + 1)
+
+
+func _panel_style() -> StyleBoxFlat:
+	var s := StyleBoxFlat.new()
+	s.bg_color = PANEL_BG
+	s.set_border_width_all(2)
+	s.border_color = PANEL_BORDER
+	s.set_content_margin_all(3)
+	return s
 
 
 func _rebuild_members() -> void:
 	for child in _members.get_children():
 		_members.remove_child(child)
 		child.queue_free()
-	_member_bars.clear()
-	_member_labels.clear()
-	_member_names.clear()
-	for m in GameState.party_members():
-		var col := VBoxContainer.new()
-		col.add_theme_constant_override("separation", 0)
-		var bar := ProgressBar.new()
-		bar.custom_minimum_size = Vector2(46, 9)
-		bar.show_percentage = false
-		var name_label := Label.new()
-		name_label.add_theme_font_size_override("font_size", 7)
-		name_label.text = m.name
-		name_label.modulate = Color(0.85, 0.85, 0.85)
-		col.add_child(bar)
-		col.add_child(name_label)
-		_members.add_child(col)
-		_member_bars.append(bar)
-		_member_labels.append(name_label)
-		_member_names.append(m.name)
+	_card_codes.clear()
+	_card_hps.clear()
+	for i in GameState.member_count():
+		var card := PanelContainer.new()
+		card.add_theme_stylebox_override("panel", _panel_style())
+		var vb := VBoxContainer.new()
+		vb.add_theme_constant_override("separation", 0)
+		vb.custom_minimum_size = Vector2(48, 0)
+		var code := Label.new()
+		code.add_theme_font_size_override("font_size", 9)
+		code.add_theme_color_override("font_color", Color(0.7, 0.95, 0.7))
+		code.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		code.text = _member_code(i)
+		var hp := Label.new()
+		hp.add_theme_font_size_override("font_size", 11)
+		hp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vb.add_child(code)
+		vb.add_child(hp)
+		card.add_child(vb)
+		_members.add_child(card)
+		_card_codes.append(code)
+		_card_hps.append(hp)
+	_refresh_hp()
 
 
-## 멤버별 개별 HP를 각자 바에 그린다. HP 0이면 "쓰러짐".
 func _refresh_hp() -> void:
-	for i in _member_bars.size():
-		_member_bars[i].max_value = maxi(1, GameState.member_max_hp(i))
-		_member_bars[i].value = GameState.member_hp(i)
-		if GameState.damage_enabled and GameState.member_hp(i) <= 0:
-			_member_labels[i].text = "쓰러짐"
-			_member_labels[i].modulate = Color(0.7, 0.35, 0.35)
-		else:
-			_member_labels[i].text = _member_names[i]
-			_member_labels[i].modulate = Color(0.85, 0.85, 0.85)
+	for i in _card_hps.size():
+		var cur := GameState.member_hp(i)
+		var mx := GameState.member_max_hp(i)
+		_card_hps[i].text = "%d/%d" % [cur, mx]
+		var ko := GameState.damage_enabled and cur <= 0
+		_card_hps[i].add_theme_color_override("font_color",
+			Color(0.8, 0.35, 0.35) if ko else Color(0.95, 0.95, 0.95))
 
 
-# ─── 사냥 허가 리스트 (v3 §8) ───
+func _on_companion_joined(_comp: CompanionData) -> void:
+	_rebuild_members()
 
-func _rebuild_hunt_list() -> void:
-	for child in _hunt_list.get_children():
-		_hunt_list.remove_child(child)
+
+# ─── 우측 Quick Slot Bar (해금된 바로가기만 표시) ───
+
+func _on_stats_changed() -> void:
+	_rebuild_slots() # 해금 상태(원격상점/자동화/삽)가 바뀌면 슬롯 갱신
+	_refresh_info()
+
+
+## 각 슬롯: {label, shown(해금여부), press}. 스펙의 데이터 기반 렌더 방식.
+func _slot_specs() -> Array[Dictionary]:
+	return [
+		{"label": "MON", "shown": true,
+			"press": func() -> void: EventBus.request_monsters.emit()},
+		{"label": "SHOP", "shown": GameState.remote_shop_unlocked,
+			"press": func() -> void: EventBus.request_shop.emit()},
+		{"label": "FORGE", "shown": GameState.auto_enhance or GameState.auto_deliver,
+			"press": func() -> void: EventBus.request_forge.emit()},
+		{"label": "DIG", "shown": GameState.has_shovel,
+			"press": func() -> void: _do_dig()},
+	]
+
+
+func _rebuild_slots() -> void:
+	for child in _slots.get_children():
+		_slots.remove_child(child)
 		child.queue_free()
-	var ids := GameState.hunt_list.keys()
-	for id: StringName in ids:
-		var cb := CheckBox.new()
-		cb.add_theme_font_size_override("font_size", 9)
-		var mdata: MonsterData = GameState.monster_catalog.get(id)
-		cb.text = mdata.display_name if mdata else String(id)
-		cb.button_pressed = GameState.is_hunted(id)
-		cb.toggled.connect(func(on: bool) -> void: GameState.set_hunted(id, on))
-		_hunt_list.add_child(cb)
-	_hunt_panel.visible = not ids.is_empty()
+	_dig_slot = null
+	for spec in _slot_specs():
+		if not spec["shown"]:
+			continue
+		var b := Button.new()
+		b.custom_minimum_size = Vector2(40, 40)
+		b.focus_mode = Control.FOCUS_NONE
+		b.add_theme_font_size_override("font_size", 9)
+		b.text = spec["label"]
+		b.pressed.connect(spec["press"])
+		_slots.add_child(b)
+		if spec["label"] == "DIG":
+			_dig_slot = b
+	_update_dig_slot()
 
 
-func _process(_delta: float) -> void:
-	# 밸런스 검증용 누적 플레이 시간 (mm:ss, 1시간 넘으면 h:mm:ss)
-	var total := int(GameState.play_time)
-	if total >= 3600:
-		_time_label.text = "%d:%02d:%02d" % [total / 3600, (total % 3600) / 60, total % 60]
-	else:
-		_time_label.text = "%02d:%02d" % [total / 60, total % 60]
-	if GameState.has_shovel:
-		_refresh_dig() # 쿨타임 카운트다운 갱신
-
-
-# ─── 땅파기 (삽 보유 시 노출) ───
-
-func _on_dig_pressed() -> void:
+func _do_dig() -> void:
 	var r := GameState.do_dig()
 	if not r.ok:
 		return
@@ -141,57 +177,25 @@ func _on_dig_pressed() -> void:
 		_show_toast("아무것도 나오지 않았다...")
 
 
-func _refresh_dig() -> void:
-	_dig_button.visible = GameState.has_shovel
-	if not GameState.has_shovel:
+## DIG 슬롯 상태색: 쿨타임=어둡게, 반짝임 위=금색, 평소=흰색.
+func _update_dig_slot() -> void:
+	if _dig_slot == null:
 		return
 	if not GameState.dig_ready():
-		_dig_button.disabled = true
-		_dig_button.text = "땅파기 (%s)" % TownFmt.time(GameState.dig_remaining())
-		_dig_button.modulate = Color(1, 1, 1)
+		_dig_slot.disabled = true
+		_dig_slot.modulate = Color(0.55, 0.55, 0.55)
 	elif GameState.has_sparkling_ground and GameState.party_on_sparkle:
-		_dig_button.disabled = false
-		_dig_button.text = "✨ 반짝임! 파기"
-		_dig_button.modulate = Color(1, 0.95, 0.5)
+		_dig_slot.disabled = false
+		_dig_slot.modulate = Color(1, 0.9, 0.4)
 	else:
-		_dig_button.disabled = false
-		_dig_button.text = "땅파기"
-		_dig_button.modulate = Color(1, 1, 1)
+		_dig_slot.disabled = false
+		_dig_slot.modulate = Color(1, 1, 1)
 
 
-func _on_gold_changed(_amount: int) -> void:
-	_refresh()
-
-
-func _on_battle_started(_battle: BattleInstance) -> void:
-	_refresh()
-
-
-func _on_battle_ended(_battle: BattleInstance, _result: Dictionary) -> void:
-	_refresh()
-
-
-## 디버그 모드에서 골드 라벨 좌클릭 → 100골드 획득
-func _on_gold_input(event: InputEvent) -> void:
-	if not GameState.debug_mode:
-		return
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		GameState.add_gold(100)
-
-
-func _refresh() -> void:
-	_gold_label.text = "골드: %d G  [+100]" % GameState.gold if GameState.debug_mode else "골드: %d G" % GameState.gold
-	_gem_label.text = "보석: %d" % GameState.gems
-	_battle_label.text = "전투: %d / %d" % [BattleManager.active_battles.size(), GameState.max_battle_windows]
-	_exp_label.text = "EXP: %d   격파: %d" % [GameState.total_exp, GameState.total_battles_won]
-	_remote_shop_button.visible = GameState.remote_shop_unlocked # 주문 카탈로그 (B-6)
-	_retreat_toggle.visible = GameState.tactic_retreat_unlocked   # 자동 철수 (v3 §9)
-	_refresh_dig()                                               # 삽 구매 시 버튼 노출
-
+# ─── 죽음의 예고 (총 HP ≤ 30%면 붉은 비네트 + 카드 점멸) ───
 
 func _on_party_hp_changed() -> void:
 	_refresh_hp()
-	# 죽음의 예고 (v3 §7): 파티 총 HP ≤ 30%면 붉은 비네트 + HP바 점멸
 	var cur := GameState.total_hp()
 	var ratio := float(cur) / float(maxi(1, GameState.total_max_hp()))
 	var danger := GameState.damage_enabled and cur > 0 and ratio <= 0.3
@@ -220,6 +224,8 @@ func _exit_danger() -> void:
 	_vignette.modulate.a = 0.0
 	_members.modulate.a = 1.0
 
+
+# ─── 토스트 ───
 
 func _show_toast(text: String) -> void:
 	if _toast_tween:

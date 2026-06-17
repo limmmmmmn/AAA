@@ -13,145 +13,56 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1")
 
-[node name="TopBar" type="PanelContainer" parent="."]
-layout_mode = 0
-offset_left = 4.0
+[node name="TopInfo" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 8.0
 offset_top = 4.0
-offset_right = 400.0
-offset_bottom = 20.0
-
-[node name="HBox" type="HBoxContainer" parent="TopBar"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="TimeLabel" type="Label" parent="TopBar/HBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.95, 0.7, 1)
-theme_override_font_sizes/font_size = 9
-text = "00:00"
-
-[node name="GoldLabel" type="Label" parent="TopBar/HBox"]
-layout_mode = 2
+offset_right = 320.0
+offset_bottom = 26.0
 mouse_filter = 0
 mouse_default_cursor_shape = 2
-theme_override_colors/font_color = Color(1, 0.9, 0.45, 1)
-theme_override_font_sizes/font_size = 9
-text = "골드: 0 G"
+theme_override_colors/font_color = Color(0.1, 0.1, 0.12, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 0.85)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 16
+text = "G 0"
 
-[node name="GemLabel" type="Label" parent="TopBar/HBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.85, 1, 1)
-theme_override_font_sizes/font_size = 9
-text = "보석: 0"
-
-[node name="BattleLabel" type="Label" parent="TopBar/HBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 9
-text = "전투: 0 / 1"
-
-[node name="ExpLabel" type="Label" parent="TopBar/HBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.75, 0.85, 1, 1)
-theme_override_font_sizes/font_size = 9
-text = "EXP: 0   격파: 0"
-
-[node name="HPBox" type="PanelContainer" parent="."]
-layout_mode = 0
-offset_left = 4.0
-offset_top = 23.0
-offset_right = 232.0
-offset_bottom = 45.0
-
-[node name="HPInner" type="HBoxContainer" parent="HPBox"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="HPLabel" type="Label" parent="HPBox/HPInner"]
-layout_mode = 2
-size_flags_vertical = 4
-theme_override_colors/font_color = Color(1, 0.6, 0.6, 1)
-theme_override_font_sizes/font_size = 9
-text = "체력"
-
-[node name="Members" type="HBoxContainer" parent="HPBox/HPInner"]
-layout_mode = 2
-theme_override_constants/separation = 4
+[node name="Members" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -42.0
+offset_right = 400.0
+offset_bottom = -6.0
+grow_vertical = 0
+theme_override_constants/separation = 5
 
 [node name="MenuButton" type="Button" parent="."]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -48.0
+offset_left = -52.0
 offset_top = 4.0
-offset_right = -4.0
-offset_bottom = 22.0
+offset_right = -6.0
+offset_bottom = 26.0
 grow_horizontal = 0
-theme_override_font_sizes/font_size = 9
-text = "메뉴"
+theme_override_font_sizes/font_size = 11
+text = "MENU"
 
-[node name="RemoteShopButton" type="Button" parent="."]
-visible = false
+[node name="QuickSlots" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -150.0
-offset_top = 4.0
-offset_right = -52.0
-offset_bottom = 22.0
+offset_left = -46.0
+offset_top = 32.0
+offset_right = -6.0
 grow_horizontal = 0
-theme_override_font_sizes/font_size = 9
-text = "상점 (원격)"
-
-[node name="HuntPanel" type="PanelContainer" parent="."]
-visible = false
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -116.0
-offset_top = 26.0
-offset_right = -4.0
-offset_bottom = 120.0
-grow_horizontal = 0
-
-[node name="VBox" type="VBoxContainer" parent="HuntPanel"]
-layout_mode = 2
-theme_override_constants/separation = 2
-
-[node name="Title" type="Label" parent="HuntPanel/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.85, 0.9, 0.7, 1)
-theme_override_font_sizes/font_size = 9
-text = "사냥 허가"
-
-[node name="HuntList" type="VBoxContainer" parent="HuntPanel/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 1
-
-[node name="RetreatToggle" type="CheckButton" parent="HuntPanel/VBox"]
-visible = false
-layout_mode = 2
-theme_override_font_sizes/font_size = 9
-text = "자동 철수"
-
-[node name="DigButton" type="Button" parent="."]
-visible = false
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -132.0
-offset_top = -28.0
-offset_right = -4.0
-offset_bottom = -4.0
-grow_horizontal = 0
-grow_vertical = 0
-theme_override_font_sizes/font_size = 10
-text = "땅파기"
+theme_override_constants/separation = 4
 
 [node name="DangerVignette" type="TextureRect" parent="."]
 layout_mode = 1
@@ -169,12 +80,12 @@ visible = false
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_top = 32.0
-offset_bottom = 52.0
+offset_top = 34.0
+offset_bottom = 54.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0.1, 0.1, 0.2, 1)
 theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 13
 horizontal_alignment = 1
 text = ""

@@ -1,6 +1,18 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scenes/ui/shop_ui.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="frame"]
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+bg_color = Color(0.04, 0.04, 0.06, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.95, 0.95, 1)
 
 [node name="ShopUI" type="Control"]
 visible = false
@@ -13,61 +25,82 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1")
 
-[node name="Panel" type="PanelContainer" parent="."]
+[node name="Center" type="CenterContainer" parent="."]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -304.0
-offset_top = -176.0
-offset_right = 304.0
-offset_bottom = 176.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Margin" type="MarginContainer" parent="Panel"]
+[node name="Layout" type="VBoxContainer" parent="Center"]
 layout_mode = 2
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 8
+theme_override_constants/separation = 4
 
-[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+[node name="TitleBox" type="PanelContainer" parent="Center/Layout"]
 layout_mode = 2
-theme_override_constants/separation = 5
+theme_override_styles/panel = SubResource("frame")
 
-[node name="Title" type="Label" parent="Panel/Margin/VBox"]
+[node name="Title" type="Label" parent="Center/Layout/TitleBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 horizontal_alignment = 1
-text = "마을 상점"
+text = "Shop"
 
-[node name="CombatHeader" type="Label" parent="Panel/Margin/VBox"]
+[node name="Body" type="HBoxContainer" parent="Center/Layout"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.7, 0.6, 1)
-theme_override_font_sizes/font_size = 9
-text = "[ 전투 ]  전투를 더 빨리 끝낸다"
+theme_override_constants/separation = 4
 
-[node name="CombatRow" type="HFlowContainer" parent="Panel/Margin/VBox"]
+[node name="ListBox" type="PanelContainer" parent="Center/Layout/Body"]
+custom_minimum_size = Vector2(264, 248)
 layout_mode = 2
-theme_override_constants/h_separation = 5
-theme_override_constants/v_separation = 4
+theme_override_styles/panel = SubResource("frame")
 
-[node name="FieldHeader" type="Label" parent="Panel/Margin/VBox"]
+[node name="Scroll" type="ScrollContainer" parent="Center/Layout/Body/ListBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.65, 0.85, 1, 1)
-theme_override_font_sizes/font_size = 9
-text = "[ 필드 ]  몬스터와 더 자주 부딪힌다"
+horizontal_scroll_mode = 0
 
-[node name="FieldRow" type="HFlowContainer" parent="Panel/Margin/VBox"]
+[node name="List" type="VBoxContainer" parent="Center/Layout/Body/ListBox/Scroll"]
 layout_mode = 2
-theme_override_constants/h_separation = 5
-theme_override_constants/v_separation = 4
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
 
-[node name="CloseButton" type="Button" parent="Panel/Margin/VBox"]
+[node name="DescBox" type="PanelContainer" parent="Center/Layout/Body"]
+custom_minimum_size = Vector2(214, 248)
+layout_mode = 2
+theme_override_styles/panel = SubResource("frame")
+
+[node name="Desc" type="VBoxContainer" parent="Center/Layout/Body/DescBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="DName" type="Label" parent="Center/Layout/Body/DescBox/Desc"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "-"
+
+[node name="DLevel" type="Label" parent="Center/Layout/Body/DescBox/Desc"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 10
+text = ""
+
+[node name="DText" type="Label" parent="Center/Layout/Body/DescBox/Desc"]
+layout_mode = 2
+size_flags_vertical = 3
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 10
+text = ""
+
+[node name="DStatus" type="Label" parent="Center/Layout/Body/DescBox/Desc"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = ""
+
+[node name="CloseButton" type="Button" parent="Center/Layout"]
 layout_mode = 2
 size_flags_horizontal = 4
+focus_mode = 0
 theme_override_font_sizes/font_size = 9
 text = "닫기 (Esc / 멀어지면)"
