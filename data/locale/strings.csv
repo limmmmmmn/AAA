@@ -1,0 +1,177 @@
+keys,en
+구리 검,Copper Sword
+철의 검,Iron Sword
+강철 검,Steel Sword
+미스릴 검,Mythril Sword
+가죽 갑옷,Leather Armor
+사슬 갑옷,Chain Armor
+날렵한 신발,Swift Boots
+바람의 신발,Wind Boots
+부활의 종,Revival Bell
+사냥꾼의 나침반,Hunter's Compass
+용맹의 깃발,Banner of Valor
+용맹의 깃발 II,Banner of Valor II
+전열 확장,Battle Line +1
+주문 카탈로그,Spell Catalog
+주문: 기라,Spell: Gira
+주문: 베기라,Spell: Begira
+삽,Shovel
+좋은 삽,Good Shovel
+꼬마돼지,Piglet
+파티 공격력 +3,Party ATK +3
+파티 공격력 +6,Party ATK +6
+파티 공격력 +12,Party ATK +12
+파티 공격력 +20,Party ATK +20
+파티 공격력 +35,Party ATK +35
+공격 주기 ×0.85,Attack speed ×0.85
+이동 속도 ×1.25,Move speed ×1.25
+이동 속도 ×1.3,Move speed ×1.3
+몬스터 리스폰 ×0.6,Monster respawn ×0.6
+피격 데미지 ×0.8,Damage taken ×0.8
+동시 전투창 +1,Battle windows +1
+자동 추적 해금,Unlock auto-hunt
+원격 구매 해금,Unlock remote buy
+전투창 내 전체 공격,Hit all enemies
+무리 출현: 2마리 가능,Group spawn: up to 2
+무리 출현: 3마리 가능,Group spawn: up to 3
+땅파기 쿨타임 -10초,Dig cooldown -10s
+땅을 팔 수 있다. 뭐가 나올지는 아무도 모른다.,Dig the ground. No one knows what comes up.
+킁킁! 수상하게 반짝이는 땅을 찾아준다.,Sniff! Finds suspicious sparkling ground.
+독사 10마리 토벌,Defeat 10 Snakes
+들개 8마리 토벌,Defeat 8 Wild Dogs
+오크 5마리 토벌,Defeat 5 Orcs
+슬라임,Slime
+박쥐,Bat
+큰박쥐,Big Bat
+메탈슬라임,Metal Slime
+메탈바블,Metal Babble
+독사,Snake
+들개,Wild Dog
+오크,Orc
+용사,Hero
+승려,Priest
+동료,Ally
+마을 장로,Village Elder
+돌멩이,Stone
+약초,Herb
+항아리 조각,Pot Shard
+강화석,Enhance Stone
+메달 조각,Medal Shard
+나무 열쇠,Wood Key
+낡은 지도 조각,Old Map Piece
+대장간,Forge
+여관,Inn
+의뢰 게시판,Quest Board
+통행료 게이트,Toll Gate
+통행료 500G,Toll 500G
+메뉴,Menu
+강화,Enhance
+판매,Sell
+장착,Equip
+열기,Open
+깨기,Break
+수주,Accept
+수주중,Active
+계속하기,Continue
+다시 시작,Restart
+처음부터 다시하기,Restart from start
+전수받는다,Learn
+묵는다,Stay
+그만둔다,Cancel
+지불한다,Pay
+취소,Cancel
+보유 완료,Owned
+장착: 없음,Equipped: none
+화로: 비어있음,Forge: empty
+자동 항아리꾼,Auto Potter
+자동 강화,Auto Enhance
+자동 납품,Auto Deliver
+디버그 모드 (골드 클릭 +100),Debug Mode (click gold +100)
+─ 보석 상점 ─,─ Gem Shop ─
+✨ 수상한 땅,✨ Odd Ground
+열기 [Space],Open [Space]
+깨기 [Space],Break [Space]
+상점 열기 [Space],Open Shop [Space]
+상점 닫기,Close Shop
+대장간 열기 [Space],Open Forge [Space]
+대장간 닫기,Close Forge
+게시판 열기 [Space],Open Board [Space]
+여관 [Space],Inn [Space]
+닫기 (Esc),Close (Esc)
+닫기 (Esc / 멀어지면),Close (Esc / walk away)
+녹슨 검 올리기,Place Rusty Sword
+수주 중인 의뢰 없음,No active quest
+수주 중인 의뢰 없음 — 무엇을 잡을지 정해보자,No active quest — pick a target
+아직 만난 몬스터가 없다,No monsters met yet
+아무것도 나오지 않았다...,Nothing came up...
+회심의 일격!,Critical Hit!
+%s 나타났다!,%s appears!
+%s ×%d 나타났다!,%s ×%d appear!
+%s 쓰러뜨렸다!,Defeated %s!
+%s — 도망쳤다!,%s fled!
+%s의 공격! %d의 데미지,%s attacks! %d damage
+%s의 공격! %s에게 %d의 데미지,%s attacks! %s takes %d damage
+%s의 일제 공격! %d의 데미지,%s's all-out attack! %d damage
+%s의 회심의 일격! %d의 데미지,%s's critical hit! %d damage
+%s의 공격! 통하지 않는다,%s attacks! No effect
+%s의 공격! 파티가 가볍게 막아냈다,%s attacks! The party shrugs it off
+이겼다! +%d G,Victory! +%d G
+회심의 일격!! +%d G,Critical Hit!! +%d G
+%s는 죽어버렸다...,%s has died...
+교회에서 눈을 떴다... (소지금 절반을 잃었다),Woke at the church... (lost half your gold)
+위험! 전투를 멈추고 마을로 철수한다...,Danger! Stop fighting and retreat...
+마을로 무사히 돌아왔다.,Returned safely to the village.
+%s가 녹슨 검을 떨어뜨렸다!,%s dropped a rusty sword!
+골드 +%d,Gold +%d
+보석 +%d,Gem +%d
+녹슨 검 +%d,Rusty Sword +%d
+항아리에서 %s!,From the pot: %s!
+보물상자: %s!,Treasure chest: %s!
+땅속에서 %s!,From underground: %s!
+✨ 반짝이는 땅에서 %s!,✨ From the sparkling ground: %s!
+✨ 수상하게 반짝이는 땅이 나타났다!,✨ Suspicious sparkling ground appeared!
+🐷 꼬마돼지가 수상한 냄새를 맡았다!,🐷 The piglet sniffs something odd!
+🔒 %s 열쇠 필요,🔒 %s key needed
+복구 %s,Restoring %s
+재생성 %s,Respawn %s
+%s  [보유중],%s  [Owned]
+%s  (보석 %d),%s  (Gem %d)
+자동 항아리꾼 (보석 1),Auto Potter (Gem 1)
+자동 강화 (보석 3),Auto Enhance (Gem 3)
+자동 납품 (보석 5),Auto Deliver (Gem 5)
+강화 → +%d  (%dG + %s %d),Enhance → +%d  (%dG + %s %d)
+판매 (보석 +%d),Sell (Gem +%d)
+장착 (공격력 +%d),Equip (ATK +%d)
+장착: +%d 검  (공격력 +%d),Equipped: +%d sword  (ATK +%d)
+화로: 녹슨 검 +%d / +%d,Forge: Rusty Sword +%d / +%d
+화로: 비어있음 — 녹슨 검을 올려 강화하세요,Forge: empty — place a rusty sword to enhance
+보석 %d    돌멩이 %d    강화석 %d    녹슨 검 %d,Gem %d    Stone %d    EnhStone %d    Rusty %d
+자동 철수        %s,Auto-Retreat        %s
+%d G — 구매 가능,%d G — Can buy
+%d G — 골드 부족,%d G — Not enough gold
+%s  (보상 %dG),%s  (reward %dG)
+수주중,Active
+진행 중: %s  [%d / %d],In progress: %s  [%d / %d]
+통행료 %dG,Toll %dG
+통행료 %dG를 지불하고 다리를 건너시겠습니까?,Pay the %dG toll and cross the bridge?
+통행료가 부족하다! (%dG 더 필요),Not enough for the toll! (need %dG more)
+다리 건너편은 아직 공사 중... (Coming soon),The far side is under construction... (Coming soon)
+산길 관문 너머는 아직 공사 중... (3지역 Coming soon),Beyond the mountain gate is under construction... (Region 3 soon)
+승려가 합류했다!  2지역 — 강 건너 가도,The Priest joined!  Region 2 — road across the river
+%s가 동료가 되었다! (2지역은 Coming soon),%s joined the party! (Region 2 coming soon)
+동료가 되었다!,joined!
+동시 전투 발생! 파티는 멈추지 않는다!,Two battles at once! The party won't stop!
+동시 전투창이 3개로 늘었다!,Battle windows increased to 3!
+철수의 지혜를 배웠다!,Learned the wisdom of retreat!
+전수 완료! 이제 전투 중에도 걸을 수 있다 (동시 전투 2),Training done! You can walk while fighting (2 battles)
+여관: 아직 쌩쌩하구먼. 다음에 오게.,Inn: You're still spry. Come back later.
+여관: 하룻밤 %dG라네... 돈이 모자라는군.,Inn: A night is %dG... you're short on coin.
+하룻밤 %dG. 푹 쉬고 가시겠소? (체력 전량 회복),A night is %dG. Rest up? (Full HP restore)
+♪ 푹 잤다! 체력이 가득 찼다.,♪ Slept well! HP fully restored.
+지금까지의 진행이 모두 사라지고 처음부터 시작합니다. 계속할까요?,All progress will be lost and you start over. Continue?
+평원 깊은 곳에서 박쥐 울음소리가 들린다...,Bat cries echo deep in the plains...
+거대한 날갯짓 소리가 외곽에서 들려온다...,Huge flapping wings echo from the outskirts...
+가도 옆 수풀에서 들개 무리의 그르렁 소리가 난다...,Wild dogs growl from the roadside brush...
+남쪽 가도에서 오크의 발걸음이 땅을 울린다...,Orc footsteps rumble on the southern road...
+남쪽 들판에 무언가 금빛으로 반짝인다...?,Something glints gold in the southern field...?
+들판에 무언가 반짝인다...?,Something sparkles in the field...?

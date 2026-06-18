@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"pot_count"
+display_name = "항아리 증설"
+description = "마을에 항아리를 하나 더 놓는다. 더 많이 깰수록 더 많은 보상."
+axis = "field"
+min_region = 1
+requires_flag = &"pot_unlocked"
+base_cost = 40
+cost_growth = 1.6
+max_purchases = 3
+effects = {
+"pot_count": 1
+}

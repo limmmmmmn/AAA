@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"pot_cooldown"
+display_name = "항아리 손질"
+description = "항아리 복구가 빨라진다. 더 자주 깰 수 있다."
+axis = "field"
+min_region = 1
+requires_flag = &"pot_unlocked"
+base_cost = 35
+cost_growth = 1.7
+max_purchases = 4
+effects = {
+"pot_cooldown_lv": 1
+}

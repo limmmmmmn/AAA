@@ -19,9 +19,9 @@ func _interact() -> void:
 		EventBus.show_toast.emit("여관: 아직 쌩쌩하구먼. 다음에 오게.")
 		return
 	if GameState.gold < cost:
-		EventBus.show_toast.emit("여관: 하룻밤 %dG라네... 돈이 모자라는군." % cost)
+		EventBus.show_toast.emit(Locale.t("여관: 하룻밤 %dG라네... 돈이 모자라는군.") % cost)
 		return
-	_dialog.dialog_text = "하룻밤 %dG. 푹 쉬고 가시겠소? (체력 전량 회복)" % cost
+	_dialog.dialog_text = Locale.t("하룻밤 %dG. 푹 쉬고 가시겠소? (체력 전량 회복)") % cost
 	_dialog.popup_centered()
 
 

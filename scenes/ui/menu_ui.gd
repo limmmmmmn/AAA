@@ -5,6 +5,7 @@ extends Control
 @onready var _restart_button: Button = $Panel/Margin/VBox/RestartButton
 @onready var _close_button: Button = $Panel/Margin/VBox/CloseButton
 @onready var _debug_toggle: CheckButton = $Panel/Margin/VBox/DebugToggle
+@onready var _lang_button: Button = $Panel/Margin/VBox/LangButton
 @onready var _confirm: ConfirmationDialog = $ConfirmRestart
 
 
@@ -15,7 +16,19 @@ func _ready() -> void:
 	_close_button.pressed.connect(_close)
 	_debug_toggle.toggled.connect(func(on: bool) -> void: GameState.set_debug_mode(on))
 	_confirm.confirmed.connect(_on_confirm_restart)
+	_lang_button.pressed.connect(_on_lang_pressed)
+	_refresh_lang_button()
+	EventBus.language_changed.connect(_refresh_lang_button)
 	EventBus.request_menu.connect(_toggle)
+
+
+## 한국어 ↔ English 전환. 버튼은 "현재 ▸ 다음" 식으로 보여준다.
+func _on_lang_pressed() -> void:
+	Locale.toggle()
+
+
+func _refresh_lang_button() -> void:
+	_lang_button.text = "한국어  ✔" if GameState.language == "ko" else "✔  English"
 
 
 func _unhandled_input(event: InputEvent) -> void:

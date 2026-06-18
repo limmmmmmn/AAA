@@ -57,11 +57,11 @@ func intro_text() -> String:
 	var d := front_data()
 	var n := group_size()
 	if n > 1:
-		return "%s ×%d 나타났다!" % [d.display_name, n]
-	return "%s 나타났다!" % _iga(d.display_name)
+		return Locale.t("%s ×%d 나타났다!") % [Locale.t(d.display_name), n]
+	return Locale.t("%s 나타났다!") % _iga(d.display_name)
 
 
-# ─── 한글 조사 (로그가 자연스럽게 읽히도록) ───
+# ─── 한글 조사 (로그가 자연스럽게 읽히도록). 영문 로케일에선 조사 없이 번역명만. ───
 
 static func _has_batchim(s: String) -> bool:
 	if s.is_empty():
@@ -72,9 +72,13 @@ static func _has_batchim(s: String) -> bool:
 	return (c - 0xAC00) % 28 != 0
 
 static func _iga(s: String) -> String:
+	if TranslationServer.get_locale().begins_with("en"):
+		return TranslationServer.translate(s)
 	return s + ("이" if _has_batchim(s) else "가")
 
 static func _eulreul(s: String) -> String:
+	if TranslationServer.get_locale().begins_with("en"):
+		return TranslationServer.translate(s)
 	return s + ("을" if _has_batchim(s) else "를")
 
 
@@ -150,7 +154,7 @@ func _member_attack(index: int) -> void:
 	state_updated.emit()
 	for i in enemies.size():
 		if before[i] > 0 and enemies[i].hp == 0:
-			log_line.emit("%s 쓰러뜨렸다!" % _eulreul(enemies[i].data.display_name))
+			log_line.emit(Locale.t("%s 쓰러뜨렸다!") % _eulreul(enemies[i].data.display_name))
 	if _all_dead():
 		is_finished = true
 		finished.emit(_build_result())
@@ -162,34 +166,34 @@ func _member_attack(index: int) -> void:
 func _enemy_attack(j: int) -> void:
 	if is_finished or j < 0 or j >= enemies.size() or enemies[j].hp <= 0:
 		return # 죽은 적은 반격하지 않는다
-	var aname: String = enemies[j].data.display_name
+	var aname: String = Locale.t(enemies[j].data.display_name)
 	var atk: int = int(enemies[j].data.attack)
 	if atk <= 0:
 		return # 공격력 0 (메탈) — 반격 없음
 	if not GameState.damage_enabled:
 		# 1지역은 죽을 위험이 없다 — 반격은 가볍게 막아낸다
-		log_line.emit("%s의 공격! 파티가 가볍게 막아냈다" % aname)
+		log_line.emit(Locale.t("%s의 공격! 파티가 가볍게 막아냈다") % aname)
 		return
 	var target := GameState.random_living_member()
 	var tname := _member_name(target)
-	log_line.emit("%s의 공격! %s에게 %d의 데미지" % [aname, tname, atk])
+	log_line.emit(Locale.t("%s의 공격! %s에게 %d의 데미지") % [aname, tname, atk])
 	enemy_acted.emit(atk)
 	GameState.damage_member(target, atk)
 
 
 func _member_name(index: int) -> String:
 	var members := GameState.party_members()
-	return members[index].name if index >= 0 and index < members.size() else "동료"
+	return Locale.t(members[index].name) if index >= 0 and index < members.size() else Locale.t("동료")
 
 
 func _member_attack_text(mname: String, is_crit: bool, dmg: int, all_hit: bool) -> String:
 	if is_crit:
-		return "%s의 회심의 일격! %d의 데미지" % [mname, dmg]
+		return Locale.t("%s의 회심의 일격! %d의 데미지") % [mname, dmg]
 	if dmg <= 0:
-		return "%s의 공격! 통하지 않는다" % mname
+		return Locale.t("%s의 공격! 통하지 않는다") % mname
 	if all_hit:
-		return "%s의 일제 공격! %d의 데미지" % [mname, dmg]
-	return "%s의 공격! %d의 데미지" % [mname, dmg]
+		return Locale.t("%s의 일제 공격! %d의 데미지") % [mname, dmg]
+	return Locale.t("%s의 공격! %d의 데미지") % [mname, dmg]
 
 
 func _check_hit_flee() -> bool:
@@ -218,7 +222,7 @@ func _flee(monster_name: String) -> void:
 	if is_finished:
 		return
 	is_finished = true
-	fled.emit("%s — 도망쳤다!" % monster_name)
+	fled.emit(Locale.t("%s — 도망쳤다!") % Locale.t(monster_name))
 
 
 func _build_result() -> Dictionary:

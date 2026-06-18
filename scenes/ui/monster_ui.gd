@@ -13,6 +13,7 @@ func _ready() -> void:
 	EventBus.request_monsters.connect(_open)
 	EventBus.request_close_modals.connect(_close)
 	EventBus.hunt_list_changed.connect(func() -> void: if visible: _rebuild())
+	EventBus.language_changed.connect(func() -> void: if visible: _rebuild())
 	_close_button.pressed.connect(_close)
 
 
@@ -75,13 +76,13 @@ func _make_row(id: StringName) -> Button:
 
 func _style_row(row: Button, id: StringName, nm: String) -> void:
 	var on := GameState.is_hunted(id)
-	row.text = "%s        %s" % [nm, "ON" if on else "OFF"]
+	row.text = "%s        %s" % [Locale.t(nm), "ON" if on else "OFF"]
 	row.add_theme_color_override("font_color",
 		Color(0.85, 0.95, 0.8) if on else Color(0.6, 0.6, 0.6))
 
 
 func _style_retreat(row: Button) -> void:
 	var on := GameState.tactic_retreat_enabled
-	row.text = "자동 철수        %s" % ("ON" if on else "OFF")
+	row.text = Locale.t("자동 철수        %s") % ("ON" if on else "OFF")
 	row.add_theme_color_override("font_color",
 		Color(0.95, 0.85, 0.6) if on else Color(0.6, 0.6, 0.6))

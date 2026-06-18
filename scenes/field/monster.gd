@@ -25,6 +25,15 @@ func _ready() -> void:
 	_pick_new_target()
 
 
+## 스폰 위치를 명시적으로 지정한다. _ready가 잡은 _origin(부착 시점 위치)을 덮어쓴다.
+## 지역 루트에 deferred로 붙일 때 add_child가 _ready를 먼저 돌려 _origin이 (0,0)로
+## 잡히는 문제를 방지 — 배회 기준점을 실제 스폰 지점으로 다시 맞춘다.
+func place(pos: Vector2) -> void:
+	global_position = pos
+	_origin = pos
+	_pick_new_target()
+
+
 ## 소속 지역(RegionBase)을 조상에서 찾는다 (그룹 등록 타이밍과 무관하게 안전).
 func _find_region() -> RegionBase:
 	var n := get_parent()

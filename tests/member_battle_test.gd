@@ -29,13 +29,16 @@ func _log_has(lines: Array, sub: String) -> bool:
 
 
 func _ready() -> void:
+	GameState.reset_to_new_game() # 이전 세이브 영향 없이 1지역 솔로 용사로 깨끗하게 시작
 	var main := MAIN_SCENE.instantiate()
 	add_child(main)
 	await get_tree().process_frame
 	GameState.crit_chance = 0.0
 	GameState.max_battle_windows = 5
 
-	# ── 1지역(데미지 off, 용사 1인) ── 한 라운드 = 용사 공격 + 적 반격(막아냄)
+	# ── 데미지 on(1지역부터), 용사 1인 ── 한 라운드 = 용사 공격 + 적 반격(데미지)
+	GameState.full_heal()
+	var hero_hp0 := GameState.member_hp(0)
 	var acted_a := [0]
 	var enemy_a := [0]
 	var log_a: Array = []
@@ -46,13 +49,13 @@ func _ready() -> void:
 	b1.enemy_acted.connect(func(_d: int) -> void: enemy_a[0] += 1)
 	b1.log_line.connect(func(s: String) -> void: log_a.append(s))
 	b1.tick(GameState.turn_interval)
-	_check(acted_a[0] == 1, "1지역: 한 라운드에 멤버 1명 공격 (용사)")
-	_check(enemy_a[0] == 0 and b1.enemies[0].hp == hp1 - GameState.hero_attack, "1지역: 적은 데미지 못 줌(막아냄), 용사 데미지 들어감")
-	_check(_log_has(log_a, "%s의 공격" % GameState.config.hero_name), "1지역: 용사 공격 로그")
-	_check(_log_has(log_a, "막아냈다"), "1지역: 적 반격 막아냄 로그")
+	_check(acted_a[0] == 1, "한 라운드에 멤버 1명 공격 (용사)")
+	_check(b1.enemies[0].hp == hp1 - GameState.hero_attack, "용사 데미지가 적에게 들어감")
+	_check(enemy_a[0] == 1 and GameState.member_hp(0) == hero_hp0 - 5, "1지역에서도 적 반격이 용사에게 -5")
+	_check(_log_has(log_a, "%s의 공격" % GameState.config.hero_name), "용사 공격 로그")
 	BattleManager.abort_all()
 
-	# ── 2지역(데미지 on, 용사+승려) ── 한 라운드 = 용사 공격 + 승려 공격 + 적 반격
+	# ── 용사+승려 ── 한 라운드 = 용사 공격 + 승려 공격 + 적 반격
 	GameState.damage_enabled = true
 	var priest: CompanionData = GameState.companion_catalog.get(&"priest")
 	GameState.add_companion(priest)

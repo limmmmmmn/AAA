@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"chest_unlock"
+display_name = "보물상자 설치"
+description = "마을에 보물상자를 놓는다. 항아리보다 귀한 보상(검·강화석 등)."
+axis = "field"
+min_region = 1
+base_cost = 120
+cost_growth = 1.0
+max_purchases = 1
+effects = {
+"chest_unlock": true
+}

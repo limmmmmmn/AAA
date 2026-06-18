@@ -56,9 +56,27 @@ func _spawn() -> void:
 	var monster: Monster = MONSTER_SCENE.instantiate()
 	monster.data = monster_data
 	monster.vanished.connect(_on_monster_vanished)
-	monster.position = to_local(_random_point())
-	add_child(monster)
+	# 지역 루트(y_sort_enabled)에 직접 붙여 파티·오브젝트와 함께 깊이 정렬되게 한다.
+	# _ready 중 스폰(초기 활성)이면 지역 루트가 아직 자식 구성 중이라 즉시 add_child가 실패한다.
+	# 부착·배치를 deferred로 미뤄 트리 구성이 끝난 뒤 안전하게 붙인다.
+	_attach.call_deferred(monster, _random_point())
 	_alive += 1
+
+
+## 몬스터를 y_sort된 지역 루트(RegionBase)에 붙이고 글로벌 위치로 배치 (deferred 호출용).
+func _attach(monster: Monster, global_pos: Vector2) -> void:
+	if not is_instance_valid(monster):
+		return
+	_spawn_host().add_child(monster)
+	monster.place(global_pos) # _origin을 실제 스폰 지점으로 (배회 기준점 보정)
+
+
+## 몬스터를 붙일 부모: y_sort된 지역 루트(RegionBase). 못 찾으면 자신(폴백).
+func _spawn_host() -> Node:
+	var n: Node = get_parent()
+	while n != null and not (n is RegionBase):
+		n = n.get_parent()
+	return n if n != null else self
 
 
 func _random_point() -> Vector2:

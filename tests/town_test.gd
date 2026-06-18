@@ -25,6 +25,10 @@ func _ready() -> void:
 	GameState.rusty_swords = 0
 	GameState.forge_level = -1
 	GameState.auto_pot = false
+	# 항아리·보물상자는 이제 상점 해금 → 테스트에선 직접 해금(갯수 1)
+	GameState.purchases[&"pot_unlock"] = 1
+	GameState.purchases[&"chest_unlock"] = 1
+	GameState.recalculate_stats()
 
 	# ── 인벤토리 ──
 	GameState.add_gems(5)
@@ -37,21 +41,21 @@ func _ready() -> void:
 
 	# ── 항아리 ──
 	GameState.play_time = 100.0
-	GameState.pot_ready_at = 0.0
+	GameState.pot_ready_ats[0] = 0.0
 	_check(GameState.pot_ready(), "항아리 준비됨")
 	var msg := GameState.break_pot()
 	_check(msg != "", "항아리 깨기 → 보상 (%s)" % msg)
 	_check(not GameState.pot_ready(), "깬 직후엔 복구 중")
-	_check(is_equal_approx(GameState.pot_ready_at, 100.0 + GameState.config.pot_cooldown), "쿨타임 설정됨")
-	GameState.play_time = GameState.pot_ready_at + 1.0
+	_check(is_equal_approx(GameState.pot_ready_ats[0], 100.0 + GameState.pot_cooldown_now()), "쿨타임 설정됨")
+	GameState.play_time = GameState.pot_ready_ats[0] + 1.0
 	_check(GameState.pot_ready(), "쿨타임 경과 후 다시 준비됨")
 
 	# ── 보물상자 ──
-	GameState.chest_ready_at = 0.0
+	GameState.chest_ready_ats[0] = 0.0
 	GameState.play_time = 300.0
 	_check(GameState.chest_ready(), "보물상자 준비됨")
 	_check(GameState.open_chest() != "", "보물상자 열기 → 보상")
-	_check(not GameState.chest_ready() and is_equal_approx(GameState.chest_ready_at, 300.0 + GameState.config.chest_cooldown), "상자 쿨타임 설정")
+	_check(not GameState.chest_ready() and is_equal_approx(GameState.chest_ready_ats[0], 300.0 + GameState.chest_cooldown_now()), "상자 쿨타임 설정")
 
 	# ── 대장간: 녹슨 검 강화 → 판매 → 보석 ──
 	GameState.rusty_swords = 1
@@ -101,7 +105,7 @@ func _ready() -> void:
 	GameState.materials.erase(&"wood_key")
 	_check(not GameState.chest_needs_key(), "해금 전엔 열쇠 불필요")
 	for i in GameState.config.chest_key_unlock_opens:
-		GameState.chest_ready_at = 0.0
+		GameState.chest_ready_ats[0] = 0.0
 		GameState.play_time = 10000.0 + i
 		# 해금 전이거나 열쇠 보유 시 열림
 		if GameState.chest_needs_key():
@@ -111,7 +115,7 @@ func _ready() -> void:
 	_check(GameState.chest_needs_key() and GameState.chest_required_key == &"wood_key", "해금 후 나무 열쇠 필요")
 	# 열쇠 없으면 못 연다
 	GameState.materials.erase(&"wood_key")
-	GameState.chest_ready_at = 0.0
+	GameState.chest_ready_ats[0] = 0.0
 	GameState.play_time = 20000.0
 	_check(GameState.chest_ready() and not GameState.chest_can_open(), "준비됐어도 열쇠 없으면 개봉 불가")
 	_check(GameState.open_chest() == "", "열쇠 없이 개봉 시도 → 실패")
@@ -123,13 +127,13 @@ func _ready() -> void:
 	# ── 자동 항아리꾼 (보석 자동화) ──
 	GameState.gems = GameState.config.auto_pot_gem_cost
 	GameState.auto_pot = false
-	GameState.pot_ready_at = 0.0
+	GameState.pot_ready_ats[0] = 0.0
 	GameState.play_time = 800.0
 	_check(GameState.buy_auto_pot() and GameState.auto_pot and GameState.gems == 0, "보석으로 자동 항아리꾼 구매")
 	_check(not GameState.buy_auto_pot(), "이미 보유 시 재구매 불가")
-	var ready_at_before := GameState.pot_ready_at
+	var ready_at_before := GameState.pot_ready_ats[0]
 	await get_tree().process_frame # _process가 자동으로 항아리를 깬다
-	_check(GameState.pot_ready_at > ready_at_before, "자동 항아리꾼: 준비되면 자동으로 깸")
+	_check(GameState.pot_ready_ats[0] > ready_at_before, "자동 항아리꾼: 준비되면 자동으로 깸")
 
 	# ── 필드 몬스터 드롭 (전투 → 마을 재료) ──
 	var dm := MonsterData.new()

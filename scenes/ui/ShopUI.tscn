@@ -1,21 +1,53 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://1xmrd2w4nlwn"]
 
-[ext_resource type="Script" path="res://scenes/ui/shop_ui.gd" id="1"]
+[ext_resource type="Script" uid="uid://brvh1gahch4ba" path="res://scenes/ui/shop_ui.gd" id="1"]
 
-[sub_resource type="StyleBoxFlat" id="frame"]
-content_margin_left = 8.0
-content_margin_top = 6.0
-content_margin_right = 8.0
-content_margin_bottom = 6.0
-bg_color = Color(0.04, 0.04, 0.06, 0.98)
+[sub_resource type="StyleBoxFlat" id="outer"]
+content_margin_left = 12.0
+content_margin_top = 10.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+bg_color = Color(0.055, 0.065, 0.1, 0.985)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.95, 0.95, 0.95, 1)
+border_color = Color(0.85, 0.88, 0.97, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+shadow_color = Color(0, 0, 0, 0.55)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="header"]
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+bg_color = Color(0.11, 0.14, 0.22, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="inner"]
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 5.0
+content_margin_bottom = 5.0
+bg_color = Color(0.025, 0.03, 0.05, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.35, 0.46, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [node name="ShopUI" type="Control"]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -33,74 +65,105 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Layout" type="VBoxContainer" parent="Center"]
+[node name="Panel" type="PanelContainer" parent="Center"]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_styles/panel = SubResource("outer")
 
-[node name="TitleBox" type="PanelContainer" parent="Center/Layout"]
+[node name="Margin" type="MarginContainer" parent="Center/Panel"]
 layout_mode = 2
-theme_override_styles/panel = SubResource("frame")
 
-[node name="Title" type="Label" parent="Center/Layout/TitleBox"]
+[node name="Layout" type="VBoxContainer" parent="Center/Panel/Margin"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
-horizontal_alignment = 1
-text = "Shop"
+theme_override_constants/separation = 7
 
-[node name="Body" type="HBoxContainer" parent="Center/Layout"]
+[node name="HeaderBox" type="PanelContainer" parent="Center/Panel/Margin/Layout"]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_styles/panel = SubResource("header")
 
-[node name="ListBox" type="PanelContainer" parent="Center/Layout/Body"]
-custom_minimum_size = Vector2(264, 248)
+[node name="Header" type="HBoxContainer" parent="Center/Panel/Margin/Layout/HeaderBox"]
 layout_mode = 2
-theme_override_styles/panel = SubResource("frame")
+theme_override_constants/separation = 8
 
-[node name="Scroll" type="ScrollContainer" parent="Center/Layout/Body/ListBox"]
+[node name="Title" type="Label" parent="Center/Panel/Margin/Layout/HeaderBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"Title"
+theme_override_colors/font_color = Color(1, 0.98, 0.92, 1)
+theme_override_font_sizes/font_size = 15
+text = "상점"
+vertical_alignment = 1
+
+[node name="Gold" type="Label" parent="Center/Panel/Margin/Layout/HeaderBox/Header"]
+layout_mode = 2
+theme_type_variation = &"Bold"
+theme_override_colors/font_color = Color(1, 0.84, 0.32, 1)
+theme_override_font_sizes/font_size = 13
+text = "G 0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="Body" type="HBoxContainer" parent="Center/Panel/Margin/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ListBox" type="PanelContainer" parent="Center/Panel/Margin/Layout/Body"]
+custom_minimum_size = Vector2(296, 244)
+layout_mode = 2
+theme_override_styles/panel = SubResource("inner")
+
+[node name="Scroll" type="ScrollContainer" parent="Center/Panel/Margin/Layout/Body/ListBox"]
 layout_mode = 2
 horizontal_scroll_mode = 0
 
-[node name="List" type="VBoxContainer" parent="Center/Layout/Body/ListBox/Scroll"]
+[node name="List" type="VBoxContainer" parent="Center/Panel/Margin/Layout/Body/ListBox/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 1
+theme_override_constants/separation = 2
 
-[node name="DescBox" type="PanelContainer" parent="Center/Layout/Body"]
-custom_minimum_size = Vector2(214, 248)
+[node name="DescBox" type="PanelContainer" parent="Center/Panel/Margin/Layout/Body"]
+custom_minimum_size = Vector2(224, 244)
 layout_mode = 2
-theme_override_styles/panel = SubResource("frame")
+theme_override_styles/panel = SubResource("inner")
 
-[node name="Desc" type="VBoxContainer" parent="Center/Layout/Body/DescBox"]
+[node name="Desc" type="VBoxContainer" parent="Center/Panel/Margin/Layout/Body/DescBox"]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 6
 
-[node name="DName" type="Label" parent="Center/Layout/Body/DescBox/Desc"]
+[node name="DName" type="Label" parent="Center/Panel/Margin/Layout/Body/DescBox/Desc"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.95, 0.6, 1)
-theme_override_font_sizes/font_size = 11
+theme_type_variation = &"Bold"
+theme_override_colors/font_color = Color(1, 0.92, 0.55, 1)
+theme_override_font_sizes/font_size = 14
 text = "-"
 
-[node name="DLevel" type="Label" parent="Center/Layout/Body/DescBox/Desc"]
+[node name="DLevel" type="Label" parent="Center/Panel/Margin/Layout/Body/DescBox/Desc"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.85, 1, 1)
-theme_override_font_sizes/font_size = 10
-text = ""
+theme_override_colors/font_color = Color(0.62, 0.82, 1, 1)
+theme_override_font_sizes/font_size = 11
 
-[node name="DText" type="Label" parent="Center/Layout/Body/DescBox/Desc"]
+[node name="DText" type="Label" parent="Center/Panel/Margin/Layout/Body/DescBox/Desc"]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.82, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 11
 autowrap_mode = 2
-theme_override_font_sizes/font_size = 10
-text = ""
 
-[node name="DStatus" type="Label" parent="Center/Layout/Body/DescBox/Desc"]
+[node name="DStatusBox" type="PanelContainer" parent="Center/Panel/Margin/Layout/Body/DescBox/Desc"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 10
-text = ""
 
-[node name="CloseButton" type="Button" parent="Center/Layout"]
+[node name="DStatus" type="Label" parent="Center/Panel/Margin/Layout/Body/DescBox/Desc/DStatusBox"]
+layout_mode = 2
+theme_type_variation = &"Bold"
+theme_override_font_sizes/font_size = 11
+text = "-"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="Center/Panel/Margin/Layout"]
 layout_mode = 2
 size_flags_horizontal = 4
 focus_mode = 0
+theme_override_colors/font_color = Color(0.7, 0.74, 0.82, 1)
 theme_override_font_sizes/font_size = 9
+flat = true
 text = "닫기 (Esc / 멀어지면)"

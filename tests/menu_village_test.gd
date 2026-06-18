@@ -62,7 +62,7 @@ func _ready() -> void:
 	_check(GameState.kill_count.is_empty(), "리셋: 토벌 수 초기화")
 	_check(not GameState.gate_paid, "리셋: 통행료 미지불")
 	_check(GameState.current_region == &"region1", "리셋: 1지역으로")
-	_check(not GameState.damage_enabled, "리셋: 데미지 off")
+	_check(GameState.damage_enabled, "리셋: 데미지 on (1지역부터)")
 	_check(GameState.member_count() == 1 and GameState.member_max_hp(0) == GameState.config.hero_max_hp, "리셋: 용사 HP 기본값")
 	_check(GameState.total_hp() == GameState.total_max_hp(), "리셋: HP 가득")
 	_check(not GameState.tactic_retreat_unlocked, "리셋: 자동 철수 잠금")

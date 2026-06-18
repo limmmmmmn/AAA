@@ -48,9 +48,16 @@ theme_override_constants/separation = 8
 
 [node name="Title" type="Label" parent="Panel/Margin/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
+theme_type_variation = &"Title"
+theme_override_font_sizes/font_size = 16
 horizontal_alignment = 1
 text = "메뉴"
+
+[node name="LangButton" type="Button" parent="Panel/Margin/VBox"]
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 10
+text = "한국어 / English"
 
 [node name="DebugToggle" type="CheckButton" parent="Panel/Margin/VBox"]
 layout_mode = 2

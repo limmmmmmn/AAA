@@ -16,6 +16,7 @@ func _check(cond: bool, label: String) -> void:
 
 
 func _ready() -> void:
+	GameState.reset_to_new_game() # 이전 세이브(삽/해금 등) 영향 없이 깨끗한 카탈로그/상점 검증
 	var main := MAIN_SCENE.instantiate()
 	add_child(main)
 	await get_tree().process_frame
@@ -27,10 +28,10 @@ func _ready() -> void:
 
 	# A-2: 시작 시 슬라임존만 활성 (6마리), 박쥐/정예존은 잠금
 	_check(get_tree().get_nodes_in_group("monsters").size() == 6, "시작 시 슬라임존만 활성(6마리)")
-	_check(GameState.catalog.size() == 19, "업그레이드 카탈로그 19종 (+삽/좋은 삽/꼬마돼지)")
-	# 1지역 상점엔 1지역 아이템만 노출. 삽 노출, 좋은 삽/꼬마돼지는 삽 보유 전엔 숨김
+	_check(GameState.catalog.size() == 29, "업그레이드 카탈로그 29종 (+마을 설치/증설/쿨다운, 모닥불 분할)")
+	# 1지역 상점엔 1지역 아이템만 노출. 해금 전 증설/쿨다운/모닥불 스탯 업글은 숨김(requires_flag).
 	_check(GameState.upgrades_for_axis("combat").size() == 5, "1지역 상점 전투 5종")
-	_check(GameState.upgrades_for_axis("field").size() == 5, "1지역 상점 필드 5종 (+삽, 좋은 삽/꼬마돼지는 삽 후)")
+	_check(GameState.upgrades_for_axis("field").size() == 8, "1지역 상점 필드 8종 (삽/모닥불/항아리·상자 설치)")
 
 	# A-1: 솔로 용사 — 파티 멤버 1명, 기본 공격력 3
 	_check(GameState.party_members().size() == 1, "파티 = 용사 1인")

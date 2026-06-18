@@ -5,6 +5,10 @@ class_name RegionBase extends Node2D
 
 @export var map_size := Vector2i(44, 34) # 타일 수 (32px 타일)
 
+const GRASS_DECO := preload("res://scenes/field/GrassDeco.tscn")
+const GRASS_DENSITY := 0.10  # 풀 타일당 풀 장식이 놓일 확률
+const GRASS_MAX := 160       # 성능 상한 (Area2D 수)
+
 const TILE_GRASS_LIGHT := Vector2i(0, 0)
 const TILE_GRASS_MID := Vector2i(1, 0)
 const TILE_GRASS_DARK := Vector2i(2, 0)
@@ -20,6 +24,7 @@ const TILE_BRIDGE := Vector2i(7, 0)
 func _ready() -> void:
 	add_to_group("field")
 	_paint_map()
+	_scatter_grass()
 
 
 func _paint_map() -> void:
@@ -27,6 +32,28 @@ func _paint_map() -> void:
 		for x in map_size.x:
 			var cell := Vector2i(x, y)
 			_tiles.set_cell(cell, 0, _tile_for(cell))
+
+
+## 초원/숲 타일 위에 풀 장식(밟으면 눕는다)을 흩뿌린다. 배치는 지역마다 일정(시드 고정).
+func _scatter_grass() -> void:
+	var grass := [TILE_GRASS_LIGHT, TILE_GRASS_MID, TILE_GRASS_DARK]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(hash(region_id())) # 같은 지역은 항상 같은 배치 (저장 불필요)
+	var placed := 0
+	for y in map_size.y:
+		for x in map_size.x:
+			if placed >= GRASS_MAX:
+				return
+			var cell := Vector2i(x, y)
+			if not grass.has(_tile_for(cell)):
+				continue
+			if rng.randf() > GRASS_DENSITY:
+				continue
+			var deco := GRASS_DECO.instantiate()
+			deco.position = _tiles.map_to_local(cell) \
+				+ Vector2(rng.randf_range(-9, 9), rng.randf_range(-9, 9))
+			add_child(deco)
+			placed += 1
 
 
 ## 파생 클래스가 오버라이드한다.

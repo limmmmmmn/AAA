@@ -23,14 +23,15 @@ func _ready() -> void:
 	GameState.crit_chance = 0.0
 	GameState.max_battle_windows = 5
 
-	# 1지역: damage off → 멤버 HP 안 깎임
-	_check(not GameState.damage_enabled, "1지역은 데미지 off")
+	# 데미지는 1지역부터 on (적 공격이 아군에게 들어간다)
+	_check(GameState.damage_enabled, "데미지 기본 on (1지역부터)")
+	var hp0 := GameState.total_hp()
 	GameState.apply_damage(10)
-	_check(GameState.total_hp() == GameState.total_max_hp(), "1지역에선 HP 불변")
+	_check(GameState.total_hp() == hp0 - 10, "1지역에서도 데미지 10 적용됨")
 
-	# 2지역 진입 → 데미지 on + 전원 가득
+	# 2지역 진입 → 전원 가득 회복
 	GameState.enable_damage_for_region2()
-	_check(GameState.damage_enabled and GameState.total_hp() == GameState.total_max_hp(), "2지역: 데미지 on + 전량 회복")
+	_check(GameState.damage_enabled and GameState.total_hp() == GameState.total_max_hp(), "2지역 진입: 전량 회복")
 	_check(GameState.member_max_hp(0) == GameState.config.hero_max_hp, "용사 최대 HP = config.hero_max_hp")
 
 	# 피격 경감 (사슬 갑옷): 데미지 4 → 2

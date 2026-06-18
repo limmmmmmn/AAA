@@ -25,10 +25,10 @@ func _ready() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 
-	# 시작: 1지역, 데미지 off, 용사 솔로
+	# 시작: 1지역, 데미지 on(1지역부터), 용사 솔로
 	_check(GameState.current_region == &"region1", "시작 지역 = region1")
 	_check(_current_region().region_id() == &"region1", "현재 지역 노드 = region1")
-	_check(not GameState.damage_enabled, "1지역 데미지 off")
+	_check(GameState.damage_enabled, "1지역부터 데미지 on")
 	_check(GameState.party_members().size() == 1, "1지역 파티 1인")
 
 	# 통행료 지불 → 2지역 전환

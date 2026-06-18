@@ -1,8 +1,7 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scenes/field/pot.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/pot.svg" id="2"]
-[ext_resource type="Texture2D" path="res://assets/pot_broken.svg" id="3"]
+[ext_resource type="Texture2D" path="res://assets/objects/pot.png" id="2"]
 
 [sub_resource type="CircleShape2D" id="shape"]
 radius = 24.0
@@ -11,11 +10,10 @@ radius = 24.0
 collision_layer = 0
 collision_mask = 1
 script = ExtResource("1")
-ready_texture = ExtResource("2")
-broken_texture = ExtResource("3")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("2")
+hframes = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("shape")

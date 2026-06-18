@@ -1,5 +1,5 @@
 extends Node
-## 상점: Space로 열고, 멀어지면 닫힌다 (대장간과 동일, 일시정지 없음).
+## 상점: Space로 열고, 멀어지면 닫힌다. 열리면 세계 정지(필드·전투 멈춤), 닫히면 해제.
 ## godot --headless --path . res://tests/ShopCloseTest.tscn
 
 const MAIN_SCENE := preload("res://scenes/Main.tscn")
@@ -31,15 +31,15 @@ func _ready() -> void:
 	shop._on_body_entered(party)
 	_check(shop._in_range, "상점 근처 진입")
 
-	# Space/[열기] → 상점 열림, 일시정지 안 함
+	# Space/[열기] → 상점 열림, 세계 정지 (필드·전투 멈춤)
 	shop._activate()
 	_check(shop_ui.visible, "Space로 상점 열림")
-	_check(not get_tree().paused, "상점 열려도 일시정지 아님 (계속 이동)")
+	_check(get_tree().paused, "상점 열리면 세계 정지 (필드·전투 멈춤)")
 
-	# 멀어지면 자동으로 닫힘
+	# 멀어지면 자동으로 닫힘 + 정지 해제
 	shop._on_body_exited(party)
 	_check(not shop_ui.visible, "멀어지면 상점 닫힘")
-	_check(not get_tree().paused, "닫힌 뒤에도 정지 아님")
+	_check(not get_tree().paused, "닫히면 정지 해제")
 
 	# 다시 열고 Esc(모달 닫기 요청)로 닫기
 	shop._on_body_entered(party)

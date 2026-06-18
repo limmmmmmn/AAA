@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3]
+[gd_scene load_steps=25 format=3]
 
 [ext_resource type="Script" path="res://scenes/field/region2.gd" id="1"]
 [ext_resource type="TileSet" path="res://data/tileset.tres" id="2"]
@@ -8,7 +8,7 @@
 [ext_resource type="Script" path="res://scenes/field/metal_slime_spawner.gd" id="6"]
 [ext_resource type="Script" path="res://scenes/field/shop_building.gd" id="7"]
 [ext_resource type="Texture2D" path="res://assets/church.svg" id="8"]
-[ext_resource type="Texture2D" path="res://assets/shop.svg" id="9"]
+[ext_resource type="Texture2D" path="res://assets/objects/shop_1.png" id="9"]
 [ext_resource type="Resource" path="res://data/monsters/snake.tres" id="10"]
 [ext_resource type="Resource" path="res://data/monsters/wolf.tres" id="11"]
 [ext_resource type="Resource" path="res://data/monsters/orc.tres" id="12"]
@@ -17,6 +17,7 @@
 [ext_resource type="Texture2D" path="res://assets/inn.svg" id="15"]
 [ext_resource type="Script" path="res://scenes/field/quest_board.gd" id="16"]
 [ext_resource type="Texture2D" path="res://assets/board.svg" id="17"]
+[ext_resource type="PackedScene" path="res://scenes/field/Bonfire.tscn" id="18"]
 
 [sub_resource type="RectangleShape2D" id="snake_rect"]
 size = Vector2(576, 416)
@@ -37,6 +38,7 @@ size = Vector2(96, 72)
 size = Vector2(48, 56)
 
 [node name="Region2" type="Node2D"]
+y_sort_enabled = true
 script = ExtResource("1")
 map_size = Vector2i(22, 64)
 
@@ -44,6 +46,7 @@ map_size = Vector2i(22, 64)
 tile_set = ExtResource("2")
 
 [node name="Village" type="Node2D" parent="."]
+y_sort_enabled = true
 
 [node name="Church" type="Sprite2D" parent="Village"]
 position = Vector2(150, 1036)
@@ -120,6 +123,9 @@ offset_bottom = 56.0
 focus_mode = 0
 theme_override_font_sizes/font_size = 8
 text = "상점 열기 [Space]"
+
+[node name="Bonfire" parent="Village" instance=ExtResource("18")]
+position = Vector2(220, 1080)
 
 [node name="Party" parent="." instance=ExtResource("3")]
 position = Vector2(336, 96)

@@ -16,7 +16,7 @@ func _ready() -> void:
 
 
 func _refresh_sign() -> void:
-	_sign.text = "2지역 — Coming soon!" if GameState.gate_paid else "통행료 %dG" % toll
+	_sign.text = "2지역 — Coming soon!" if GameState.gate_paid else Locale.t("통행료 %dG") % toll
 
 
 func _on_body_entered(body: Node2D) -> void:
@@ -25,10 +25,10 @@ func _on_body_entered(body: Node2D) -> void:
 	if GameState.gate_paid:
 		EventBus.show_toast.emit("다리 건너편은 아직 공사 중... (Coming soon)")
 	elif GameState.gold >= toll:
-		_dialog.dialog_text = "통행료 %dG를 지불하고 다리를 건너시겠습니까?" % toll
+		_dialog.dialog_text = Locale.t("통행료 %dG를 지불하고 다리를 건너시겠습니까?") % toll
 		_dialog.popup_centered()
 	else:
-		EventBus.show_toast.emit("통행료가 부족하다! (%dG 더 필요)" % (toll - GameState.gold))
+		EventBus.show_toast.emit(Locale.t("통행료가 부족하다! (%dG 더 필요)") % (toll - GameState.gold))
 
 
 func _on_confirmed() -> void:

@@ -32,6 +32,8 @@ func _ready() -> void:
 	EventBus.dig_changed.connect(func() -> void: _update_dig_slot())
 	EventBus.debug_mode_changed.connect(func(_on: bool) -> void: _refresh_info())
 	_menu_button.focus_mode = Control.FOCUS_NONE
+	_menu_button.theme_type_variation = &"Bold"
+	_info.theme_type_variation = &"Bold" # 골드 = 강조 (굵게)
 	_menu_button.pressed.connect(func() -> void: EventBus.request_menu.emit())
 	_info.gui_input.connect(_on_gold_input) # 디버그: 골드 라벨 클릭 +100
 	_rebuild_members()
@@ -48,7 +50,7 @@ func _process(_delta: float) -> void:
 # ─── 좌상단 미니멀 정보 (G 360   GEM 2   02:15) ───
 
 func _refresh_info() -> void:
-	var t := "G %d" % GameState.gold
+	var t := "GOLD %d" % GameState.gold
 	if GameState.gems > 0:
 		t += "   GEM %d" % GameState.gems
 	var sec := int(GameState.play_time)
@@ -94,6 +96,7 @@ func _rebuild_members() -> void:
 		vb.add_theme_constant_override("separation", 0)
 		vb.custom_minimum_size = Vector2(48, 0)
 		var code := Label.new()
+		code.theme_type_variation = &"Bold" # 멤버 코드 = 강조
 		code.add_theme_font_size_override("font_size", 9)
 		code.add_theme_color_override("font_color", Color(0.7, 0.95, 0.7))
 		code.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -156,6 +159,7 @@ func _rebuild_slots() -> void:
 		var b := Button.new()
 		b.custom_minimum_size = Vector2(40, 40)
 		b.focus_mode = Control.FOCUS_NONE
+		b.theme_type_variation = &"Bold" # 슬롯 라벨 = 강조
 		b.add_theme_font_size_override("font_size", 9)
 		b.text = spec["label"]
 		b.pressed.connect(spec["press"])
@@ -170,9 +174,9 @@ func _do_dig() -> void:
 	if not r.ok:
 		return
 	if r.sparkle:
-		_show_toast("✨ 반짝이는 땅에서 %s!" % r.msg)
+		_show_toast(Locale.t("✨ 반짝이는 땅에서 %s!") % r.msg)
 	elif r.msg != "":
-		_show_toast("땅속에서 %s!" % r.msg)
+		_show_toast(Locale.t("땅속에서 %s!") % r.msg)
 	else:
 		_show_toast("아무것도 나오지 않았다...")
 

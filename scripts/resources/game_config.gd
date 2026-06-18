@@ -33,6 +33,8 @@ class_name GameConfig extends Resource
 @export var auto_forge_interval: float = 1.5   # 자동 강화/납품 1스텝 간격(초)
 @export var sword_attack_per_level: int = 2    # 장착 검: 강화 수치당 파티 공격력
 @export var chest_key_unlock_opens: int = 3    # 보물상자를 N번 열면 열쇠 시스템 해금
+@export var pot_cooldown_mult_per_level: float = 0.82   # 항아리 복구속도 업글 1단계당 쿨타임 ×
+@export var chest_cooldown_mult_per_level: float = 0.85 # 보물상자 복구속도 업글 1단계당
 
 @export_group("Digging")
 @export var dig_base_cooldown: float = 60.0     # 삽 기본 쿨타임(초). 항아리보다 길게
@@ -42,6 +44,14 @@ class_name GameConfig extends Resource
 @export var sparkle_base_chance: float = 0.0    # 반짝이는 땅 기본 생성 확률
 @export var wisdom_sparkle_per: float = 0.005   # 지혜 1당 반짝임 확률 +
 @export var pig_sparkle_bonus: float = 0.10     # 꼬마돼지 보유 시 반짝임 확률 +
+
+@export_group("Bonfire")
+@export var bonfire_base_interval: float = 1.4    # 1레벨 회복 1틱 간격(초)
+@export var bonfire_interval_per_level: float = 0.4 # 레벨당 간격 감소(회복 빨라짐)
+@export var bonfire_min_interval: float = 0.35     # 간격 하한
+@export var bonfire_heal: int = 1                  # 1틱 회복량(HP)
+@export var bonfire_base_radius: float = 42.0      # 1레벨 회복 반경(px)
+@export var bonfire_radius_per_level: float = 48.0 # 레벨당 반경 증가 (나중에 키우면 맵 전체)
 
 @export_group("Save")
 @export var autosave_interval: float = 30.0

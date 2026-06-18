@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"pot_unlock"
+display_name = "항아리 설치"
+description = "마을에 항아리를 놓는다. 깨면 쿨타임마다 랜덤 보상."
+axis = "field"
+min_region = 1
+base_cost = 25
+cost_growth = 1.0
+max_purchases = 1
+effects = {
+"pot_unlock": true
+}

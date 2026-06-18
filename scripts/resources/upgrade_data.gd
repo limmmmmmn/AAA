@@ -9,6 +9,7 @@ class_name UpgradeData extends Resource
 @export_enum("combat", "field") var axis: String = "combat" # 상점 윗줄/아랫줄
 @export var min_region: int = 1   # 이 지역 번호 이상에서만 상점에 노출 (1지역=1, 2지역=2)
 @export var requires_shovel: bool = false # 삽 보유 시에만 상점에 노출 (좋은 삽/꼬마돼지)
+@export var requires_flag: StringName = &"" # 이 GameState bool 플래그가 true일 때만 노출 (예: &"pot_unlocked")
 @export var base_cost: int = 10
 @export var cost_growth: float = 1.0   # 반복 구매형이면 >1.0
 @export var max_purchases: int = 1

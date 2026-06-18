@@ -33,14 +33,24 @@ func _try_spawn() -> void:
 		var monster: Monster = MONSTER_SCENE.instantiate()
 		monster.data = monster_data
 		monster.vanished.connect(_on_vanished)
-		monster.position = to_local(Vector2(
+		var pos := Vector2(
 			randf_range(spawn_rect.position.x, spawn_rect.end.x),
 			randf_range(spawn_rect.position.y, spawn_rect.end.y)
-		))
-		add_child(monster)
+		)
+		# 지역 루트(y_sort)에 붙여 파티와 함께 깊이 정렬되게 한다.
+		_spawn_host().add_child(monster)
+		monster.place(pos)
 		_current = monster
 	_schedule()
 
 
 func _on_vanished(_monster: Monster) -> void:
 	_current = null
+
+
+## 몬스터를 붙일 부모: y_sort된 지역 루트(RegionBase). 못 찾으면 자신(폴백).
+func _spawn_host() -> Node:
+	var n: Node = get_parent()
+	while n != null and not (n is RegionBase):
+		n = n.get_parent()
+	return n if n != null else self

@@ -92,7 +92,7 @@ func _on_defeat() -> void:
 		return
 	_busy = true
 	BattleManager.abort_all()
-	_death_label.text = "%s는 죽어버렸다..." % GameState.config.hero_name
+	_death_label.text = Locale.t("%s는 죽어버렸다...") % Locale.t(GameState.config.hero_name)
 	await _do_fade(1.0)
 	_death_label.visible = true
 	await get_tree().create_timer(1.4).timeout

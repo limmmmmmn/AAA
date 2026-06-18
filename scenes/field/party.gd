@@ -7,6 +7,8 @@ class_name Party extends CharacterBody2D
 ##   2. 입력이 멈춘 뒤 auto_resume_delay 경과 시 자동 추적 재개
 ## (마을 안에서도 자동 추적은 동작한다 — 몬스터가 마을에 못 들어오므로 가까운 바깥 사냥감으로 향한다)
 
+const HP_BAR := preload("res://scenes/field/field_hp_bar.gd")
+
 @export var auto_resume_delay: float = 1.5
 @export var follow_gap: float = 15.0   # 동료 줄줄이 행군 간격(px) — 멤버 간 거리
 
@@ -16,6 +18,8 @@ class_name Party extends CharacterBody2D
 var _field: Node = null
 var _idle_time: float = 0.0   # 마지막 수동 입력 이후 경과 시간
 var _companion_sprites: Array[DirSprite] = []
+var _hero_bar: Node2D = null               # 용사 머리 위 HP바
+var _companion_bars: Array[Node2D] = []     # 동료 머리 위 HP바
 var _companion_prev: Array[Vector2] = []   # 동료 방향 애니용 직전 위치
 var _path: Array[Vector2] = []   # 용사가 지나온 경로 점(촘촘), 끝이 최신 — 동료 줄줄이 추적용
 var _last_pos: Vector2 = Vector2.ZERO
@@ -27,10 +31,15 @@ var _retreat_hold: bool = false   # 철수 직후 마을에서 대기 — 수동
 func _ready() -> void:
 	add_to_group("party")
 	_field = _find_region()
-	_sprite.z_index = 1 # 용사는 동료보다 앞에 그린다 (동료 z=0, 바닥 타일맵 z=0보다 위)
+	_sprite.z_index = 0 # 깊이는 Y-sort가 결정한다 (Party가 y_sort_enabled)
+	_hero_bar = HP_BAR.new()
+	_sprite.add_child(_hero_bar)
+	_hero_bar.place_above(_sprite)
 	EventBus.companion_joined.connect(_on_companion_joined)
 	EventBus.tactic_retreat_triggered.connect(_on_retreat)
+	EventBus.party_hp_changed.connect(_refresh_hp_bars)
 	_refresh_companions()
+	_refresh_hp_bars()
 
 
 ## 소속 지역(RegionBase)을 조상에서 찾는다. 그룹 등록은 부모 _ready보다 늦으므로
@@ -42,6 +51,16 @@ func _find_region() -> RegionBase:
 			return n
 		n = n.get_parent()
 	return null
+
+
+## 멤버 i의 월드 좌표 (0=용사, 1+=동료). 모닥불 회복 연출 위치용.
+func member_world_pos(index: int) -> Vector2:
+	if index <= 0:
+		return _sprite.global_position
+	var ci := index - 1
+	if ci < _companion_sprites.size():
+		return _companion_sprites[ci].global_position
+	return global_position
 
 
 ## 자동 철수 (v3 §9): 전투 일제 종료 → 마을로 자동 귀환 (귀환 중 인카운트 없음)
@@ -81,21 +100,34 @@ func _on_companion_joined(_comp: CompanionData) -> void:
 	_refresh_companions()
 
 
+## 멤버별 현재 HP를 머리 위 바에 반영 (용사=0, 동료=1+).
+func _refresh_hp_bars() -> void:
+	if _hero_bar:
+		_hero_bar.set_hp(GameState.member_hp(0), GameState.member_max_hp(0))
+	for i in _companion_bars.size():
+		_companion_bars[i].set_hp(GameState.member_hp(i + 1), GameState.member_max_hp(i + 1))
+
+
 ## 동료 줄줄이 이동 (고전 JRPG 행군): 용사가 지나온 경로를 따라 일정 간격으로 줄지어 따라온다.
 ## 동료 스프라이트는 Party의 자식이지만 매 프레임 글로벌 위치를 경로 점으로 덮어써 배치한다.
 func _refresh_companions() -> void:
 	for s in _companion_sprites:
 		s.queue_free()
 	_companion_sprites.clear()
+	_companion_bars.clear() # 바는 스프라이트의 자식이라 함께 해제됨
 	for comp: CompanionData in GameState.companions:
 		var s := DirSprite.new()
 		s.texture = comp.sprite
-		s.z_index = 0       # 바닥 타일맵(z=0) 위, 용사(z=1) 아래 — z_index -1이면 바닥에 가려졌었다
-		s.z_as_relative = false
+		s.z_index = 0       # 깊이는 Y-sort가 결정 (z 동일, Y로 정렬)
 		s.scale = Vector2(0.85, 0.85)
 		add_child(s)
+		var bar := HP_BAR.new()
+		s.add_child(bar)
+		bar.place_above(s)
 		_companion_sprites.append(s)
+		_companion_bars.append(bar)
 	_reset_follow()
+	_refresh_hp_bars()
 
 
 ## 거리 기반 브레드크럼: 용사 경로에 점을 촘촘히 남기고, 멤버 i를 경로상

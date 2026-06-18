@@ -43,4 +43,4 @@ func _reveal(announce: bool) -> void:
 			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		tween.tween_property(_sprite, "position:y", _sprite.position.y, 0.18) \
 			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-		EventBus.show_toast.emit("%s가 동료가 되었다! (2지역은 Coming soon)" % companion_name)
+		EventBus.show_toast.emit(Locale.t("%s가 동료가 되었다! (2지역은 Coming soon)") % Locale.t(companion_name))

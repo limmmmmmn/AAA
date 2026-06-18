@@ -17,6 +17,7 @@ func _ready() -> void:
 	EventBus.quest_accepted.connect(_on_quest_changed)
 	EventBus.quest_completed.connect(_on_quest_changed)
 	EventBus.monster_died.connect(_on_monster_died)
+	EventBus.language_changed.connect(func() -> void: if visible: _rebuild())
 	_close_button.pressed.connect(_close)
 
 
@@ -58,7 +59,7 @@ func _make_row(quest: QuestData) -> HBoxContainer:
 
 	var desc := Label.new()
 	desc.add_theme_font_size_override("font_size", 9)
-	desc.text = "%s  (보상 %dG)" % [quest.description, quest.reward_gold]
+	desc.text = Locale.t("%s  (보상 %dG)") % [Locale.t(quest.description), quest.reward_gold]
 	desc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(desc)
 
@@ -83,4 +84,4 @@ func _refresh_active() -> void:
 	if q == null:
 		_active_label.text = "수주 중인 의뢰 없음 — 무엇을 잡을지 정해보자"
 	else:
-		_active_label.text = "진행 중: %s  [%d / %d]" % [q.description, GameState.quest_progress(), q.target_count]
+		_active_label.text = Locale.t("진행 중: %s  [%d / %d]") % [Locale.t(q.description), GameState.quest_progress(), q.target_count]
