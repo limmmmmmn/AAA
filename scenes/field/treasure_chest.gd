@@ -45,7 +45,7 @@ func _interact() -> void:
 
 func _prompt_text() -> String:
 	if not GameState.chest_ready(index):
-		return Locale.t("재생성 %s") % TownFmt.time(GameState.chest_remaining(index))
+		return TownFmt.time(GameState.chest_remaining(index))
 	if GameState.chest_needs_key() and GameState.material_count(GameState.chest_required_key) <= 0:
 		return Locale.t("🔒 %s 열쇠 필요") % GameState.material_name(GameState.chest_required_key)
 	return "열기"
@@ -58,4 +58,4 @@ func _tick() -> void:
 	_sprite.frame = 0 if r else 1   # 닫힘 / 열림
 	_status.visible = not r
 	if not r:
-		_status.text = Locale.t("재생성 %s") % TownFmt.time(GameState.chest_remaining(index))
+		_status.text = TownFmt.time(GameState.chest_remaining(index)) # 남은 시간만 (깔끔하게)

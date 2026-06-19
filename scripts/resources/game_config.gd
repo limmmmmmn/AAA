@@ -13,6 +13,20 @@ class_name GameConfig extends Resource
 @export var initial_max_battle_windows: int = 1
 @export var hero_max_hp: int = 40           # 용사 최대 HP (멤버별 개별 HP)
 @export var base_crit_chance: float = 0.02  # 회심의 일격 확률 (방어 무시, v3 §1)
+@export var hero_base_luck: int = 0         # 용사 기본 운
+
+@export_group("Luck")
+@export var luck_crit_per: float = 0.01        # 운 1당 회심 확률 +
+@export var luck_gold_per: float = 0.06        # 운 1당 발견 골드 ×(1+)
+@export var luck_find_per: float = 0.07        # 운 1당 아이템/드롭 발견 확률 ×(1+)
+@export var luck_drop_weight_per: float = 0.07 # 운 1당 보상 가중치 편향 (좋은거↑·꽝↓)
+
+@export_group("Inn")
+@export var inn_cost_ratio: float = 0.1   # 숙박료 = 소지금의 이 비율
+@export var inn_min_cost: int = 3         # 숙박료 하한 (돈 적어도 공짜 회복 방지)
+
+@export_group("Recruit NPC")
+@export var recruit_gold_threshold: int = 10  # 이 골드 이상 모이면 마을에 영입 NPC 등장
 
 @export_group("Elder Events")
 @export var elder_battles_threshold: int = 15        # 누적 전투 N회

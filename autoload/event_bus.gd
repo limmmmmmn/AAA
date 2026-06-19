@@ -12,6 +12,9 @@ signal party_exited_village
 signal request_shop                              # 상점 [열기]/Space → ShopUI 열기
 signal request_shop_close                         # 상점 [닫기]/멀어짐 → ShopUI 닫기
 signal shop_closed                                # ShopUI가 닫힘을 통지 (상점 버튼 동기화)
+signal request_inn                               # 여관 [열기]/Space → InnUI 열기
+signal request_inn_close                          # 여관 [닫기]/멀어짐 → InnUI 닫기
+signal inn_closed                                 # InnUI가 닫힘을 통지 (여관 버튼 동기화)
 signal request_close_modals                      # Esc → 열려 있는 모달(상점/대장간/게시판) 닫기
 signal gate_unlocked(gate_id: StringName)
 signal show_toast(text: String)

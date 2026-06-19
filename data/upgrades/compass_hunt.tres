@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = &"compass_hunt"
 display_name = "사냥꾼의 나침반"
-description = "자동 추적 해금"
+description = "자동 이동 해금 — 우측에 자동이동 토글 버튼이 생긴다"
 axis = "field"
 base_cost = 120
 cost_growth = 1.0

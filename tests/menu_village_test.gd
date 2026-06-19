@@ -26,7 +26,8 @@ func _ready() -> void:
 
 	# ── 마을에서도 자동 추적 가능 ──
 	var party: Node2D = get_tree().get_first_node_in_group("party")
-	GameState.auto_hunt_unlocked = true
+	GameState.auto_hunt_unlocked = true # 자동이동 스킬 해금
+	GameState.auto_move_on = true       # 자동 이동 토글 ON
 	party._idle_time = 999.0 # 수동 입력 유예 지난 상태
 	party.global_position = _field().entrance(&"default") # 마을 안 스폰 지점
 	_check(_field().is_village(party.global_position), "파티가 마을 타일 위")

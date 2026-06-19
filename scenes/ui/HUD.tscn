@@ -27,16 +27,22 @@ theme_override_constants/outline_size = 5
 theme_override_font_sizes/font_size = 16
 text = "G 0"
 
-[node name="Members" type="HBoxContainer" parent="." unique_id=1633574721]
+[node name="PartyPanel" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 8.0
 offset_top = -42.0
-offset_right = 400.0
+offset_right = 130.0
 offset_bottom = -6.0
 grow_vertical = 0
+theme_override_constants/separation = 3
+
+[node name="Members" type="HBoxContainer" parent="PartyPanel"]
+layout_mode = 2
+mouse_filter = 0
+mouse_default_cursor_shape = 2
 theme_override_constants/separation = 5
 
 [node name="MenuButton" type="Button" parent="." unique_id=2012525166]

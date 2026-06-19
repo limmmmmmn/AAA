@@ -76,15 +76,20 @@ var turn_interval: float = 1.2
 var turn_beat_delay: float = 0.25       # 라운드 내 파티→적 행동 텀 (A-2, config에서)
 var move_speed: float = 80.0
 var respawn_delay_mult: float = 1.0
+var spawn_count_bonus: int = 0          # 존별 최대 몬스터 수 +α (몹 증식 업글)
 var max_battle_windows: int = 1
 var auto_hunt_unlocked: bool = false
-var crit_chance: float = 0.02          # 회심의 일격 확률 (v3 §1)
+var auto_move_on: bool = false          # 자동 이동 토글 (우측 버튼 온/오프)
+var crit_chance: float = 0.02          # 회심의 일격 확률 (v3 §1) — 운이 더해진 최종값
+var party_luck: int = 0                # 파티 운 = 멤버 중 가장 높은 운 (회심·골드·발견에 영향)
+var hero_luck: int = 0                 # 용사 단독 운 (기본 + 행운 업글)
 var damage_reduction_mult: float = 1.0 # 사슬 갑옷 등 피격 경감 (B-6)
 var all_attack: bool = false           # 베기라: 전체 공격 (B-6)
 var remote_shop_unlocked: bool = false # 주문 카탈로그: 원격 구매 (B-6)
 var has_shovel: bool = false           # 삽 보유 (상점 구매 → 땅파기 해금)
 var has_pig_companion: bool = false    # 꼬마돼지 영입 (반짝임 발견 ↑)
 var dig_cooldown: float = 60.0         # 땅파기 쿨타임 (좋은 삽으로 감소)
+var inn_unlocked: bool = false         # 여관 설치 여부 (상점 구매)
 var bonfire_unlocked: bool = false     # 모닥불 설치 여부 (상점 구매)
 var bonfire_speed_lv: int = 0          # 회복 속도 업글 단계 (간격↓)
 var bonfire_range_lv: int = 0          # 회복 범위 업글 단계 (반경↑)
@@ -295,9 +300,10 @@ func register_kill(data: MonsterData) -> void:
 func roll_monster_drops(data: MonsterData) -> void:
 	if data == null:
 		return
-	if data.stone_drop > 0.0 and randf() < data.stone_drop:
+	var find := item_find_mult() # 운 = 아이템 발견 확률↑
+	if data.stone_drop > 0.0 and randf() < data.stone_drop * find:
 		add_material(&"stone", 1)
-	if data.sword_drop > 0.0 and randf() < data.sword_drop:
+	if data.sword_drop > 0.0 and randf() < data.sword_drop * find:
 		rusty_swords += 1
 		EventBus.materials_changed.emit()
 		EventBus.show_toast.emit(Locale.t("%s가 녹슨 검을 떨어뜨렸다!") % Locale.t(data.display_name))
@@ -360,6 +366,11 @@ func _has_companion(id: StringName) -> bool:
 	return false
 
 
+## 외부(영입 NPC 등)에서 동료 보유 여부 확인.
+func has_companion(id: StringName) -> bool:
+	return _has_companion(id)
+
+
 ## 전투창 좌측 슬롯 표시용: 용사 + 동료 순서
 func party_members() -> Array[Dictionary]:
 	var list: Array[Dictionary] = []
@@ -383,6 +394,24 @@ func member_attacks() -> Array[int]:
 	for c in companions:
 		arr.append(c.attack_bonus)
 	return arr
+
+
+## 멤버별 운 (용사, 동료1, ...). 파티 운은 이 중 최고값(party_luck).
+func member_lucks() -> Array[int]:
+	var arr: Array[int] = [hero_luck]
+	for c in companions:
+		arr.append(c.luck)
+	return arr
+
+
+## 발견 골드 배수 (운이 높을수록 ↑). 항아리·상자·땅파기·전투 골드에 적용.
+func gold_find_mult() -> float:
+	return 1.0 + party_luck * config.luck_gold_per
+
+
+## 아이템/드롭 발견 확률 배수 (운이 높을수록 ↑). 몬스터 드롭 등에 적용.
+func item_find_mult() -> float:
+	return 1.0 + party_luck * config.luck_find_per
 
 
 # ─── 멤버별 개별 HP (각자 자기 HP) ───
@@ -533,6 +562,23 @@ func full_heal() -> void:
 	EventBus.party_hp_changed.emit()
 
 
+## 여관 숙박료 = 소지금의 일정 비율 (하한 적용). 부유할수록 비싸진다.
+func inn_cost() -> int:
+	return maxi(config.inn_min_cost, int(floor(gold * config.inn_cost_ratio)))
+
+
+## 여관에서 잔다: 숙박료 지불 → 전량 회복. 성공 시 true.
+func inn_sleep() -> bool:
+	if total_hp() >= total_max_hp():
+		return false # 이미 가득
+	var cost := inn_cost()
+	if not try_spend(cost):
+		return false
+	full_heal()
+	EventBus.inn_rested.emit()
+	return true
+
+
 ## 패배 처리: 소지금 절반 차감 + 전원 부활 (창 닫기/이동은 호출측 연출이 담당)
 func apply_defeat_penalty() -> void:
 	gold = gold / 2
@@ -667,12 +713,13 @@ func break_pot(i: int = 0) -> String:
 
 func _roll_pot() -> Dictionary:
 	return _weighted_pick([
-		{"w": 5.0, "type": "gold", "min": 1, "max": 5},
+		{"w": 6.0, "type": "nothing", "lf": -1.0},                       # 꽝 — 운 높으면 확 줄어든다
+		{"w": 5.0, "type": "gold", "min": 1, "max": 6},
 		{"w": 4.0, "type": "mat", "id": &"stone", "n": 1},
-		{"w": 3.0, "type": "mat", "id": &"herb", "n": 1},
-		{"w": 2.0, "type": "mat", "id": &"pot_shard", "n": 1},
-		{"w": 1.0, "type": "mat", "id": &"wood_key", "n": 1},  # 보물상자 열쇠
-		{"w": 0.5, "type": "mat", "id": &"medal_shard", "n": 1},
+		{"w": 3.0, "type": "mat", "id": &"herb", "n": 1, "lf": 0.4},
+		{"w": 2.0, "type": "mat", "id": &"pot_shard", "n": 1, "lf": 0.7},
+		{"w": 1.0, "type": "mat", "id": &"wood_key", "n": 1, "lf": 1.0},  # 보물상자 열쇠
+		{"w": 0.5, "type": "mat", "id": &"medal_shard", "n": 1, "lf": 1.5}, # 희귀 — 운 높으면 잘 나온다
 	])
 
 
@@ -727,30 +774,38 @@ func _assign_chest_key() -> void:
 func _roll_chest() -> Dictionary:
 	return _weighted_pick([
 		{"w": 5.0, "type": "gold", "min": 30, "max": 80},
-		{"w": 3.0, "type": "sword", "n": 1},
-		{"w": 3.0, "type": "mat", "id": &"enhance_stone", "n": 1},
+		{"w": 3.0, "type": "sword", "n": 1, "lf": 0.5},
+		{"w": 3.0, "type": "mat", "id": &"enhance_stone", "n": 1, "lf": 0.6},
 		{"w": 3.0, "type": "mat", "id": &"stone", "n": 2},
-		{"w": 0.7, "type": "mat", "id": &"medal_shard", "n": 1},
+		{"w": 0.7, "type": "mat", "id": &"medal_shard", "n": 1, "lf": 1.5},
 	])
 
 
+## 가중치 추첨. 운(party_luck)이 높으면 "lf" 키로 좋은 항목↑·꽝/잡템↓ 으로 편향된다.
+## 항목에 "lf" (luck factor): +면 운 높을수록 잘 나오고, -면 운 높을수록 덜 나온다.
 func _weighted_pick(table: Array) -> Dictionary:
+	var weights: Array[float] = []
 	var total := 0.0
 	for e in table:
-		total += float(e.w)
+		var lf: float = float(e.get("lf", 0.0))
+		var w: float = maxf(0.05, float(e.w) * (1.0 + lf * party_luck * config.luck_drop_weight_per))
+		weights.append(w)
+		total += w
 	var r := randf() * total
-	for e in table:
-		r -= float(e.w)
+	for i in table.size():
+		r -= weights[i]
 		if r <= 0.0:
-			return e
+			return table[i]
 	return table[table.size() - 1]
 
 
 ## 보상 적용 + 토스트용 문자열 반환
 func _grant(e: Dictionary) -> String:
 	match e.type:
+		"nothing":
+			return Locale.t("꽝...")
 		"gold":
-			var g := randi_range(int(e["min"]), int(e["max"]))
+			var g := int(round(randi_range(int(e["min"]), int(e["max"])) * gold_find_mult())) # 운 = 발견 골드↑
 			add_gold(g)
 			return Locale.t("골드 +%d") % g
 		"mat":
@@ -982,6 +1037,7 @@ func recalculate_stats() -> void:
 	turn_interval = config.base_turn_interval
 	move_speed = config.base_move_speed
 	respawn_delay_mult = 1.0
+	spawn_count_bonus = 0
 	max_battle_windows = config.initial_max_battle_windows + elder_window_bonus
 	auto_hunt_unlocked = false
 	crit_chance = config.base_crit_chance
@@ -996,11 +1052,13 @@ func recalculate_stats() -> void:
 	chest_count = 0
 	pot_cooldown_lv = 0
 	chest_cooldown_lv = 0
+	inn_unlocked = false
 	bonfire_unlocked = false
 	bonfire_speed_lv = 0
 	bonfire_range_lv = 0
 	bonfire_heal_lv = 0
 	var dig_levels := 0
+	var hero_luck_acc := config.hero_base_luck
 	group_table = [1.0]
 	for id: StringName in purchases:
 		var upgrade: UpgradeData = catalog.get(id)
@@ -1018,6 +1076,8 @@ func recalculate_stats() -> void:
 					move_speed *= pow(float(value), count)
 				"respawn_delay_mult":
 					respawn_delay_mult *= pow(float(value), count)
+				"spawn_count":
+					spawn_count_bonus += int(value) * count # 존당 몬스터 +α (몹 바글바글)
 				"max_battle_windows":
 					max_battle_windows += int(value) * count
 				"auto_hunt":
@@ -1053,6 +1113,8 @@ func recalculate_stats() -> void:
 					chest_count += int(value) * count               # 보물상자 증설
 				"chest_cooldown_lv":
 					chest_cooldown_lv += count                      # 보물상자 복구 속도
+				"inn_unlock":
+					inn_unlocked = bool(value)                      # 여관 설치
 				"bonfire":
 					bonfire_unlocked = bool(value)                  # 모닥불 설치
 				"bonfire_speed":
@@ -1061,6 +1123,8 @@ func recalculate_stats() -> void:
 					bonfire_range_lv += count                       # 회복 범위
 				"bonfire_heal":
 					bonfire_heal_lv += count                        # 회복량
+				"luck":
+					hero_luck_acc += int(value) * count             # 용사 운 (행운 부적)
 				_:
 					push_warning("알 수 없는 효과 키: %s (%s)" % [key, upgrade.id])
 	# 갯수 = 해금 시 기본 1 + 증설, 잠금 시 0. 인덱스별 쿨타임 배열을 갯수에 맞춘다.
@@ -1073,6 +1137,12 @@ func recalculate_stats() -> void:
 	# 동료 공격력 기여 (용사 + 동료 합산 = 파티 총 공격력)
 	for c in companions:
 		party_attack += c.attack_bonus
+	# 운: 파티 운 = 멤버 중 최고값. 회심 확률에 운을 더한다.
+	hero_luck = hero_luck_acc
+	party_luck = hero_luck
+	for c in companions:
+		party_luck = maxi(party_luck, c.luck)
+	crit_chance += party_luck * config.luck_crit_per
 	# 땅파기 쿨타임: 좋은 삽 단계당 감소, 하한 적용
 	dig_cooldown = maxf(config.dig_min_cooldown,
 		config.dig_base_cooldown - dig_levels * config.dig_cooldown_per_level)
@@ -1144,6 +1214,7 @@ func reset_to_new_game() -> void:
 	sparkle_area = &""
 	party_on_sparkle = false
 	wisdom = 0
+	auto_move_on = false
 	recalculate_stats()
 	_ensure_member_hp() # 용사만, 가득
 
@@ -1215,6 +1286,7 @@ func save_game() -> void:
 		"sparkle_area": String(sparkle_area),
 		"wisdom": wisdom,
 		"language": language,
+		"auto_move_on": auto_move_on,
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
@@ -1271,6 +1343,7 @@ func load_game() -> void:
 	sparkle_area = StringName(data.get("sparkle_area", ""))
 	wisdom = int(data.get("wisdom", 0))
 	language = String(data.get("language", "ko"))
+	auto_move_on = bool(data.get("auto_move_on", false))
 	materials.clear()
 	var mats_in: Dictionary = data.get("materials", {})
 	for key: String in mats_in:

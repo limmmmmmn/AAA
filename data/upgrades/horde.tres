@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"horde"
+display_name = "몹 증식"
+description = "각 사냥터에 몬스터 +1 (반복 — 바글바글하게)"
+axis = "field"
+min_region = 1
+base_cost = 55
+cost_growth = 1.7
+max_purchases = 6
+effects = {
+"spawn_count": 1
+}

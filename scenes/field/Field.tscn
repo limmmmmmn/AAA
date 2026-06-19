@@ -22,6 +22,8 @@
 [ext_resource type="PackedScene" path="res://scenes/field/Blacksmith.tscn" id="20"]
 [ext_resource type="PackedScene" path="res://scenes/field/SparkleGround.tscn" id="21"]
 [ext_resource type="PackedScene" path="res://scenes/field/Bonfire.tscn" id="22"]
+[ext_resource type="PackedScene" path="res://scenes/field/RecruitNPC.tscn" id="23"]
+[ext_resource type="PackedScene" path="res://scenes/field/InnBuilding.tscn" id="24"]
 
 [sub_resource type="RectangleShape2D" id="shop_rect"]
 size = Vector2(88, 72)
@@ -145,6 +147,12 @@ region_id = &"region1"
 
 [node name="Bonfire" parent="Village" instance=ExtResource("22")]
 position = Vector2(790, 610)
+
+[node name="RecruitNPC" parent="Village" instance=ExtResource("23")]
+position = Vector2(672, 462)
+
+[node name="InnBuilding" parent="Village" instance=ExtResource("24")]
+position = Vector2(560, 470)
 
 [node name="Party" parent="." instance=ExtResource("3")]
 position = Vector2(720, 576)

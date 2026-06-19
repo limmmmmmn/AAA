@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3]
+[gd_scene load_steps=23 format=3]
 
 [ext_resource type="Script" path="res://scenes/field/region2.gd" id="1"]
 [ext_resource type="TileSet" path="res://data/tileset.tres" id="2"]
@@ -7,17 +7,17 @@
 [ext_resource type="Script" path="res://scenes/field/spawn_zone.gd" id="5"]
 [ext_resource type="Script" path="res://scenes/field/metal_slime_spawner.gd" id="6"]
 [ext_resource type="Script" path="res://scenes/field/shop_building.gd" id="7"]
-[ext_resource type="Texture2D" path="res://assets/church.svg" id="8"]
 [ext_resource type="Texture2D" path="res://assets/objects/shop_1.png" id="9"]
 [ext_resource type="Resource" path="res://data/monsters/snake.tres" id="10"]
 [ext_resource type="Resource" path="res://data/monsters/wolf.tres" id="11"]
 [ext_resource type="Resource" path="res://data/monsters/orc.tres" id="12"]
 [ext_resource type="Resource" path="res://data/monsters/metal_babble.tres" id="13"]
-[ext_resource type="Script" path="res://scenes/field/inn.gd" id="14"]
-[ext_resource type="Texture2D" path="res://assets/inn.svg" id="15"]
-[ext_resource type="Script" path="res://scenes/field/quest_board.gd" id="16"]
-[ext_resource type="Texture2D" path="res://assets/board.svg" id="17"]
 [ext_resource type="PackedScene" path="res://scenes/field/Bonfire.tscn" id="18"]
+[ext_resource type="PackedScene" path="res://scenes/field/Blacksmith.tscn" id="19"]
+[ext_resource type="PackedScene" path="res://scenes/field/RecruitNPC.tscn" id="20"]
+[ext_resource type="PackedScene" path="res://scenes/field/Pot.tscn" id="21"]
+[ext_resource type="PackedScene" path="res://scenes/field/TreasureChest.tscn" id="22"]
+[ext_resource type="PackedScene" path="res://scenes/field/ElderNPC.tscn" id="23"]
 
 [sub_resource type="RectangleShape2D" id="snake_rect"]
 size = Vector2(576, 416)
@@ -31,12 +31,6 @@ size = Vector2(576, 736)
 [sub_resource type="RectangleShape2D" id="shop_rect"]
 size = Vector2(88, 72)
 
-[sub_resource type="RectangleShape2D" id="inn_rect"]
-size = Vector2(96, 72)
-
-[sub_resource type="RectangleShape2D" id="board_rect"]
-size = Vector2(48, 56)
-
 [node name="Region2" type="Node2D"]
 y_sort_enabled = true
 script = ExtResource("1")
@@ -48,59 +42,8 @@ tile_set = ExtResource("2")
 [node name="Village" type="Node2D" parent="."]
 y_sort_enabled = true
 
-[node name="Church" type="Sprite2D" parent="Village"]
-position = Vector2(150, 1036)
-texture = ExtResource("8")
-
-[node name="Inn" type="Area2D" parent="Village"]
-position = Vector2(300, 1012)
-collision_layer = 0
-collision_mask = 1
-script = ExtResource("14")
-cost = 20
-
-[node name="Sprite2D" type="Sprite2D" parent="Village/Inn"]
-texture = ExtResource("15")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Village/Inn"]
-shape = SubResource("inn_rect")
-
-[node name="Prompt" type="Button" parent="Village/Inn"]
-visible = false
-offset_left = -40.0
-offset_top = 40.0
-offset_right = 40.0
-offset_bottom = 56.0
-focus_mode = 0
-theme_override_font_sizes/font_size = 8
-text = "여관 [Space]"
-
-[node name="ConfirmationDialog" type="ConfirmationDialog" parent="Village/Inn"]
-title = "여관"
-ok_button_text = "묵는다"
-cancel_button_text = "그만둔다"
-
-[node name="QuestBoard" type="Area2D" parent="Village"]
-position = Vector2(430, 1040)
-collision_layer = 0
-collision_mask = 1
-script = ExtResource("16")
-
-[node name="Sprite2D" type="Sprite2D" parent="Village/QuestBoard"]
-texture = ExtResource("17")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Village/QuestBoard"]
-shape = SubResource("board_rect")
-
-[node name="Prompt" type="Button" parent="Village/QuestBoard"]
-visible = false
-offset_left = -44.0
-offset_top = 32.0
-offset_right = 44.0
-offset_bottom = 48.0
-focus_mode = 0
-theme_override_font_sizes/font_size = 8
-text = "게시판 열기 [Space]"
+[node name="ElderNPC" parent="Village" instance=ExtResource("23")]
+position = Vector2(300, 1010)
 
 [node name="ShopBuilding" type="Area2D" parent="Village"]
 position = Vector2(560, 1036)
@@ -126,6 +69,40 @@ text = "상점 열기 [Space]"
 
 [node name="Bonfire" parent="Village" instance=ExtResource("18")]
 position = Vector2(220, 1080)
+
+[node name="Blacksmith" parent="Village" instance=ExtResource("19")]
+position = Vector2(500, 948)
+
+[node name="RecruitNPC" parent="Village" instance=ExtResource("20")]
+position = Vector2(380, 952)
+
+[node name="Pot" parent="Village" instance=ExtResource("21")]
+position = Vector2(110, 1150)
+index = 0
+
+[node name="Pot2" parent="Village" instance=ExtResource("21")]
+position = Vector2(164, 1156)
+index = 1
+
+[node name="Pot3" parent="Village" instance=ExtResource("21")]
+position = Vector2(218, 1150)
+index = 2
+
+[node name="Pot4" parent="Village" instance=ExtResource("21")]
+position = Vector2(272, 1156)
+index = 3
+
+[node name="TreasureChest" parent="Village" instance=ExtResource("22")]
+position = Vector2(448, 1150)
+index = 0
+
+[node name="Chest2" parent="Village" instance=ExtResource("22")]
+position = Vector2(508, 1156)
+index = 1
+
+[node name="Chest3" parent="Village" instance=ExtResource("22")]
+position = Vector2(572, 1150)
+index = 2
 
 [node name="Party" parent="." instance=ExtResource("3")]
 position = Vector2(336, 96)

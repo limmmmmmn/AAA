@@ -25,10 +25,24 @@ func _ready() -> void:
 		if shape_node and shape_node.shape is RectangleShape2D:
 			var size: Vector2 = shape_node.shape.size
 			_rects.append(Rect2(shape_node.global_position - size * 0.5, size))
+	EventBus.stats_changed.connect(_on_stats_changed) # 몹 증식 업글 → 즉시 충원
 	if GameState.milestone_met(unlock_milestone):
 		_activate(false) # 이미 조건 충족(세이브 로드 등) → 조용히 활성
 	else:
 		EventBus.monster_died.connect(_on_monster_died)
+
+
+## 존당 최대 몬스터 수 (기본 + 몹 증식 업글 보너스).
+func _max_count() -> int:
+	return max_count + GameState.spawn_count_bonus
+
+
+## 몹 증식 업글을 사면 활성 존을 즉시 새 최대치까지 채운다 (바글바글).
+func _on_stats_changed() -> void:
+	if not _active:
+		return
+	while _alive < _max_count():
+		_spawn()
 
 
 func _on_monster_died(_data: MonsterData, _pos: Vector2) -> void:
@@ -42,7 +56,7 @@ func _activate(announce: bool) -> void:
 	_active = true
 	if EventBus.monster_died.is_connected(_on_monster_died):
 		EventBus.monster_died.disconnect(_on_monster_died)
-	for i in max_count:
+	for i in _max_count():
 		_spawn()
 	if announce:
 		EventBus.zone_unlocked.emit(zone_id)
@@ -96,5 +110,5 @@ func _on_monster_vanished(_monster: Monster) -> void:
 
 
 func _on_respawn_timer() -> void:
-	if is_inside_tree() and _active and _alive < max_count:
+	if is_inside_tree() and _active and _alive < _max_count():
 		_spawn()

@@ -12,3 +12,4 @@ attack_bonus = 4
 max_hp = 20
 role = &"priest"
 heal_per_turn = 2
+luck = 2

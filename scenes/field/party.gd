@@ -8,9 +8,10 @@ class_name Party extends CharacterBody2D
 ## (마을 안에서도 자동 추적은 동작한다 — 몬스터가 마을에 못 들어오므로 가까운 바깥 사냥감으로 향한다)
 
 const HP_BAR := preload("res://scenes/field/field_hp_bar.gd")
+const WALK_HOLD_FRAMES := 8   # 동료가 멈춤 판정되기까지 버티는 프레임 (불연속 추적 사이 걷기 유지)
 
 @export var auto_resume_delay: float = 1.5
-@export var follow_gap: float = 15.0   # 동료 줄줄이 행군 간격(px) — 멤버 간 거리
+@export var follow_gap: float = 24.0   # 동료 줄줄이 행군 간격(px) — 멤버 간 거리 (캐릭터 폭보다 살짝 넓게)
 
 @onready var _encounter_area: Area2D = $EncounterArea
 @onready var _sprite: DirSprite = $Sprite2D
@@ -21,6 +22,7 @@ var _companion_sprites: Array[DirSprite] = []
 var _hero_bar: Node2D = null               # 용사 머리 위 HP바
 var _companion_bars: Array[Node2D] = []     # 동료 머리 위 HP바
 var _companion_prev: Array[Vector2] = []   # 동료 방향 애니용 직전 위치
+var _companion_walk_hold: Array[int] = []  # 동료별 걷기 애니 유지 프레임 (브레드크럼 불연속 이동 사이 끊김 방지)
 var _path: Array[Vector2] = []   # 용사가 지나온 경로 점(촘촘), 끝이 최신 — 동료 줄줄이 추적용
 var _last_pos: Vector2 = Vector2.ZERO
 var _retreating: bool = false
@@ -119,7 +121,7 @@ func _refresh_companions() -> void:
 		var s := DirSprite.new()
 		s.texture = comp.sprite
 		s.z_index = 0       # 깊이는 Y-sort가 결정 (z 동일, Y로 정렬)
-		s.scale = Vector2(0.85, 0.85)
+		# 크기·걸음걸이 모두 용사와 동일 (같은 DirSprite, 스케일 1.0)
 		add_child(s)
 		var bar := HP_BAR.new()
 		s.add_child(bar)
@@ -151,26 +153,33 @@ func _update_follow() -> void:
 		var prev: Vector2 = _companion_prev[i] if i < _companion_prev.size() else pos
 		var move := pos - prev
 		_companion_sprites[i].global_position = pos
-		var moving := move.length() > 0.4
-		if moving:
+		# 브레드크럼은 ~3px 단위로 불연속 갱신돼 move가 프레임마다 0/양수로 튄다.
+		# 움직인 프레임엔 유지 카운터를 채우고, 빈 프레임엔 줄여 걷기 애니가 끊기지 않게 한다.
+		if move.length() > 0.4:
 			_companion_sprites[i].face(move)
+			if i < _companion_walk_hold.size():
+				_companion_walk_hold[i] = WALK_HOLD_FRAMES
+		elif i < _companion_walk_hold.size() and _companion_walk_hold[i] > 0:
+			_companion_walk_hold[i] -= 1
+		var moving := i < _companion_walk_hold.size() and _companion_walk_hold[i] > 0
 		_companion_sprites[i].set_moving(moving)
 		if i < _companion_prev.size():
 			_companion_prev[i] = pos
 
 
-## 경로 끝(용사)에서 dist 만큼 거슬러 올라간 지점 (선분 보간).
+## 경로 끝에서 dist 만큼 거슬러 올라간 지점 (선분 보간).
+## 시작점을 '용사의 실시간 위치(global_position)'로 잡는다 — 브레드크럼은 3px마다 띄엄띄엄
+## 추가돼 그걸 끝점으로 쓰면 동료가 계단식으로 튄다("드드득"). 라이브 헤드부터 보간해 부드럽게.
 func _path_point_back(dist: float) -> Vector2:
 	var remaining := dist
-	var i := _path.size() - 1
-	while i > 0:
-		var a := _path[i]
-		var b := _path[i - 1]
-		var seg := a.distance_to(b)
+	var from := global_position
+	for i in range(_path.size() - 1, -1, -1):
+		var b := _path[i]
+		var seg := from.distance_to(b)
 		if seg >= remaining:
-			return a.lerp(b, remaining / seg) if seg > 0.0 else a
+			return from.lerp(b, remaining / seg) if seg > 0.0 else b
 		remaining -= seg
-		i -= 1
+		from = b
 	return _path[0] if not _path.is_empty() else global_position
 
 
@@ -179,10 +188,12 @@ func _reset_follow() -> void:
 	_path.append(global_position)
 	_last_pos = global_position
 	_companion_prev.clear()
+	_companion_walk_hold.clear()
 	for s in _companion_sprites:
 		s.global_position = global_position
 		s.set_moving(false)
 		_companion_prev.append(global_position)
+		_companion_walk_hold.append(0)
 
 
 func _physics_process(delta: float) -> void:
@@ -215,7 +226,8 @@ func _movement_locked() -> bool:
 
 
 func _can_auto_hunt() -> bool:
-	if not GameState.auto_hunt_unlocked or not BattleManager.can_start_battle():
+	# 자동이동 스킬(나침반) 해금 + 우측 토글 ON + 새 전투 가능
+	if not GameState.auto_hunt_unlocked or not GameState.auto_move_on or not BattleManager.can_start_battle():
 		return false
 	if _idle_time < auto_resume_delay:           # 수동 입력 직후 유예
 		return false

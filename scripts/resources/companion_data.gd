@@ -9,3 +9,4 @@ class_name CompanionData extends Resource
 @export var max_hp: int = 20            # 이 동료의 최대 HP (각자 개별)
 @export var role: StringName            # "priest", "warrior" ...
 @export var heal_per_turn: int = 0      # priest용: 매 턴 가장 다친 멤버를 회복
+@export var luck: int = 0               # 이 동료의 운 (파티 운 = 멤버 중 최고값)

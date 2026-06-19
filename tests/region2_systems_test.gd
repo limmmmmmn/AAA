@@ -28,6 +28,7 @@ func _field() -> RegionBase:
 
 
 func _ready() -> void:
+	GameState.reset_to_new_game() # 이전 세이브(2지역 등) 영향 없이 1지역에서 시작
 	var main := MAIN_SCENE.instantiate()
 	add_child(main)
 	await get_tree().process_frame
@@ -57,14 +58,8 @@ func _ready() -> void:
 	_check(GameState.purchase(GameState.catalog[&"spell_catalog"]), "주문 카탈로그 구매")
 	_check(GameState.remote_shop_unlocked, "원격 구매 해금")
 
-	# B-3: 여관
-	GameState.member_hps[0] = 10 # 용사 부상
-	GameState.gold = 100
-	var inn := _field().get_node("Village/Inn")
-	inn._on_confirmed() # 확인 팝업 승낙 → 숙박 결제
-	_check(GameState.total_hp() == GameState.total_max_hp() and GameState.gold == 80, "여관: 20G로 전량 회복")
-
-	# B-4: 게시판 의뢰
+	# (2지역 전용 여관/게시판/성소는 삭제됨 — 의뢰 시스템은 GameState로 직접 검증)
+	# 의뢰 수주/완료 (게시판 건물 없이도 시스템은 동작)
 	var snake: MonsterData = load("res://data/monsters/snake.tres")
 	var quest: QuestData = GameState.quest_catalog[&"quest_snake"]
 	_check(GameState.accept_quest(quest), "의뢰 수주 (독사 10)")

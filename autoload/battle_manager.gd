@@ -35,7 +35,7 @@ func abort_all() -> void:
 
 func _on_battle_finished(result: Dictionary, battle: BattleInstance) -> void:
 	active_battles.erase(battle)
-	GameState.add_gold(result.gold)
+	GameState.add_gold(int(round(result.gold * GameState.gold_find_mult()))) # 운 = 발견 골드↑
 	GameState.total_exp += result.exp
 	GameState.total_battles_won += 1
 	# 적별로 사망 처리 (kill_count·존 해금·재료 드롭이 여기에 반응)

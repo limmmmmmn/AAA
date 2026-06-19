@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"haste_charm"
+display_name = "질주의 부적"
+description = "이동 속도 ×1.1 (반복 강화 가능)"
+axis = "field"
+min_region = 1
+base_cost = 45
+cost_growth = 1.6
+max_purchases = 5
+effects = {
+"move_speed_mult": 1.1
+}

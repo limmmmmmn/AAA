@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scenes/main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="3"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/MenuUI.tscn" id="7"]
 [ext_resource type="PackedScene" path="res://scenes/ui/ForgeUI.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/ui/MonsterUI.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://scenes/ui/InnUI.tscn" id="10"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1")
@@ -38,6 +39,8 @@ script = ExtResource("4")
 [node name="QuestBoardUI" parent="UILayer" instance=ExtResource("6")]
 
 [node name="ForgeUI" parent="UILayer" instance=ExtResource("8")]
+
+[node name="InnUI" parent="UILayer" instance=ExtResource("10")]
 
 [node name="MonsterUI" parent="UILayer" instance=ExtResource("9")]
 

@@ -45,7 +45,7 @@ func _interact() -> void:
 
 
 func _prompt_text() -> String:
-	return "깨기" if GameState.pot_ready(index) else Locale.t("복구 %s") % TownFmt.time(GameState.pot_remaining(index))
+	return "깨기" if GameState.pot_ready(index) else TownFmt.time(GameState.pot_remaining(index))
 
 
 func _tick() -> void:
@@ -55,7 +55,7 @@ func _tick() -> void:
 	_sprite.frame = 0 if r else 1   # 항아리 / 깨진 항아리
 	_status.visible = not r
 	if not r:
-		_status.text = Locale.t("복구 %s") % TownFmt.time(GameState.pot_remaining(index))
+		_status.text = TownFmt.time(GameState.pot_remaining(index)) # 남은 시간만 (깔끔하게)
 
 
 func _pop() -> void:
