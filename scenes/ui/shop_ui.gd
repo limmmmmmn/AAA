@@ -1,7 +1,7 @@
 extends Control
 ## 상점 UI — 고전 드퀘식 커맨드 창의 정체성(어두운 창·픽셀 폰트·또렷한 테두리)은 지키되,
 ## 모던 가독성을 얹었다: 한 덩어리 둥근 창 + 선택 하이라이트 바 + 분류 헤더(전투/필드)
-## + 헤더 소지금 + 우측 상세(이름·Lv 바·효과·상태 칩).
+## + 헤더 소지금 + 우측 상세(이름·Lv 바·효과·상태 칩).dd
 ## 열리면 세계 정지(필드·전투 멈춤). 키보드 ↑/↓로 이동, Enter로 구매. Space는 상점 토글이라 제외.
 
 @onready var _title: Label = $Center/Panel/Margin/Layout/HeaderBox/Header/Title

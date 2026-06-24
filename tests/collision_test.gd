@@ -23,15 +23,15 @@ func _ready() -> void:
 
 	# is_walkable 기본 판정
 	_check(field.is_walkable(field.village_center * 32), "마을 중앙은 통행 가능")
-	_check(not field.is_walkable(Vector2(field.map_size.x * 32 - 16, 200)), "동쪽 산맥은 막힘")
-	_check(not field.is_walkable(Vector2(700, field.map_size.y * 32 - 16)), "남쪽 강은 막힘")
-	_check(field.is_walkable(Vector2(field.bridge_x * 32 + 16, field.map_size.y * 32 - 64)), "다리는 통행 가능")
+	_check(not field.is_walkable(Vector2(field.map_size.x * 16 - 16, 200)), "동쪽 산맥은 막힘")
+	_check(not field.is_walkable(Vector2(700, field.map_size.y * 16 - 16)), "남쪽 강은 막힘")
+	_check(field.is_walkable(Vector2(field.bridge_x * 32 + 16, field.map_size.y * 16 - 64)), "다리는 통행 가능")
 
 	# 메탈슬라임을 강 쪽으로 200스텝 밀어붙여도 물 위로 못 감
 	var ms_scene := load("res://scenes/field/Monster.tscn")
 	var ms = ms_scene.instantiate()
 	ms.data = load("res://data/monsters/metal_slime.tres")
-	ms.position = Vector2(700, field.map_size.y * 32 - 96) # 강 바로 위
+	ms.position = Vector2(700, field.map_size.y * 16 - 96) # 강 바로 위
 	field.add_child(ms)
 	await get_tree().process_frame
 	var escaped := false
@@ -44,7 +44,7 @@ func _ready() -> void:
 	_check(not escaped, "메탈슬라임이 강을 넘지 못함 (최종 y=%d)" % int(ms.global_position.y))
 
 	# 산맥(동쪽)으로도 밀어붙이기
-	ms.global_position = Vector2(field.map_size.x * 32 - 96, 400)
+	ms.global_position = Vector2(field.map_size.x * 16 - 96, 400)
 	var escaped_x := false
 	for i in 240:
 		ms._move_blocked(Vector2(6, 0))

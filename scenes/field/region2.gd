@@ -24,27 +24,29 @@ func entrance(id: StringName) -> Vector2:
 
 
 func _tile_for(cell: Vector2i) -> Vector2i:
-	var w := map_size.x
-	var h := map_size.y
+	# 16px 타일 2칸 = 옛 32px 1칸. cell을 절반 해상도(c)로 내려 원래 로직 그대로 재사용.
+	var c := Vector2i(cell.x / 2, cell.y / 2)
+	var w := map_size.x / 2
+	var h := map_size.y / 2
 	# 동서 산맥 (막힘)
-	if cell.x <= 1 or cell.x >= w - 2:
+	if c.x <= 1 or c.x >= w - 2:
 		return TILE_MOUNTAIN
 	# 남쪽 끝 산맥 (게이트 너머)
-	if cell.y >= h - 1:
+	if c.y >= h - 1:
 		return TILE_MOUNTAIN
 	# 북쪽 벽 — 가도 폭만 열려 있다 (다리에서 진입)
-	if cell.y <= 1:
-		if cell.x >= road_left and cell.x <= road_right:
+	if c.y <= 1:
+		if c.x >= road_left and c.x <= road_right:
 			return TILE_PATH
 		return TILE_MOUNTAIN
 	# 중간 마을 (안전지대)
-	if cell.y >= village_top and cell.y <= village_bottom:
+	if c.y >= village_top and c.y <= village_bottom:
 		return TILE_VILLAGE
 	# 가도 (길)
-	if cell.x >= road_left and cell.x <= road_right:
+	if c.x >= road_left and c.x <= road_right:
 		return TILE_PATH
 	# 길 옆: 가까우면 풀(약), 멀면 숲(강)
-	var d := mini(absi(cell.x - road_left), absi(cell.x - road_right))
+	var d := mini(absi(c.x - road_left), absi(c.x - road_right))
 	if d <= 2:
 		return TILE_GRASS_MID
 	return TILE_GRASS_DARK

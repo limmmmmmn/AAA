@@ -18,22 +18,25 @@ func entrance(_id: StringName) -> Vector2:
 
 
 func _tile_for(cell: Vector2i) -> Vector2i:
-	var w := map_size.x
-	var h := map_size.y
+	# 16px 타일 2칸 = 옛 32px 1칸. cell을 절반 해상도(c)로 내려 원래 로직을 그대로 재사용
+	# → 월드 px·맵 모양이 100% 동일하게 유지된다.
+	var c := Vector2i(cell.x / 2, cell.y / 2)
+	var w := map_size.x / 2
+	var h := map_size.y / 2
 	# 남쪽 다리 (물 위를 지나는 통로 — 통행료 게이트가 여기 있다)
-	if cell.x >= bridge_x and cell.x <= bridge_x + 1 and cell.y >= h - 4 and cell.y <= h - 2:
+	if c.x >= bridge_x and c.x <= bridge_x + 1 and c.y >= h - 4 and c.y <= h - 2:
 		return TILE_BRIDGE
 	# 남쪽: 강 (충돌 있음 — 다리로만 건넌다)
-	if cell.y >= h - 2:
+	if c.y >= h - 2:
 		return TILE_WATER
 	# 북쪽/동서: 산맥 (막힘)
-	if cell.y <= 1 or cell.x <= 1 or cell.x >= w - 2:
+	if c.y <= 1 or c.x <= 1 or c.x >= w - 2:
 		return TILE_MOUNTAIN
 	# 마을 → 다리로 이어지는 길
-	if cell.x >= bridge_x and cell.x <= bridge_x + 1 \
-			and cell.y > village_center.y + village_radius and cell.y < h - 4:
+	if c.x >= bridge_x and c.x <= bridge_x + 1 \
+			and c.y > village_center.y + village_radius and c.y < h - 4:
 		return TILE_PATH
-	var dist := maxi(absi(cell.x - village_center.x), absi(cell.y - village_center.y))
+	var dist := maxi(absi(c.x - village_center.x), absi(c.y - village_center.y))
 	if dist <= village_radius:
 		return TILE_VILLAGE
 	if dist <= slime_radius:
