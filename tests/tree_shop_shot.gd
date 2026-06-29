@@ -27,7 +27,7 @@ func _ready() -> void:
 	_shot("fresh")
 
 	# ③ 경로를 따라 구매 → 끝 노드를 사면 다음 연결 노드가 새로 등장
-	for id in [&"sword_copper", &"sword_iron", &"spell_gira",
+	for id in [&"core_start", &"cmb_atk_1", &"cmb_atk_2",
 			&"pot_unlock", &"bonfire", &"bonfire_speed",
 			&"boots_swift", &"luck_charm", &"horde"]:
 		GameState.purchase(GameState.catalog[id])
@@ -37,11 +37,11 @@ func _ready() -> void:
 
 	# ④ 2지역 전체(많이 보유한 상태로 재오픈) + 노드 호버 띠링
 	EventBus.request_shop_close.emit()
-	GameState.current_region = &"region2"
+	GameState.current_region = &"stage_forest"
 	GameState.gold = 999999
 	EventBus.request_shop.emit()
 	await get_tree().create_timer(1.3).timeout # 펼쳐짐 정착 대기
-	var hovered: SkillNode = shop_ui._node_map[&"sword_steel"]
+	var hovered: SkillNode = shop_ui._node_map[&"cmb_auto_command"]
 	hovered._on_enter()
 	await get_tree().create_timer(0.12).timeout
 	_shot("full")

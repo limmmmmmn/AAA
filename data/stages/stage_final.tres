@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="StageData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/stage_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/monsters/orc.tres" id="2"]
+[ext_resource type="Resource" path="res://data/monsters/metal_babble.tres" id="3"]
+
+[resource]
+script = ExtResource("1")
+id = &"stage_final"
+index = 5
+display_name = "마왕성 정문"
+near_monster = ExtResource("2")
+mid_monster = ExtResource("2")
+far_monster = ExtResource("2")
+rare_monster = ExtResource("3")
+tile_tint = Color(0.85, 0.55, 0.6, 1)
+arrive_toast = "마왕성 정문 — 최종 결전의 땅"
+advance_toll = 0
+joins_companion = &""

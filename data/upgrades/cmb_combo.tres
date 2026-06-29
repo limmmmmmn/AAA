@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/dagger.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"cmb_combo"
+display_name = "콤보 감각"
+description = "연속 공격 감각 — 파티 피해 ×1.15"
+icon = ExtResource("2")
+branch = "combat"
+node_type = "stat"
+base_cost = 140
+tree_pos = Vector2i(6, -1)
+tree_links = Array[StringName]([&"cmb_skill_slash"])
+effects = {
+"party_damage_mult": 1.15
+}

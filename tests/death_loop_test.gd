@@ -28,10 +28,9 @@ func _ready() -> void:
 	EventBus.tactic_retreat_triggered.connect(func() -> void: _retreat_triggered = true)
 	EventBus.tactic_retreat_finished.connect(func() -> void: _retreat_finished = true)
 
-	# 2지역 진입 (승려 합류)
-	GameState.add_gold(600)
-	_field().get_node("BridgeGate")._on_confirmed()
-	await get_tree().create_timer(1.4).timeout
+	# 숲길 진입 (지역 노드 구매 → 승려 합류)
+	GameState.gold = 1000
+	GameState.purchase(GameState.catalog[&"core_forest_path"])
 	await get_tree().process_frame
 
 	# §9 해금
@@ -53,6 +52,8 @@ func _ready() -> void:
 	var quarter := int(GameState.total_max_hp() * 0.25)
 	GameState.member_hps[0] = quarter # 용사
 	GameState.member_hps[1] = 3        # 승려 → 총 HP가 25%보다 살짝 위
+	# 마을 밖으로 내보낸다 — 마을 안이면 철수가 즉시 완료돼버린다
+	get_tree().get_first_node_in_group("party").global_position = Vector2(900, 500)
 	BattleManager.start_battle([snake]) # 철수가 중단시킬 전투
 	GameState.apply_damage(quarter)    # 용사 KO → 총 HP 25% 아래 → 철수 발동
 	await get_tree().process_frame

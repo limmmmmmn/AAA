@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/bonfire.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"brg_inn_combo"
+display_name = "여관 영수증 재활용"
+description = "회복이 보호막이 되고, 보호막은 골드로 (모든 골드 ×1.1)."
+icon = ExtResource("2")
+branch = "bridge"
+node_type = "bridge"
+base_cost = 2500
+tree_pos = Vector2i(-10, -3)
+tree_links = Array[StringName]([&"vlg_inn", &"cmd_healer"])
+requires_all = true
+effects = {
+"all_gold_mult": 1.1
+}

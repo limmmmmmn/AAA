@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/gold.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"vlg_tax_office"
+display_name = "마을세 징수"
+description = "비전투 골드 ×2, 일반 적 골드 ×0.9"
+icon = ExtResource("2")
+axis = "field"
+branch = "village"
+node_type = "stat"
+base_cost = 7000
+tree_pos = Vector2i(-13, -6)
+tree_links = Array[StringName]([&"vlg_big_pot"])
+effects = {
+"village_gold_mult": 2.0,
+"enemy_gold_mult": 0.9
+}

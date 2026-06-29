@@ -25,33 +25,37 @@ func _ready() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 
-	# 시작: 1지역, 데미지 on(1지역부터), 용사 솔로
-	_check(GameState.current_region == &"region1", "시작 지역 = region1")
-	_check(_current_region().region_id() == &"region1", "현재 지역 노드 = region1")
+	# 시작: 1단계(초원), 데미지 on(1지역부터), 용사 솔로 — 맵은 1지역 하나
+	_check(GameState.current_region == &"stage_meadow", "시작 단계 = 초원")
+	_check(GameState.region_number() == 1, "단계 번호 1")
+	_check(_current_region().region_id() == &"region1", "맵 노드는 항상 1지역(맵 1개)")
 	_check(GameState.damage_enabled, "1지역부터 데미지 on")
-	_check(GameState.party_members().size() == 1, "1지역 파티 1인")
+	_check(GameState.party_members().size() == 1, "초원 파티 1인")
 
-	# 통행료 지불 → 2지역 전환
-	GameState.add_gold(600)
-	var gate := _current_region().get_node("BridgeGate")
-	gate._on_confirmed()
-	await get_tree().create_timer(1.4).timeout  # 페이드 + 스왑 + 페이드
+	# 지역 노드 구매 → 숲길로 진행 (맵 스왑 없음, 같은 맵에서 적/지역명만 바뀜)
+	GameState.gold = 1000
+	GameState.purchase(GameState.catalog[&"core_forest_path"]) # set_stage → stage_forest + 승려 합류
+	await get_tree().process_frame
 
-	_check(GameState.current_region == &"region2", "전환 후 지역 = region2")
-	_check(_current_region().region_id() == &"region2", "현재 지역 노드 = region2")
-	_check(GameState.damage_enabled, "2지역 데미지 on")
+	_check(GameState.current_region == &"stage_forest", "지역 노드 구매 → 단계 = 숲길")
+	_check(GameState.region_number() == 2, "단계 번호 2 (같은 맵)")
+	_check(_current_region().region_id() == &"region1", "맵은 그대로 1지역")
+	_check(GameState.damage_enabled, "데미지 on")
 	_check(GameState.party_members().size() == 2, "승려 합류 → 파티 2인")
 	_check(GameState.party_attack == 3 + 4, "승려 공격 보너스 +4 합산")
-	var party: Node2D = get_tree().get_first_node_in_group("party")
-	_check(party.global_position.y < 200, "파티가 북쪽 입구에 배치됨 (y=%d)" % int(party.global_position.y))
 
-	# 2지역: 시작 시 독사존만 활성
+	# 단계 전환 → 근접존 적이 초원(슬라임)에서 숲길(독사)로 교체됨
+	await get_tree().process_frame
 	await get_tree().process_frame
 	var snakes := 0
+	var slimes := 0
 	for m: Node2D in get_tree().get_nodes_in_group("monsters"):
 		if m.data and m.data.id == &"snake":
 			snakes += 1
-	_check(snakes > 0, "2지역 독사존 활성 (%d마리)" % snakes)
+		elif m.data and m.data.id == &"slime":
+			slimes += 1
+	_check(snakes > 0, "숲길 근접존 = 독사 (%d마리)" % snakes)
+	_check(slimes == 0, "초원 슬라임은 전부 사라짐")
 
 	# 패배 → 교회 부활 (전원 KO)
 	GameState.gold = 80

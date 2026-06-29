@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/pot.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"vlg_big_pot"
+display_name = "대형 항아리 주문 제작"
+description = "항아리 골드 ×2, 항아리 +2"
+icon = ExtResource("2")
+axis = "field"
+branch = "village"
+node_type = "stat"
+base_cost = 4200
+tree_pos = Vector2i(-12, -5)
+tree_links = Array[StringName]([&"vlg_chest"])
+effects = {
+"pot_gold_mult": 2.0,
+"pot_count": 2
+}

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/chest.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"vlg_chest"
+display_name = "보물상자는 왜 열려있나"
+description = "마을에 보물상자 1개 — 긴 쿨타임, 큰 보상."
+icon = ExtResource("2")
+axis = "field"
+branch = "village"
+node_type = "unlock"
+base_cost = 2600
+tree_pos = Vector2i(-11, -5)
+tree_links = Array[StringName]([&"vlg_village_worker"])
+effects = {
+"chest_unlock": true
+}

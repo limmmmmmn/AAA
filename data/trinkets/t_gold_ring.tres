@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TrinketData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trinket_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/gold.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"t_gold_ring"
+display_name = "반짝이는 반지"
+description = "일반 적 골드 ×1.15"
+icon = ExtResource("2")
+effects = {
+"enemy_gold_mult": 1.15
+}
+tags = Array[StringName]([&"gold"])
+rarity = 1
+pool = &"common"

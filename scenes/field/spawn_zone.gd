@@ -5,6 +5,9 @@ class_name SpawnZone extends Area2D
 ## unlock_milestone이 비어 있으면 시작부터 활성. 아니면 누적 토벌 조건 충족 시
 ## "세계가 깨어나는" 연출과 함께 활성화된다 (A-2).
 
+## role이 비어 있으면 monster_data를 그대로 쓴다(레거시/고정 존).
+## role이 near/mid/far/rare면 현재 단계(StageData)에서 몬스터를 받아온다 → 단계마다 적이 바뀐다.
+@export var role: String = "" # "" | near | mid | far | rare
 @export var monster_data: MonsterData
 @export var max_count: int = 4
 @export var respawn_delay: float = 5.0
@@ -17,6 +20,14 @@ const MONSTER_SCENE := preload("res://scenes/field/Monster.tscn")
 var _alive: int = 0
 var _active: bool = false
 var _rects: Array[Rect2] = [] # 글로벌 좌표
+var _monsters: Array[Monster] = [] # 현재 필드에 살아있는 이 존의 몬스터 (단계 전환 시 정리용)
+
+
+## 이 존이 스폰할 몬스터 — role이 있으면 현재 단계에서, 없으면 고정 데이터.
+func _resolve_monster() -> MonsterData:
+	if role != "":
+		return GameState.stage_monster(StringName(role))
+	return monster_data
 
 
 func _ready() -> void:
@@ -26,10 +37,23 @@ func _ready() -> void:
 			var size: Vector2 = shape_node.shape.size
 			_rects.append(Rect2(shape_node.global_position - size * 0.5, size))
 	EventBus.stats_changed.connect(_on_stats_changed) # 몹 증식 업글 → 즉시 충원
+	EventBus.region_changed.connect(_on_region_changed) # 단계 전환 → 적 교체
 	if GameState.milestone_met(unlock_milestone):
 		_activate(false) # 이미 조건 충족(세이브 로드 등) → 조용히 활성
 	else:
 		EventBus.monster_died.connect(_on_monster_died)
+
+
+## 단계가 바뀌면 이 존의 적을 전부 치우고 새 단계 적으로 다시 채운다 (맵은 그대로).
+func _on_region_changed(_id: StringName) -> void:
+	for m in _monsters:
+		if is_instance_valid(m):
+			m.queue_free() # consume()이 아니므로 vanished/재스폰 캐스케이드 없음
+	_monsters.clear()
+	_alive = 0
+	if _active:
+		for i in _max_count():
+			_spawn()
 
 
 ## 존당 최대 몬스터 수 (기본 + 몹 증식 업글 보너스).
@@ -65,11 +89,13 @@ func _activate(announce: bool) -> void:
 
 
 func _spawn() -> void:
-	if monster_data == null or _rects.is_empty():
+	var md := _resolve_monster()
+	if md == null or _rects.is_empty():
 		return
 	var monster: Monster = MONSTER_SCENE.instantiate()
-	monster.data = monster_data
+	monster.data = md
 	monster.vanished.connect(_on_monster_vanished)
+	_monsters.append(monster)
 	# 지역 루트(y_sort_enabled)에 직접 붙여 파티·오브젝트와 함께 깊이 정렬되게 한다.
 	# _ready 중 스폰(초기 활성)이면 지역 루트가 아직 자식 구성 중이라 즉시 add_child가 실패한다.
 	# 부착·배치를 deferred로 미뤄 트리 구성이 끝난 뒤 안전하게 붙인다.
@@ -101,7 +127,8 @@ func _random_point() -> Vector2:
 	)
 
 
-func _on_monster_vanished(_monster: Monster) -> void:
+func _on_monster_vanished(monster: Monster) -> void:
+	_monsters.erase(monster)
 	_alive -= 1
 	if not is_inside_tree():
 		return

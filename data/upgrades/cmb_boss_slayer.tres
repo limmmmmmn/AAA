@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/shield.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"cmb_boss_slayer"
+display_name = "보스 패턴 외우기"
+description = "보스에게 주는 피해 ×1.4"
+icon = ExtResource("2")
+branch = "combat"
+node_type = "stat"
+base_cost = 1100
+tree_pos = Vector2i(9, -2)
+tree_links = Array[StringName]([&"cmb_fire_spell"])
+effects = {
+"boss_damage_mult": 1.4
+}

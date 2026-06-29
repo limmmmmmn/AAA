@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/helmet.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"cmd_window_2"
+display_name = "동시 전투창 I"
+description = "전투창 +1. 멀티 전투가 시작된다 (추가 창은 화력 45%)."
+icon = ExtResource("2")
+branch = "command"
+node_type = "unlock"
+base_cost = 85
+tree_pos = Vector2i(4, -4)
+tree_links = Array[StringName]([&"cmd_battle_queue"])
+effects = {
+"combat_slots": 1
+}

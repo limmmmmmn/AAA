@@ -78,6 +78,10 @@ func _refresh_info() -> void:
 	t += "   %02d:%02d" % [sec / 60, sec % 60]
 	if GameState.debug_mode:
 		t += "   [+100]"
+		var d := GameState.debug_stats()
+		t += "\nGPM %d (전%d·마%d·보%d)  지난구매 %.0fs  살수있음 %d" % [
+			d["gpm"], d["gpm_combat"], d["gpm_village"], d["gpm_boss"],
+			d["since_purchase"], d["buyable"]]
 	_info.text = t
 
 

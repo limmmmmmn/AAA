@@ -21,7 +21,7 @@ func _ready() -> void:
 	# 2) 합류 후 개별 스탯 패널
 	var party: Node = get_tree().get_first_node_in_group("party")
 	npc._on_body_entered(party)
-	GameState.purchase(GameState.catalog[&"sword_copper"]) # 용사 공격력 차이 보이게
+	GameState.purchase(GameState.catalog[&"cmb_atk_1"]) # 용사 공격력 차이 보이게
 	var hud: Node = main.find_child("HUD", true, false)
 	hud._user_expanded = true
 	hud._update_expanded(true)

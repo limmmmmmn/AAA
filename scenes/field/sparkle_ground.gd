@@ -2,7 +2,6 @@ extends Area2D
 ## 반짝이는 땅: 꼬마돼지/지혜 조건이 맞으면 맵의 "랜덤 위치"에 등장한다.
 ## 자동으로 캐지지 않는다 — 이 위에 서서 땅파기 버튼을 눌러야 100% 보상 (do_dig).
 
-@export var region_id: StringName = &"region1"      # 이 지역일 때만 노출
 @export var spawn_area: Rect2 = Rect2(540, 580, 360, 150) # 반짝임이 뜰 수 있는 영역 (열린 땅)
 
 @onready var _sprite: Sprite2D = $Sprite2D
@@ -20,8 +19,7 @@ func _ready() -> void:
 
 
 func _shown() -> bool:
-	return GameState.has_sparkling_ground \
-		and (GameState.sparkle_area == region_id or GameState.sparkle_area == &"")
+	return GameState.has_sparkling_ground # 맵이 하나라 현재 맵에 항상 노출
 
 
 func _refresh() -> void:

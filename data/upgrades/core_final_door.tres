@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/shield.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"core_final_door"
+display_name = "마왕성 정문"
+description = "최종 보스의 땅을 연다."
+icon = ExtResource("2")
+branch = "core"
+node_type = "region"
+base_cost = 60000
+tree_pos = Vector2i(0, -11)
+tree_links = Array[StringName]([&"core_four_crystals"])
+effects = {
+"set_stage": "stage_final"
+}

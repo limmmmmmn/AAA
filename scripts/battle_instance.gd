@@ -17,6 +17,7 @@ signal aborted                 # 패배로 강제 종료 (B-2)
 
 var enemies: Array[Dictionary] = []   # 각 항목: {"data": MonsterData, "hp": int, "hits": int}
 var origin_pos: Vector2
+var window_efficiency: float = 1.0    # 이 전투창의 화력 비율 (1번 창=1.0, 추가 창=extra_window_efficiency)
 var turns: int = 0
 var elapsed: float = 0.0
 var is_finished: bool = false
@@ -27,8 +28,10 @@ var _phase_timer: float = 0.0
 
 
 func _init(monster_list: Array, world_pos: Vector2 = Vector2.ZERO) -> void:
+	var hp_mult := float(GameState.stat("enemy_hp_mult")) # cmd_squad_clone: 적 HP ×1.4
 	for data: MonsterData in monster_list:
-		enemies.append({"data": data, "hp": data.max_hp, "hits": 0})
+		var hp := maxi(1, int(round(data.max_hp * hp_mult)))
+		enemies.append({"data": data, "hp": hp, "hits": 0})
 	origin_pos = world_pos
 
 
@@ -128,9 +131,10 @@ func _member_attack(index: int) -> void:
 	var attacks := GameState.member_attacks()
 	if index >= attacks.size():
 		return
-	var atk: int = attacks[index]
+	var atk: int = int(round(attacks[index] * window_efficiency)) # 추가 전투창은 화력 감소
 	var mname: String = _member_name(index)
 	var is_crit: bool = randf() < GameState.crit_chance
+	var crit_atk: int = int(round(atk * float(GameState.stat("crit_damage_mult")))) # 회심 피해 배율(cmb_crit)
 	var before: Array[int] = []
 	for e in enemies:
 		before.append(int(e.hp))
@@ -139,14 +143,14 @@ func _member_attack(index: int) -> void:
 		# 베기라: 살아있는 모든 적을 동시에 공격 (각자 방어력 적용)
 		for e in enemies:
 			if e.hp > 0:
-				var d: int = atk if is_crit else maxi(atk - int(e.data.defense), 0)
+				var d: int = crit_atk if is_crit else maxi(atk - int(e.data.defense), 0)
 				e.hp = maxi(0, e.hp - d)
 				e.hits += 1
-		shown = atk if is_crit else maxi(atk - int(enemies[target].data.defense), 0)
+		shown = crit_atk if is_crit else maxi(atk - int(enemies[target].data.defense), 0)
 		log_line.emit(_member_attack_text(mname, is_crit, shown, true))
 		party_acted.emit(-1, shown, is_crit)
 	else:
-		shown = atk if is_crit else maxi(atk - int(enemies[target].data.defense), 0)
+		shown = crit_atk if is_crit else maxi(atk - int(enemies[target].data.defense), 0)
 		enemies[target].hp = maxi(0, enemies[target].hp - shown)
 		enemies[target].hits += 1
 		log_line.emit(_member_attack_text(mname, is_crit, shown, false))

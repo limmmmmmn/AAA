@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="StageData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/stage_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/monsters/snake.tres" id="2"]
+[ext_resource type="Resource" path="res://data/monsters/wolf.tres" id="3"]
+[ext_resource type="Resource" path="res://data/monsters/orc.tres" id="4"]
+[ext_resource type="Resource" path="res://data/monsters/metal_babble.tres" id="5"]
+
+[resource]
+script = ExtResource("1")
+id = &"stage_forest"
+index = 2
+display_name = "숲길"
+near_monster = ExtResource("2")
+mid_monster = ExtResource("3")
+far_monster = ExtResource("4")
+rare_monster = ExtResource("5")
+tile_tint = Color(0.82, 1, 0.85, 1)
+arrive_toast = "숲길에 들어섰다 — 더 거친 짐승들이 도사린다"
+advance_toll = 1700
+joins_companion = &"priest"

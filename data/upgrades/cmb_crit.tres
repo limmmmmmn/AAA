@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/bow.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"cmb_crit"
+display_name = "회심의 일격 연습"
+description = "치명타 확률 +5%, 치명타 피해 ×1.5"
+icon = ExtResource("2")
+branch = "combat"
+node_type = "stat"
+base_cost = 230
+tree_pos = Vector2i(7, -1)
+tree_links = Array[StringName]([&"cmb_combo"])
+effects = {
+"crit_bonus": 0.05,
+"crit_damage_mult": 1.5
+}

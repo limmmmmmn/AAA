@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/mage_staff.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"cmd_squad_clone"
+display_name = "파티 분신술"
+description = "모든 전투창이 100% 화력 — 대신 적 HP ×1.4"
+icon = ExtResource("2")
+branch = "command"
+node_type = "stat"
+base_cost = 18000
+tree_pos = Vector2i(15, -8)
+tree_links = Array[StringName]([&"cmd_window_4"])
+effects = {
+"extra_window_efficiency": 0.15,
+"enemy_hp_mult": 1.4
+}

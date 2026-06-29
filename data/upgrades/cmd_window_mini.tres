@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/helmet.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"cmd_window_mini"
+display_name = "전투창 축소술"
+description = "작은 전투창 모드. 추가 전투창 효율 +5%"
+icon = ExtResource("2")
+branch = "command"
+node_type = "stat"
+base_cost = 550
+tree_pos = Vector2i(8, -5)
+tree_links = Array[StringName]([&"cmd_target_rules"])
+effects = {
+"extra_window_efficiency": 0.05
+}

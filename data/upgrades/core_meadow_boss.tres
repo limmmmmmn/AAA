@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/shield.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"core_meadow_boss"
+display_name = "초원의 수문장"
+description = "첫 보스를 쓰러뜨린다. 숲길로 가는 길이 열린다."
+icon = ExtResource("2")
+branch = "core"
+node_type = "boss"
+base_cost = 180
+tree_pos = Vector2i(0, -4)
+tree_links = Array[StringName]([&"core_multi_hint"])
+effects = {
+"meadow_boss_cleared": true
+}

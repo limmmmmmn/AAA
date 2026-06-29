@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/water.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"core_cave_map"
+display_name = "동굴 지도"
+description = "동굴 지역을 연다. 방어가 단단한 적 추가."
+icon = ExtResource("2")
+branch = "core"
+node_type = "region"
+base_cost = 1700
+tree_pos = Vector2i(0, -7)
+tree_links = Array[StringName]([&"core_quest_board"])
+effects = {
+"set_stage": "stage_cave"
+}

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/sword.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"cmb_skill_slash"
+display_name = "기술: 세로베기"
+description = "강한 일격 — 파티 피해 ×1.2"
+icon = ExtResource("2")
+branch = "combat"
+node_type = "stat"
+base_cost = 90
+tree_pos = Vector2i(5, -1)
+tree_links = Array[StringName]([&"cmb_reward_study"])
+effects = {
+"party_damage_mult": 1.2
+}

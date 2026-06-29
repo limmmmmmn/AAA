@@ -1,8 +1,7 @@
 extends Area2D
-## 남쪽 출구 통행료 게이트. 시작부터 보이는 다음 목표.
-## 지불 시 gate_unlocked 발신 — 2지역은 아직 없으므로 Coming soon 처리.
+## 남쪽 길 표지판. 단계 진행은 이제 패시브 트리(중앙 스파인의 지역 노드)가 주도한다 —
+## "골드로 다음 지역을 산다". 이 표지판은 다음 목표가 트리에 있음을 알려줄 뿐, 직접 전환하지 않는다.
 
-@export var toll: int = 500
 @export var gate_id: StringName = &"bridge_south"
 
 @onready var _sign: Label = $SignLabel
@@ -11,29 +10,17 @@ extends Area2D
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
-	_dialog.confirmed.connect(_on_confirmed)
+	if _dialog:
+		_dialog.hide()
+	EventBus.region_changed.connect(func(_id: StringName) -> void: _refresh_sign())
 	_refresh_sign()
 
 
 func _refresh_sign() -> void:
-	_sign.text = "2지역 — Coming soon!" if GameState.gate_paid else Locale.t("통행료 %dG") % toll
+	_sign.text = Locale.t("남쪽 길 — 다음 지역은\n패시브 트리에서 연다")
 
 
 func _on_body_entered(body: Node2D) -> void:
 	if not body is Party:
 		return
-	if GameState.gate_paid:
-		EventBus.show_toast.emit("다리 건너편은 아직 공사 중... (Coming soon)")
-	elif GameState.gold >= toll:
-		_dialog.dialog_text = Locale.t("통행료 %dG를 지불하고 다리를 건너시겠습니까?") % toll
-		_dialog.popup_centered()
-	else:
-		EventBus.show_toast.emit(Locale.t("통행료가 부족하다! (%dG 더 필요)") % (toll - GameState.gold))
-
-
-func _on_confirmed() -> void:
-	if GameState.try_spend(toll):
-		GameState.gate_paid = true
-		_refresh_sign()
-		# 합류 컷(CompanionPreview)이 메시지를 이어받는다 — 여기선 토스트를 내지 않는다
-		EventBus.gate_unlocked.emit(gate_id)
+	EventBus.show_toast.emit(Locale.t("다음 지역은 패시브 트리(상점)에서 해금한다."))

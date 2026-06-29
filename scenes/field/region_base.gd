@@ -49,6 +49,14 @@ func _ready() -> void:
 	else:
 		_build_type_grid_from_tiles() # 에디터에서 칠한 맵을 읽어 통행/마을 격자 구축
 	_scatter_grass()
+	_apply_stage_tint()
+	EventBus.region_changed.connect(func(_id: StringName) -> void: _apply_stage_tint())
+
+
+## 현재 단계의 분위기(타일 틴트)를 맵에 입힌다 — 맵은 그대로, 색감만 바뀌어 새 지역 느낌.
+func _apply_stage_tint() -> void:
+	var s := GameState.current_stage()
+	_tiles.modulate = s.tile_tint if s != null else Color.WHITE
 
 
 ## 에디터에서 칠한 TileMapLayer를 읽어 기반 지형 격자를 만든다 (아틀라스 좌표 → 타입).

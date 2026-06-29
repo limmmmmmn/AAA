@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/ring.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"cmd_window_train"
+display_name = "분신 전투 훈련"
+description = "추가 전투창 효율 +15%"
+icon = ExtResource("2")
+branch = "command"
+node_type = "stat"
+base_cost = 130
+tree_pos = Vector2i(5, -4)
+tree_links = Array[StringName]([&"cmd_window_2"])
+effects = {
+"extra_window_efficiency": 0.15
+}

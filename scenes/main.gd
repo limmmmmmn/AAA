@@ -2,8 +2,7 @@ extends Node
 ## 메인 씬. 지역(Region)을 동적으로 로드/전환하고, 카메라 추종(고정 640×360 줌)·
 ## 첫 동시 전투 연출·지역 전환 페이드·패배/부활을 담당한다.
 
-const REGION1 := preload("res://scenes/field/Field.tscn")
-const REGION2 := preload("res://scenes/field/Region2.tscn")
+const REGION1 := preload("res://scenes/field/Field.tscn") # 맵은 하나 — 단계만 갈아끼운다
 
 @onready var _camera: Camera2D = $Camera2D
 @onready var _host: Node2D = $RegionHost
@@ -17,14 +16,12 @@ var _shake: float = 0.0
 
 
 func _ready() -> void:
-	# 세이브 상태에 따라 시작 지역 결정 (2지역 재진입 시 교회에서 시작)
-	var start_id: StringName = GameState.current_region
-	var entrance := &"church" if start_id == &"region2" else &""
-	await _swap_region(start_id, entrance)
+	# 맵은 1지역 하나로 고정 — 어떤 단계든 같은 맵 위에서 시작한다.
+	await _load_field(&"")
 	EventBus.battle_started.connect(_on_battle_started)
-	EventBus.gate_unlocked.connect(_on_gate_unlocked)
 	EventBus.party_defeated.connect(_on_defeat)
 	EventBus.screen_shake.connect(_on_screen_shake)
+	EventBus.region_changed.connect(_on_region_changed) # 지역 노드 구매 → 도착 토스트
 
 
 func _process(delta: float) -> void:
@@ -42,13 +39,12 @@ func _on_screen_shake(amount: float) -> void:
 	_shake = maxf(_shake, amount)
 
 
-# ─── 지역 로드/전환 ───
+# ─── 지역(맵) 로드 — 항상 1지역 맵 ───
 
-func _swap_region(region_id: StringName, entrance_id: StringName) -> void:
+func _load_field(entrance_id: StringName) -> void:
 	if _region and is_instance_valid(_region):
 		_region.queue_free()
-	var scene := REGION2 if region_id == &"region2" else REGION1
-	_region = scene.instantiate()
+	_region = REGION1.instantiate()
 	_host.add_child(_region)
 	await get_tree().process_frame # 지역 _ready(페인팅·파티 그룹 등록) 대기
 	_party = _region.get_node("Party")
@@ -64,25 +60,16 @@ func _swap_region(region_id: StringName, entrance_id: StringName) -> void:
 	_camera.reset_smoothing()
 
 
-func _on_gate_unlocked(gate_id: StringName) -> void:
-	if gate_id == &"bridge_south" and GameState.current_region == &"region1" and not _busy:
-		_enter_region2()
-	elif gate_id == &"region2_south":
-		EventBus.show_toast.emit("산길 관문 너머는 아직 공사 중... (3지역 Coming soon)")
+# ─── 단계 진행 안내 (실제 전환은 패시브 트리의 지역 노드 구매가 한다) ───
+## 지역 노드를 사면 GameState.set_stage_to → region_changed → 적/틴트 교체 + 도착 토스트.
 
-
-func _enter_region2() -> void:
-	_busy = true
-	await _do_fade(1.0)
-	GameState.set_region(&"region2")
-	GameState.enable_damage_for_region2()          # 여기서부터 죽을 수 있다
-	var priest: CompanionData = GameState.companion_catalog.get(&"priest")
-	if priest:
-		GameState.add_companion(priest)
-	await _swap_region(&"region2", &"north")
-	await _do_fade(0.0)
-	EventBus.show_toast.emit("승려가 합류했다!  2지역 — 강 건너 가도")
-	_busy = false
+func _on_region_changed(_id: StringName) -> void:
+	var s := GameState.current_stage()
+	if s == null:
+		return
+	var msg: String = s.arrive_toast if s.arrive_toast != "" \
+		else Locale.t("%s 도착") % GameState.stage_name()
+	EventBus.show_toast.emit(msg)
 
 
 # ─── 패배 / 부활 (B-2) ───

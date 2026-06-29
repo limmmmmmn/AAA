@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/mage_staff.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"brg_fire_festival"
+display_name = "축제의 모닥불이 너무 크다"
+description = "축제가 적을 태운다 (파티 피해 ×1.1)."
+icon = ExtResource("2")
+branch = "bridge"
+node_type = "bridge"
+base_cost = 9000
+tree_pos = Vector2i(8, -1)
+tree_links = Array[StringName]([&"cmb_fire_spell", &"vlg_festival"])
+requires_all = true
+effects = {
+"party_damage_mult": 1.1
+}

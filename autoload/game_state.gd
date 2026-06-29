@@ -7,6 +7,8 @@ const CONFIG_PATH := "res://data/config/game_config.tres"
 const UPGRADE_DIR := "res://data/upgrades"
 const COMPANION_DIR := "res://data/companions"
 const QUEST_DIR := "res://data/quests"
+const STAGE_DIR := "res://data/stages"
+const TRINKET_DIR := "res://data/trinkets"
 
 var config: GameConfig
 
@@ -36,7 +38,7 @@ var member_max_hps: Array[int] = []     # 멤버별 최대 HP
 var damage_enabled: bool = true         # 1지역부터 적 공격이 아군에게 데미지
 var tactic_retreat_unlocked: bool = false # 승려 합류 시 해금 (v3 §9)
 var tactic_retreat_enabled: bool = false  # HUD 토글
-var current_region: StringName = &"region1"
+var current_region: StringName = &"stage_meadow" # 현재 단계 id (맵은 하나, 단계만 갈아끼움)
 var active_quest_id: StringName = &""   # 동시 수주 1개
 var quest_progress_base: int = 0        # 수주 시점의 target 토벌 수 (이후 증가분만 카운트)
 
@@ -98,15 +100,60 @@ var bonfire_heal_lv: int = 0           # 회복량 업글 단계 (1틱 +HP↑)
 # ─── 무리 출현 확률표 (v3 §4). [1.0] = 항상 1마리. 배너로 확장 ───
 var group_table: Array[float] = [1.0]
 
+# ─── 제너릭 스탯 사전 (업그레이드 트리 v0.1) ───
+## 스펙의 baseStats. 새 노드는 effects의 키로 이 사전을 건드린다. recalculate_stats가
+## 기본값에서 다시 빌드하고, 알 수 없는(레거시 외) 키는 _apply_generic_stat이 분류 적용한다.
+## 곱(_STAT_MULT): 기본 1.0, 효과는 거듭곱. / 합(_STAT_ADD): 기본값에 합. / 불(_STAT_BOOL): set true.
+var stats: Dictionary = {}
+const _STAT_MULT := {
+	"party_damage_mult": 1.0, "party_hp_mult": 1.0, "attack_speed_mult": 1.0,
+	"enemy_gold_mult": 1.0, "boss_gold_mult": 1.0, "boss_damage_mult": 1.0,
+	"pot_gold_mult": 1.0, "pot_respawn_mult": 1.0,
+	"upgrade_cost_mult": 1.0, "village_gold_mult": 1.0, "all_gold_mult": 1.0,
+	"crit_damage_mult": 1.0, "enemy_hp_mult": 1.0,
+}
+const _STAT_ADD := {
+	"combat_slots": 1, "extra_window_efficiency": 0.45,
+	"pot_base_gold": 0, "auto_pot_interval_sec": 0,
+	"crate_count": 0, "trinket_slots": 0,
+	"trinket_drop_chance": 0.0, "rare_trinket_chance": 0.0,
+	"hero_max_hp": 0,
+}
+const _STAT_BOOL := {
+	"auto_battle_restart": false, "auto_loot": false, "auto_boss_retry": false,
+	"boss_does_not_pause_farm": false, "npc_talk_enabled": false,
+	"shop_enabled": false, "healer_enabled": false, "trinkets_enabled": false,
+	"target_priority_enabled": false,
+	# ─ 트링켓 시스템 해금 플래그 ─
+	"boss_trinket_guarantee": false, "trinket_reroll_enabled": false,
+	"trinket_sets_enabled": false, "cursed_trinkets_enabled": false,
+	"pot_trinket_pool_enabled": false, "trinket_loadouts_enabled": false,
+	"trinket_collection_bonus": false,
+	# ─ core 스파인 해금 플래그 (가지 노출·시스템 게이팅용) ─
+	"adventure_started": false, "village_tree_unlocked": false,
+	"command_tree_unlocked": false, "meadow_boss_cleared": false,
+	"quest_unlocked": false, "ending_reached": false,
+}
+## 스탯이 아니라 "행동"인 효과 키 — recalculate_stats에선 무시하고 purchase가 처리한다.
+const _ACTION_KEYS := ["set_stage", "recruit", "discover_trinkets"]
+
 var catalog: Dictionary = {}            # id(StringName) -> UpgradeData
 var companion_catalog: Dictionary = {}  # id(StringName) -> CompanionData
 var quest_catalog: Dictionary = {}      # id(StringName) -> QuestData
+var stage_catalog: Array[StageData] = [] # 단계 목록 (index 오름차순) — 맵 1개를 갈아끼우는 단위
+var trinket_catalog: Dictionary = {}    # id(StringName) -> TrinketData
+var owned_trinkets: Array[StringName] = []    # 발견한 트링켓 (수집 도감 — trk_collection)
+var equipped_trinkets: Array[StringName] = [] # 장착 중 (trinket_slots 만큼 자동 채움)
 
 var _heal_accum: float = 0.0            # 공유 HP 회복 틱 누적
 var _forge_accum: float = 0.0           # 자동 강화/납품 틱 누적
 
 # ─── 디버그 (저장 안 함 — 실행마다 off로 시작) ───
 var debug_mode: bool = false
+## 골드/분 추적 — 출처별(전투/마을/보스). add_gold(amount, source)가 기록.
+var last_purchase_time: float = 0.0     # 마지막 노드 구매 시각(play_time) — 구매 간격 측정
+var _gold_events: Array = []            # [{t, amt, src}] — 최근 60s 윈도우 (오래된 건 즉시 폐기)
+const _GPM_WINDOW := 60.0               # 골드/분 측정 윈도우(s)
 
 
 func set_debug_mode(on: bool) -> void:
@@ -120,6 +167,8 @@ func _ready() -> void:
 	_load_catalog()
 	_load_companion_catalog()
 	_load_quest_catalog()
+	_load_stage_catalog()
+	_load_trinket_catalog()
 	load_game()
 	recalculate_stats()
 	_ensure_member_hp() # 멤버별 HP 배열을 멤버 수에 맞춰 정리 (로드 값 보존, 부족분 가득)
@@ -216,8 +265,182 @@ func quests_all() -> Array[QuestData]:
 	return list
 
 
+# ─── 단계(Stage) — 맵 하나로 1~최종 지역 커버 ───
+
+func _load_stage_catalog() -> void:
+	stage_catalog.clear()
+	var dir := DirAccess.open(STAGE_DIR)
+	if dir == null:
+		return
+	for file in dir.get_files():
+		var fname := file.trim_suffix(".remap")
+		if not fname.ends_with(".tres"):
+			continue
+		var s: StageData = load(STAGE_DIR + "/" + fname)
+		if s:
+			stage_catalog.append(s)
+	stage_catalog.sort_custom(func(a: StageData, b: StageData) -> bool: return a.index < b.index)
+
+
+## 현재 단계 데이터 (없으면 첫 단계, 카탈로그 미로드면 null).
+func current_stage() -> StageData:
+	for s: StageData in stage_catalog:
+		if s.id == current_region:
+			return s
+	return stage_catalog[0] if not stage_catalog.is_empty() else null
+
+
+func _stage_by_index(idx: int) -> StageData:
+	for s: StageData in stage_catalog:
+		if s.index == idx:
+			return s
+	return null
+
+
+## 현재 단계 번호 (옛 region_number — 상점 min_region 게이팅에 그대로 쓰인다).
 func region_number() -> int:
-	return 2 if current_region == &"region2" else 1
+	var s := current_stage()
+	return s.index if s != null else 1
+
+
+## 현재 단계 지역명 (HUD 제목용).
+func stage_name() -> String:
+	var s := current_stage()
+	return s.display_name if s != null else ""
+
+
+## 현재 단계에서 role(near/mid/far/rare)에 해당하는 몬스터 (SpawnZone이 호출).
+func stage_monster(role: StringName) -> MonsterData:
+	var s := current_stage()
+	return s.monster_for(role) if s != null else null
+
+
+func _stage_by_id(id: StringName) -> StageData:
+	for s: StageData in stage_catalog:
+		if s.id == id:
+			return s
+	return null
+
+
+## 특정 단계로 전진(역행 불가). core 스파인의 지역 노드를 사면 호출된다 = "골드로 지역을 산다".
+## 첫 도달이면 동료 합류 + full_heal. 성공 시 region_changed 발신. 현재 이하/모르는 단계면 false.
+func set_stage_to(stage_id: StringName) -> bool:
+	var target := _stage_by_id(stage_id)
+	if target == null or target.index <= region_number():
+		return false # 전진만 — 현재 이하면 무시
+	current_region = stage_id
+	gate_paid = true
+	full_heal() # 새 지역 = 새 출발, 가득 채워 보낸다
+	if target.joins_companion != &"":
+		var comp: CompanionData = companion_catalog.get(target.joins_companion)
+		if comp and not _has_companion(comp.id):
+			add_companion(comp)
+	sparkle_area = current_region
+	has_sparkling_ground = false # 새 단계 → 반짝임 리셋
+	EventBus.region_changed.emit(current_region)
+	return true
+
+
+## 다음 단계로 진행(순차). set_stage_to의 얇은 래퍼 — 테스트/디버그용.
+func advance_stage() -> bool:
+	var nxt := _stage_by_index(region_number() + 1)
+	return set_stage_to(nxt.id) if nxt != null else false
+
+
+# ─── 트링켓 (빌드를 망가뜨리는 장신구) ───
+
+func _load_trinket_catalog() -> void:
+	trinket_catalog.clear()
+	var dir := DirAccess.open(TRINKET_DIR)
+	if dir == null:
+		return
+	for file in dir.get_files():
+		var fname := file.trim_suffix(".remap")
+		if not fname.ends_with(".tres"):
+			continue
+		var t: TrinketData = load(TRINKET_DIR + "/" + fname)
+		if t:
+			trinket_catalog[t.id] = t
+
+
+## 트링켓 슬롯 수 (trk_unlock/slot_2/slot_3).
+func trinket_slots() -> int:
+	return int(stat("trinket_slots"))
+
+
+## 트링켓을 처음 발견 → 도감(owned)에 등록. 빈 슬롯이 있으면 자동 장착. 새로 발견했으면 true.
+func discover_trinket(id: StringName) -> bool:
+	if not trinket_catalog.has(id) or id in owned_trinkets:
+		return false
+	owned_trinkets.append(id)
+	recalculate_stats() # 슬롯 자동 채움 + 효과 반영
+	EventBus.show_toast.emit(Locale.t("장신구 발견: %s") % Locale.t(trinket_catalog[id].display_name))
+	return true
+
+
+## 저주 트링켓은 trk_cursed 해금 전엔 드랍 풀에서 빠진다.
+func _trinket_drop_pool() -> Array[StringName]:
+	var pool: Array[StringName] = []
+	for id: StringName in trinket_catalog:
+		var t: TrinketData = trinket_catalog[id]
+		if t.cursed and not bool(stat("cursed_trinkets_enabled")):
+			continue
+		if t.pool == &"pot" and not bool(stat("pot_trinket_pool_enabled")):
+			continue # 항아리 풀은 trk_pot_pool 해금 후
+		if id not in owned_trinkets:
+			pool.append(id)
+	return pool
+
+
+## 적 처치 시 트링켓 드랍 시도 (희귀 확률은 rare_trinket_chance가 가산).
+func try_drop_trinket() -> void:
+	if not bool(stat("trinkets_enabled")):
+		return
+	var chance := float(stat("trinket_drop_chance")) + float(stat("rare_trinket_chance"))
+	if chance <= 0.0 or randf() >= chance * item_find_mult():
+		return
+	var pool := _trinket_drop_pool()
+	if not pool.is_empty():
+		discover_trinket(pool[randi() % pool.size()])
+
+
+## 슬롯 수에 맞춰 owned에서 장착분을 채운다(부족하면 채우고, 슬롯이 줄면 잘라낸다).
+func _autofill_trinket_slots() -> void:
+	var slots := trinket_slots()
+	equipped_trinkets = equipped_trinkets.filter(func(id: StringName) -> bool: return id in owned_trinkets)
+	if equipped_trinkets.size() > slots:
+		equipped_trinkets.resize(slots)
+	for id: StringName in owned_trinkets:
+		if equipped_trinkets.size() >= slots:
+			break
+		if id not in equipped_trinkets:
+			equipped_trinkets.append(id)
+
+
+## 세트 효과(trk_tags): 장착 트링켓 중 같은 태그가 2개 이상이면 태그당 파티 피해 ×1.1.
+func _apply_trinket_sets() -> void:
+	var tag_counts := {}
+	for tid: StringName in equipped_trinkets:
+		var trk: TrinketData = trinket_catalog.get(tid)
+		if trk == null:
+			continue
+		for tag: StringName in trk.tags:
+			tag_counts[tag] = int(tag_counts.get(tag, 0)) + 1
+	for tag: StringName in tag_counts:
+		if int(tag_counts[tag]) >= 2:
+			stats["party_damage_mult"] = float(stats["party_damage_mult"]) * 1.1
+
+
+## 구 세이브(지역 id "region1"/"region2") → 단계 id 마이그레이션.
+func _migrate_stage_id(id: StringName) -> StringName:
+	match id:
+		&"region1": return &"stage_meadow"
+		&"region2": return &"stage_forest"
+	# 이미 stage_* 이거나, 카탈로그에 있으면 그대로. 없으면 첫 단계로.
+	for s: StageData in stage_catalog:
+		if s.id == id:
+			return id
+	return stage_catalog[0].id if not stage_catalog.is_empty() else &"stage_meadow"
 
 
 ## 무리 출현 규모 추첨 (v3 §4). group_table[i] = (i+1)마리 확률.
@@ -235,6 +458,10 @@ func upgrades_for_axis(axis: String) -> Array[UpgradeData]:
 	var list: Array[UpgradeData] = []
 	var region := region_number()
 	for upgrade: UpgradeData in catalog.values():
+		# 새 스펙 가지(core/village/command/trinket/bridge/infinite)는 레거시 axis 목록에서 제외.
+		# 레거시 노드(branch 미설정="combat")만 남는다. 라이브 트리는 tree_upgrades를 쓴다.
+		if upgrade.branch in ["core", "village", "command", "trinket", "bridge", "infinite"]:
+			continue
 		if upgrade.axis == axis and upgrade.min_region <= region:
 			if upgrade.requires_shovel and not has_shovel:
 				continue # 삽이 없으면 좋은 삽/꼬마돼지는 아직 숨긴다
@@ -274,10 +501,16 @@ func node_allocated(id: StringName) -> bool:
 	return up != null and owned_count(up) >= 1
 
 
-## 경로 잠금 해제 여부 — 연결된 선행 노드 중 하나라도 할당됐으면 구매 가능.
+## 경로 잠금 해제 여부.
+## 기본: 연결된 선행 중 하나라도 할당되면 OK. requires_all(교차 노드): 전부 할당돼야 OK.
 func node_unlocked(upgrade: UpgradeData) -> bool:
 	if upgrade.tree_links.is_empty():
 		return true # 링크 미설정 노드는 잠그지 않음(안전장치)
+	if upgrade.requires_all:
+		for link: StringName in upgrade.tree_links:
+			if not node_allocated(link):
+				return false
+		return true
 	for link: StringName in upgrade.tree_links:
 		if node_allocated(link):
 			return true
@@ -285,7 +518,8 @@ func node_unlocked(upgrade: UpgradeData) -> bool:
 
 
 func current_cost(upgrade: UpgradeData) -> int:
-	return int(round(upgrade.base_cost * pow(upgrade.cost_growth, owned_count(upgrade))))
+	var raw := upgrade.base_cost * pow(upgrade.cost_growth, owned_count(upgrade))
+	return maxi(0, int(round(raw * float(stats.get("upgrade_cost_mult", 1.0)))))
 
 
 func purchase(upgrade: UpgradeData) -> bool:
@@ -297,20 +531,43 @@ func purchase(upgrade: UpgradeData) -> bool:
 	gold -= cost
 	EventBus.gold_changed.emit(gold)
 	purchases[upgrade.id] = owned_count(upgrade) + 1
-	if upgrade.id == &"sword_copper" and first_sword_time < 0.0:
-		first_sword_time = play_time
+	last_purchase_time = play_time
+	if upgrade.id == &"cmb_atk_1" and first_sword_time < 0.0:
+		first_sword_time = play_time # 첫 전투 업글 시점 (촌장 이벤트 타이밍)
 	recalculate_stats()
+	# core 스파인의 지역 노드: 사는 즉시 그 지역을 연다 (set_stage 효과 = 행동)
+	if upgrade.effects.has("set_stage"):
+		set_stage_to(StringName(upgrade.effects["set_stage"]))
+	# 지휘 트리 동료 영입 (recruit 효과 = 행동) — 이미 합류했으면 무시
+	if upgrade.effects.has("recruit"):
+		var comp: CompanionData = companion_catalog.get(StringName(upgrade.effects["recruit"]))
+		if comp:
+			add_companion(comp)
+	# 트링켓 발견 (trk_unlock의 스타터 3개 등) — discover_trinkets 효과 = 행동
+	if upgrade.effects.has("discover_trinkets"):
+		for tid: Variant in upgrade.effects["discover_trinkets"]:
+			discover_trinket(StringName(tid))
 	EventBus.upgrade_purchased.emit(upgrade)
 	return true
 
 
 # ─── 골드 ───
 
-func add_gold(amount: int) -> void:
+## source: &"combat" / &"village" / &"boss" / &"" (기타). 디버그 GPM 출처 분류용.
+func add_gold(amount: int, source: StringName = &"") -> void:
 	gold += amount
 	if amount > 0:
 		total_gold_earned += amount
+		_record_gold_event(amount, source)
 	EventBus.gold_changed.emit(gold)
+
+
+## 골드 획득을 60s 윈도우에 기록(디버그 GPM). 윈도우 밖은 즉시 폐기해 배열을 작게 유지.
+func _record_gold_event(amount: int, source: StringName) -> void:
+	_gold_events.append({"t": play_time, "amt": amount, "src": source})
+	var cutoff := play_time - _GPM_WINDOW
+	while not _gold_events.is_empty() and _gold_events[0]["t"] < cutoff:
+		_gold_events.pop_front()
 
 
 func try_spend(amount: int) -> bool:
@@ -342,6 +599,7 @@ func roll_monster_drops(data: MonsterData) -> void:
 		rusty_swords += 1
 		EventBus.materials_changed.emit()
 		EventBus.show_toast.emit(Locale.t("%s가 녹슨 검을 떨어뜨렸다!") % Locale.t(data.display_name))
+	try_drop_trinket() # 트링켓 드랍 (trk_drop_slime/rare_chance — 해금 전엔 무효)
 
 
 # ─── 사냥 허가 리스트 (v3 §8) ───
@@ -419,15 +677,19 @@ func member_count() -> int:
 	return 1 + companions.size()
 
 
-## 멤버별 단독 공격력 (용사, 동료1, 동료2 ...). 합 = party_attack (총 공격력에서 파생).
-## 용사 = party_attack - 동료 보너스 합 (= 기본 + 무기/주문 업그레이드).
+## 멤버별 단독 공격력 (용사, 동료1, 동료2 ...). 합 = party_attack.
+## 동료 = 보너스 × 파티 피해 배율, 용사 = party_attack - 동료합 (= 배율 적용된 hero_attack).
+## party_attack에서 파생하므로 테스트가 party_attack을 직접 세팅해도 용사 화력이 따라온다.
 func member_attacks() -> Array[int]:
-	var bonus := 0
+	var pdm := float(stats.get("party_damage_mult", 1.0))
+	var comp_attacks: Array[int] = []
+	var comp_total := 0
 	for c in companions:
-		bonus += c.attack_bonus
-	var arr: Array[int] = [maxi(0, party_attack - bonus)]
-	for c in companions:
-		arr.append(c.attack_bonus)
+		var ca := int(round(c.attack_bonus * pdm))
+		comp_attacks.append(ca)
+		comp_total += ca
+	var arr: Array[int] = [maxi(0, party_attack - comp_total)]
+	arr.append_array(comp_attacks)
 	return arr
 
 
@@ -449,12 +711,63 @@ func item_find_mult() -> float:
 	return 1.0 + party_luck * config.luck_find_per
 
 
+## 제너릭 스탯 접근자 (없으면 기본값). 외부에서 stats[...] 직접 접근 대신 이걸 권장.
+func stat(key: String) -> Variant:
+	if stats.has(key):
+		return stats[key]
+	if _STAT_MULT.has(key): return _STAT_MULT[key]
+	if _STAT_ADD.has(key): return _STAT_ADD[key]
+	if _STAT_BOOL.has(key): return _STAT_BOOL[key]
+	return null
+
+
+## 전투 골드 총배율 = 운(발견) × 적 골드 배율 × 전체 골드 배율. (보스는 boss_gold_mult 추가 곱)
+func combat_gold_mult(is_boss: bool = false) -> float:
+	var m := gold_find_mult() * float(stat("enemy_gold_mult")) * float(stat("all_gold_mult"))
+	if is_boss:
+		m *= float(stat("boss_gold_mult"))
+	return m
+
+
+## 마을(항아리·상자·땅파기) 골드 총배율 = 운 × 마을 골드 배율 × 전체 골드 배율.
+func village_gold_mult() -> float:
+	return gold_find_mult() * float(stat("village_gold_mult")) * float(stat("all_gold_mult"))
+
+
+## 디버그 패널용 — 골드/분(출처별), 마지막 구매 후 경과, 현재 구매가능 노드 수.
+func debug_stats() -> Dictionary:
+	var cutoff := play_time - _GPM_WINDOW
+	var span := minf(_GPM_WINDOW, maxf(1.0, play_time)) # 플레이 60s 미만이면 실제 경과로 나눔
+	var sums := {&"combat": 0, &"village": 0, &"boss": 0, &"": 0}
+	for ev: Dictionary in _gold_events:
+		if ev["t"] >= cutoff:
+			var s: StringName = ev["src"]
+			sums[s] = int(sums.get(s, 0)) + int(ev["amt"])
+	var per := 60.0 / span
+	var buyable := 0
+	for up: UpgradeData in catalog.values():
+		if up.min_region <= region_number() and node_unlocked(up) \
+				and owned_count(up) < up.max_purchases and gold >= current_cost(up):
+			buyable += 1
+	var total_gpm := 0.0
+	for k in sums:
+		total_gpm += float(sums[k]) * per
+	return {
+		"gpm": int(round(total_gpm)),
+		"gpm_combat": int(round(sums[&"combat"] * per)),
+		"gpm_village": int(round(sums[&"village"] * per)),
+		"gpm_boss": int(round(sums[&"boss"] * per)),
+		"since_purchase": play_time - last_purchase_time,
+		"buyable": buyable,
+	}
+
+
 # ─── 멤버별 개별 HP (각자 자기 HP) ───
 
 ## index번째 멤버의 최대 HP (0=용사=config, 1+=동료=CompanionData.max_hp).
 func member_max_hp_for(index: int) -> int:
 	if index == 0:
-		return config.hero_max_hp
+		return config.hero_max_hp + int(stat("hero_max_hp")) # cmb_hp_* 보너스
 	var ci := index - 1
 	return companions[ci].max_hp if ci < companions.size() else 0
 
@@ -721,9 +1034,10 @@ func _ensure_town_arrays() -> void:
 		chest_ready_ats.append(0.0)
 
 
-## 항아리 복구 시간(초). 복구 속도 업글마다 짧아진다.
+## 항아리 복구 시간(초). 복구 속도 업글(레거시 lv) + pot_respawn_mult(vlg) 둘 다 적용.
 func pot_cooldown_now() -> float:
-	return config.pot_cooldown * pow(config.pot_cooldown_mult_per_level, pot_cooldown_lv)
+	return config.pot_cooldown * pow(config.pot_cooldown_mult_per_level, pot_cooldown_lv) \
+		* float(stat("pot_respawn_mult"))
 
 
 func pot_ready(i: int = 0) -> bool:
@@ -740,7 +1054,8 @@ func pot_remaining(i: int = 0) -> float:
 func break_pot(i: int = 0) -> String:
 	if not pot_ready(i):
 		return ""
-	var msg := _grant(_roll_pot())
+	# 항아리 골드: 기본 +pot_base_gold, ×pot_gold_mult (vlg_pot_gold_1·big_pot·chain·kingdom)
+	var msg := _grant(_roll_pot(), int(stat("pot_base_gold")), float(stat("pot_gold_mult")))
 	pot_ready_ats[i] = play_time + pot_cooldown_now()
 	EventBus.pot_changed.emit()
 	return msg
@@ -835,13 +1150,15 @@ func _weighted_pick(table: Array) -> Dictionary:
 
 
 ## 보상 적용 + 토스트용 문자열 반환
-func _grant(e: Dictionary) -> String:
+## gold_add/gold_mult: 출처별 골드 보정 (항아리는 pot_base_gold/pot_gold_mult를 넘긴다).
+func _grant(e: Dictionary, gold_add: int = 0, gold_mult: float = 1.0) -> String:
 	match e.type:
 		"nothing":
 			return Locale.t("꽝...")
 		"gold":
-			var g := int(round(randi_range(int(e["min"]), int(e["max"])) * gold_find_mult())) # 운 = 발견 골드↑
-			add_gold(g)
+			var raw := (randi_range(int(e["min"]), int(e["max"])) + gold_add) * gold_mult
+			var g := int(round(raw * village_gold_mult())) # 운·마을 골드 배율
+			add_gold(g, &"village")
 			return Locale.t("골드 +%d") % g
 		"mat":
 			add_material(e.id, int(e.n))
@@ -1067,6 +1384,31 @@ func _forge_auto_step() -> bool:
 
 # ─── 스탯 집계 ───
 
+## 제너릭 스탯을 기본값으로 초기화 (recalculate_stats 시작 시).
+func _init_generic_stats() -> void:
+	stats = {}
+	for k: String in _STAT_MULT: stats[k] = _STAT_MULT[k]
+	for k: String in _STAT_ADD: stats[k] = _STAT_ADD[k]
+	for k: String in _STAT_BOOL: stats[k] = _STAT_BOOL[k]
+
+
+## effects의 키를 제너릭 스탯 분류에 따라 적용. 처리했으면 true, 모르는 키면 false(레거시 경고).
+func _apply_generic_stat(key: String, value: Variant, count: int) -> bool:
+	if key in _ACTION_KEYS:
+		return true # 행동 키(set_stage 등)는 스탯이 아니므로 recalc에선 무시 (purchase가 처리)
+	if _STAT_MULT.has(key):
+		stats[key] = float(stats[key]) * pow(float(value), count)
+		return true
+	if _STAT_ADD.has(key):
+		stats[key] = stats[key] + value * count
+		return true
+	if _STAT_BOOL.has(key):
+		if bool(value):
+			stats[key] = true
+		return true
+	return false
+
+
 func recalculate_stats() -> void:
 	party_attack = config.base_party_attack
 	turn_interval = config.base_turn_interval
@@ -1095,6 +1437,7 @@ func recalculate_stats() -> void:
 	var dig_levels := 0
 	var hero_luck_acc := config.hero_base_luck
 	group_table = [1.0]
+	_init_generic_stats()
 	for id: StringName in purchases:
 		var upgrade: UpgradeData = catalog.get(id)
 		if upgrade == null:
@@ -1103,8 +1446,10 @@ func recalculate_stats() -> void:
 		for key: String in upgrade.effects:
 			var value: Variant = upgrade.effects[key]
 			match key:
-				"party_attack":
-					party_attack += int(value) * count
+				"party_attack", "hero_attack":
+					party_attack += int(value) * count # 용사 평타 가산 (cmb_atk_*)
+				"crit_bonus":
+					crit_chance += float(value) * count # 회심 확률 가산 (cmb_crit)
 				"turn_interval_mult":
 					turn_interval *= pow(float(value), count)
 				"move_speed_mult":
@@ -1142,6 +1487,8 @@ func recalculate_stats() -> void:
 					pot_count += int(value) * count                 # 항아리 증설
 				"pot_cooldown_lv":
 					pot_cooldown_lv += count                        # 항아리 복구 속도
+				"auto_pot":
+					if bool(value): auto_pot = true                 # 항아리꾼 고용 (자동 깨기) — 끄지 않음
 				"chest_unlock":
 					chest_unlocked = bool(value)                    # 보물상자 설치
 				"chest_count":
@@ -1161,17 +1508,33 @@ func recalculate_stats() -> void:
 				"luck":
 					hero_luck_acc += int(value) * count             # 용사 운 (행운 부적)
 				_:
-					push_warning("알 수 없는 효과 키: %s (%s)" % [key, upgrade.id])
+					if not _apply_generic_stat(key, value, count):
+						push_warning("알 수 없는 효과 키: %s (%s)" % [key, upgrade.id])
+	# ─── 장착 트링켓 효과 (업그레이드와 같은 제너릭 스탯 키로 가산) ───
+	_autofill_trinket_slots()
+	for tid: StringName in equipped_trinkets:
+		var trk: TrinketData = trinket_catalog.get(tid)
+		if trk == null:
+			continue
+		for tkey: String in trk.effects:
+			_apply_generic_stat(tkey, trk.effects[tkey], 1)
+	if bool(stats["trinket_sets_enabled"]):
+		_apply_trinket_sets() # 같은 태그 2개+ → 세트 보너스
+	if bool(stats["trinket_collection_bonus"]):
+		# 수집벽: 발견 트링켓 1개당 모든 골드 +1%, 최대 +50%
+		stats["all_gold_mult"] = float(stats["all_gold_mult"]) * (1.0 + minf(0.5, owned_trinkets.size() * 0.01))
 	# 갯수 = 해금 시 기본 1 + 증설, 잠금 시 0. 인덱스별 쿨타임 배열을 갯수에 맞춘다.
 	pot_count = (pot_count + 1) if pot_unlocked else 0
 	chest_count = (chest_count + 1) if chest_unlocked else 0
 	_ensure_town_arrays()
 	if equipped_sword_level >= 0: # 장착한 강화검 — 용사가 든다
 		party_attack += equipped_sword_level * config.sword_attack_per_level
-	hero_attack = party_attack # 용사 = 기본 + 무기/주문 업그레이드 + 장착검 (동료 보너스 제외)
-	# 동료 공격력 기여 (용사 + 동료 합산 = 파티 총 공격력)
-	for c in companions:
-		party_attack += c.attack_bonus
+	# 여기까지 party_attack = 용사 단독 raw(기본 + 평타 업글 + 장착검). 파티 피해 배율을 곱한다.
+	var pdm := float(stats["party_damage_mult"]) # cmb_legend_sword 등 (기본 1.0 = 무변화)
+	hero_attack = int(round(party_attack * pdm)) # 용사 최종 공격력 (동료 제외)
+	party_attack = hero_attack
+	for c in companions: # 동료 기여도 같은 배율로 (용사 + 동료 = 파티 총합)
+		party_attack += int(round(c.attack_bonus * pdm))
 	# 운: 파티 운 = 멤버 중 최고값. 회심 확률에 운을 더한다.
 	hero_luck = hero_luck_acc
 	party_luck = hero_luck
@@ -1181,6 +1544,11 @@ func recalculate_stats() -> void:
 	# 땅파기 쿨타임: 좋은 삽 단계당 감소, 하한 적용
 	dig_cooldown = maxf(config.dig_min_cooldown,
 		config.dig_base_cooldown - dig_levels * config.dig_cooldown_per_level)
+	# ─── 제너릭 스탯 → 레거시 변수 파생 (기본값이면 무변화) ───
+	turn_interval /= maxf(0.05, float(stats["attack_speed_mult"]))     # 공격속도 ↑ → 라운드 ↓
+	max_battle_windows += int(stats["combat_slots"]) - 1               # 추가 전투슬롯
+	if not member_max_hps.is_empty(): # 용사 최대 HP 업글(cmb_hp_*) 반영 — 현재 HP는 보존
+		_ensure_member_hp()
 	EventBus.stats_changed.emit()
 
 
@@ -1225,7 +1593,7 @@ func reset_to_new_game() -> void:
 	damage_enabled = true
 	tactic_retreat_unlocked = false
 	tactic_retreat_enabled = false
-	current_region = &"region1"
+	current_region = &"stage_meadow"
 	active_quest_id = &""
 	quest_progress_base = 0
 	_retreat_active = false
@@ -1250,6 +1618,10 @@ func reset_to_new_game() -> void:
 	party_on_sparkle = false
 	wisdom = 0
 	auto_move_on = false
+	owned_trinkets.clear()
+	equipped_trinkets.clear()
+	last_purchase_time = 0.0
+	_gold_events.clear()
 	recalculate_stats()
 	_ensure_member_hp() # 용사만, 가득
 
@@ -1322,6 +1694,8 @@ func save_game() -> void:
 		"wisdom": wisdom,
 		"language": language,
 		"auto_move_on": auto_move_on,
+		"owned_trinkets": owned_trinkets.map(func(s: StringName) -> String: return String(s)),
+		"equipped_trinkets": equipped_trinkets.map(func(s: StringName) -> String: return String(s)),
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
@@ -1352,7 +1726,7 @@ func load_game() -> void:
 	for h in data.get("member_hps", []):
 		member_hps.append(int(h)) # _ensure_member_hp가 멤버 수에 맞춰 정리
 	damage_enabled = true # 이제 1지역부터 항상 데미지 ON (구 세이브의 false 무시)
-	current_region = StringName(data.get("current_region", "region1"))
+	current_region = _migrate_stage_id(StringName(data.get("current_region", "stage_meadow")))
 	active_quest_id = StringName(data.get("active_quest_id", ""))
 	quest_progress_base = int(data.get("quest_progress_base", 0))
 	tactic_retreat_unlocked = bool(data.get("tactic_retreat_unlocked", false))
@@ -1379,6 +1753,12 @@ func load_game() -> void:
 	wisdom = int(data.get("wisdom", 0))
 	language = String(data.get("language", "ko"))
 	auto_move_on = bool(data.get("auto_move_on", false))
+	owned_trinkets.clear()
+	for t: Variant in data.get("owned_trinkets", []):
+		owned_trinkets.append(StringName(t))
+	equipped_trinkets.clear()
+	for t: Variant in data.get("equipped_trinkets", []):
+		equipped_trinkets.append(StringName(t))
 	materials.clear()
 	var mats_in: Dictionary = data.get("materials", {})
 	for key: String in mats_in:

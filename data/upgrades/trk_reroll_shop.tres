@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/gold.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"trk_reroll_shop"
+display_name = "수상한 재감정"
+description = "상점에서 골드로 트링켓 선택지를 재굴림한다."
+icon = ExtResource("2")
+branch = "trinket"
+node_type = "trinket"
+base_cost = 1200
+tree_pos = Vector2i(-6, -11)
+tree_links = Array[StringName]([&"trk_slot_2"])
+effects = {
+"trinket_reroll_enabled": true
+}

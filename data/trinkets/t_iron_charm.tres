@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TrinketData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trinket_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/necklace.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"t_iron_charm"
+display_name = "무쇠 부적"
+description = "파티 피해 ×1.1"
+icon = ExtResource("2")
+effects = {
+"party_damage_mult": 1.1
+}
+tags = Array[StringName]([&"combat"])
+rarity = 0
+pool = &"common"

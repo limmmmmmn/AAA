@@ -29,11 +29,11 @@ func _ready() -> void:
 	# ── 해금 전 = 숨김 ──
 	_check(inn != null and inn_ui != null, "여관 건물/UI 존재")
 	_check(not inn.visible, "해금 전엔 여관 숨김")
-	_check(not GameState.upgrades_for_axis("field").is_empty() and GameState.catalog.has(&"inn_unlock"), "여관 설치 업글 존재")
+	_check(GameState.catalog.has(&"vlg_inn"), "여관 설치 업글 존재")
 
 	# ── 상점에서 해금 → 마을 등장 ──
 	GameState.gold = 1000
-	GameState.purchase(GameState.catalog[&"inn_unlock"])
+	GameState.purchase(GameState.catalog[&"vlg_inn"])
 	_check(GameState.inn_unlocked and inn.visible, "해금 → 마을에 여관 등장")
 
 	# ── Space로 상점식 UI 열림 (세계 정지) ──

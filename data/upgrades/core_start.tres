@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/gold.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"core_start"
+display_name = "모험의 시작"
+description = "용사가 길을 나선다. 패시브 트리가 깨어난다."
+icon = ExtResource("2")
+branch = "core"
+node_type = "unlock"
+base_cost = 0
+tree_pos = Vector2i(0, -1)
+tree_links = Array[StringName]([&"core"])
+effects = {
+"adventure_started": true
+}

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/gold.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"trk_collection"
+display_name = "장신구 수집벽"
+description = "발견한 트링켓 1개당 모든 골드 +1%, 최대 +50%."
+icon = ExtResource("2")
+branch = "trinket"
+node_type = "trinket"
+base_cost = 40000
+tree_pos = Vector2i(-13, -18)
+tree_links = Array[StringName]([&"trk_loadouts"])
+effects = {
+"trinket_collection_bonus": true
+}

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/dagger.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"cmd_battle_queue"
+display_name = "전투 대기열"
+description = "적 처치 후 자동으로 다음 전투를 시작한다."
+icon = ExtResource("2")
+branch = "command"
+node_type = "automation"
+base_cost = 50
+tree_pos = Vector2i(3, -4)
+tree_links = Array[StringName]([&"cmd_auto_loot"])
+effects = {
+"auto_battle_restart": true
+}

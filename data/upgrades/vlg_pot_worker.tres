@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/pot.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"vlg_pot_worker"
+display_name = "항아리꾼 고용"
+description = "준비된 항아리를 자동으로 깨준다."
+icon = ExtResource("2")
+axis = "field"
+branch = "village"
+node_type = "automation"
+base_cost = 130
+tree_pos = Vector2i(-6, -3)
+tree_links = Array[StringName]([&"vlg_pot_respawn_1"])
+effects = {
+"auto_pot": true
+}

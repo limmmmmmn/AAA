@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/necklace.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"trk_rare_chance"
+display_name = "반짝이는 쓰레기"
+description = "희귀 트링켓 확률 +5% (드랍률에 가산)."
+icon = ExtResource("2")
+branch = "trinket"
+node_type = "trinket"
+base_cost = 8000
+tree_pos = Vector2i(-10, -15)
+tree_links = Array[StringName]([&"trk_pot_pool"])
+effects = {
+"rare_trinket_chance": 0.05
+}

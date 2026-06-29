@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TrinketData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trinket_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/sword.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"t_old_scabbard"
+display_name = "낡은 검집"
+description = "파티 피해 ×1.25, 항아리 골드 ×0.75"
+icon = ExtResource("2")
+effects = {
+"party_damage_mult": 1.25,
+"pot_gold_mult": 0.75
+}
+tags = Array[StringName]([&"combat"])
+rarity = 0
+pool = &"common"

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/necklace.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"core_quest_board"
+display_name = "촌장의 게시판"
+description = "퀘스트 시스템을 연다. 목표 보상 추가."
+icon = ExtResource("2")
+branch = "core"
+node_type = "unlock"
+base_cost = 800
+tree_pos = Vector2i(0, -6)
+tree_links = Array[StringName]([&"core_forest_path"])
+effects = {
+"quest_unlocked": true
+}

@@ -31,20 +31,20 @@ func _ready() -> void:
 	var chest0: Node = field.find_child("TreasureChest", true, false)
 	var chest1: Node = field.find_child("Chest2", true, false)
 
-	# ── 해금 전 = 숨김 + 상점 게이팅 ──
+	# ── 해금 전 = 숨김 + 경로 잠금 ──
 	_check(not pot0.visible and not chest0.visible, "해금 전엔 항아리·상자 숨김")
-	_check(not GameState.upgrades_for_axis("field").has(GameState.catalog[&"pot_count"]),
-		"해금 전엔 증설 업글 숨김(requires_flag)")
+	_check(not GameState.node_unlocked(GameState.catalog[&"vlg_pot_plus"]),
+		"vlg_pot_1 사기 전엔 항아리 증설 잠김(경로)")
 
-	# ── 항아리 설치 ──
-	_buy(&"pot_unlock")
+	# ── 항아리 설치 (vlg_pot_1) ──
+	_buy(&"vlg_pot_1")
 	_check(GameState.pot_unlocked and GameState.pot_count == 1, "항아리 설치 → 갯수 1")
 	_check(pot0.visible and not pot1.visible, "1번 항아리만 보이고 2번은 숨김")
-	_check(GameState.upgrades_for_axis("field").has(GameState.catalog[&"pot_count"]),
-		"해금 후 증설 업글 노출")
+	_check(GameState.node_unlocked(GameState.catalog[&"vlg_pot_plus"]),
+		"vlg_pot_1 구매 → 증설 해금")
 
-	# ── 항아리 증설 → 2개, 각각 독립 쿨타임 ──
-	_buy(&"pot_count")
+	# ── 항아리 증설 (vlg_pot_plus) → 2개, 각각 독립 쿨타임 ──
+	_buy(&"vlg_pot_plus")
 	_check(GameState.pot_count == 2 and pot1.visible, "증설 → 갯수 2, 2번 항아리 등장")
 	GameState.play_time = 1000.0
 	GameState.pot_ready_ats[0] = 0.0
@@ -53,26 +53,24 @@ func _ready() -> void:
 	GameState.break_pot(0)
 	_check(not GameState.pot_ready(0) and GameState.pot_ready(1), "0번만 깨짐 — 쿨타임 독립")
 
-	# ── 항아리 쿨다운 업글 → 복구 빨라짐 ──
+	# ── 항아리 재생 업글 (vlg_pot_respawn_1) → 복구 빨라짐 ──
 	var pcd0 := GameState.pot_cooldown_now()
-	_buy(&"pot_cooldown")
-	_check(GameState.pot_cooldown_now() < pcd0, "항아리 쿨다운 업글 → 복구 시간 단축")
+	_buy(&"vlg_pot_respawn_1")
+	_check(GameState.pot_cooldown_now() < pcd0, "재생설(×0.8) → 복구 시간 단축")
 
-	# ── 보물상자 설치/증설/쿨다운 (더 비싸지만 동일 구조) ──
-	_check(GameState.catalog[&"chest_unlock"].base_cost > GameState.catalog[&"pot_unlock"].base_cost,
-		"보물상자 설치가 항아리보다 비쌈")
-	_buy(&"chest_unlock")
+	# ── 항아리 골드 업글 (vlg_pot_gold_1·big_pot) → 항아리 골드 ↑ ──
+	_buy(&"vlg_pot_gold_1") # 기본 +2
+	_check(int(GameState.stat("pot_base_gold")) == 2, "더 수상한 항아리 → 항아리 기본 골드 +2")
+
+	# ── 보물상자 설치 (vlg_chest) ──
+	_check(GameState.catalog[&"vlg_chest"].base_cost > GameState.catalog[&"vlg_pot_1"].base_cost,
+		"보물상자가 항아리보다 비쌈")
+	_buy(&"vlg_chest")
 	_check(GameState.chest_unlocked and GameState.chest_count == 1 and chest0.visible, "보물상자 설치 → 1개")
-	_buy(&"chest_count")
-	_check(GameState.chest_count == 2 and chest1.visible, "보물상자 증설 → 2개")
 	GameState.play_time = 5000.0
 	GameState.chest_ready_ats[0] = 0.0
-	GameState.chest_ready_ats[1] = 0.0
 	GameState.open_chest(0)
-	_check(not GameState.chest_ready(0) and GameState.chest_ready(1), "0번 상자만 열림 — 독립")
-	var ccd0 := GameState.chest_cooldown_now()
-	_buy(&"chest_cooldown")
-	_check(GameState.chest_cooldown_now() < ccd0, "보물상자 쿨다운 업글 → 복구 단축")
+	_check(not GameState.chest_ready(0), "보물상자 개봉 → 쿨타임 진입")
 
 	print("RESULT: " + ("ALL PASS" if _fails == 0 else "%d FAILED" % _fails))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://save.json"))

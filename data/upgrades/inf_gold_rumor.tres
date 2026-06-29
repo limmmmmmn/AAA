@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/gold.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"inf_gold_rumor"
+display_name = "골드가 많다는 소문"
+description = "레벨당 일반 적 골드 ×1.1 (반복)."
+icon = ExtResource("2")
+branch = "infinite"
+node_type = "repeatable"
+base_cost = 10000
+cost_growth = 1.5
+max_purchases = 99
+tree_pos = Vector2i(1, -9)
+tree_links = Array[StringName]([&"core_castle_shadow"])
+effects = {
+"enemy_gold_mult": 1.1
+}

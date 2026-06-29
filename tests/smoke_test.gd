@@ -28,10 +28,10 @@ func _ready() -> void:
 
 	# A-2: 시작 시 슬라임존만 활성 (6마리), 박쥐/정예존은 잠금
 	_check(get_tree().get_nodes_in_group("monsters").size() == 6, "시작 시 슬라임존만 활성(6마리)")
-	_check(GameState.catalog.size() == 34, "업그레이드 카탈로그 34종 (+여관 설치)")
-	# 1지역 상점엔 1지역 아이템만 노출. 해금 전 증설/쿨다운/모닥불 스탯 업글은 숨김(requires_flag).
-	_check(GameState.upgrades_for_axis("combat").size() == 5, "1지역 상점 전투 5종")
-	_check(GameState.upgrades_for_axis("field").size() == 13, "1지역 상점 필드 13종 (+여관 설치)")
+	_check(GameState.catalog.size() == 106, "업그레이드 카탈로그 106종 (+ brg 8 + inf 5)")
+	# 레거시 axis 헬퍼는 옛 노드만 — 새 가지(core/combat/village)는 tree_upgrades로 노출.
+	_check(GameState.upgrades_for_axis("combat").size() == 17, "전투 가지 17종 (cmb_* + 전사의 맹세)")
+	_check(GameState.upgrades_for_axis("field").size() == 10, "레거시 필드 노드 10종 (항아리/상자/여관 vlg로 이동)")
 
 	# A-1: 솔로 용사 — 파티 멤버 1명, 기본 공격력 3
 	_check(GameState.party_members().size() == 1, "파티 = 용사 1인")
@@ -61,12 +61,12 @@ func _ready() -> void:
 	# 상점 구매 → 스탯 재계산
 	GameState.add_gold(50)
 	var atk_before: int = GameState.party_attack
-	var sword: UpgradeData = GameState.catalog[&"sword_copper"]
-	_check(GameState.purchase(sword), "구리 검 구매")
-	_check(GameState.party_attack == atk_before + 3, "공격력 +3 반영")
+	var sword: UpgradeData = GameState.catalog[&"cmb_atk_1"]
+	_check(GameState.purchase(sword), "낡은 검 닦기 구매")
+	_check(GameState.party_attack == atk_before + 1, "공격력 +1 반영")
 	_check(not GameState.purchase(sword), "중복 구매 차단")
 
-	# 1턴 격파 플래그
+	# 1턴 격파 플래그 (party_attack을 크게 → member_attacks가 용사 화력에 반영)
 	GameState.party_attack = 99
 	var battle2 := BattleManager.start_battle([slime])
 	var result2: Dictionary = await battle2.finished

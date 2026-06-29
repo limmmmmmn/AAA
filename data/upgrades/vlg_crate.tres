@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/chest.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"vlg_crate"
+display_name = "나무 상자도 수상하다"
+description = "마을 수입 증가 (비전투 골드 ×1.15)"
+icon = ExtResource("2")
+axis = "field"
+branch = "village"
+node_type = "unlock"
+base_cost = 210
+tree_pos = Vector2i(-6, -4)
+tree_links = Array[StringName]([&"vlg_pot_worker"])
+effects = {
+"village_gold_mult": 1.15
+}

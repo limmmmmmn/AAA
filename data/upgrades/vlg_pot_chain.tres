@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/pot.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"vlg_pot_chain"
+display_name = "항아리 연쇄 파괴"
+description = "항아리 골드 ×1.5"
+icon = ExtResource("2")
+axis = "field"
+branch = "village"
+node_type = "stat"
+base_cost = 1100
+tree_pos = Vector2i(-9, -5)
+tree_links = Array[StringName]([&"vlg_inn"])
+effects = {
+"pot_gold_mult": 1.5
+}

@@ -13,6 +13,9 @@ func start_battle(monsters: Array, world_pos: Vector2 = Vector2.ZERO) -> BattleI
 	if not can_start_battle() or monsters.is_empty():
 		return null
 	var battle := BattleInstance.new(monsters, world_pos)
+	# 1번 전투창은 100% 화력, 추가로 열리는 창은 extra_window_efficiency(기본 0.45, 노드로 ↑·최대 1.0).
+	battle.window_efficiency = 1.0 if active_battles.is_empty() \
+		else minf(1.0, float(GameState.stat("extra_window_efficiency")))
 	active_battles.append(battle)
 	battle.finished.connect(_on_battle_finished.bind(battle))
 	battle.fled.connect(_on_battle_fled.bind(battle))
@@ -35,7 +38,7 @@ func abort_all() -> void:
 
 func _on_battle_finished(result: Dictionary, battle: BattleInstance) -> void:
 	active_battles.erase(battle)
-	GameState.add_gold(int(round(result.gold * GameState.gold_find_mult()))) # 운 = 발견 골드↑
+	GameState.add_gold(int(round(result.gold * GameState.combat_gold_mult())), &"combat") # 운·적/전체 골드 배율
 	GameState.total_exp += result.exp
 	GameState.total_battles_won += 1
 	# 적별로 사망 처리 (kill_count·존 해금·재료 드롭이 여기에 반응)

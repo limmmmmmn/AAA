@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/priest_staff.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"cmd_healer"
+display_name = "힐러 고용"
+description = "승려(힐러)가 합류한다. 매 턴 회복."
+icon = ExtResource("2")
+branch = "command"
+node_type = "unlock"
+base_cost = 240
+tree_pos = Vector2i(6, -5)
+tree_links = Array[StringName]([&"cmd_window_train"])
+effects = {
+"recruit": "priest",
+"healer_enabled": true
+}

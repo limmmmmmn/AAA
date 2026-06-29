@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/bow.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"cmd_target_rules"
+display_name = "타겟 우선순위"
+description = "체력 낮은/골드 높은 적 우선 공격 옵션."
+icon = ExtResource("2")
+branch = "command"
+node_type = "unlock"
+base_cost = 380
+tree_pos = Vector2i(7, -5)
+tree_links = Array[StringName]([&"cmd_healer"])
+effects = {
+"target_priority_enabled": true
+}

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/slime.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"trk_drop_slime"
+display_name = "슬라임도 뭔가 낀다"
+description = "일반 적 트링켓 드랍률 +0.5%"
+icon = ExtResource("2")
+branch = "trinket"
+node_type = "trinket"
+base_cost = 190
+tree_pos = Vector2i(-3, -8)
+tree_links = Array[StringName]([&"trk_unlock"])
+effects = {
+"trinket_drop_chance": 0.005
+}

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/dagger.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"cmb_quick_swing"
+display_name = "빠른 휘두르기"
+description = "공격 속도 ×1.15"
+icon = ExtResource("2")
+branch = "combat"
+node_type = "stat"
+base_cost = 36
+tree_pos = Vector2i(4, 0)
+tree_links = Array[StringName]([&"cmb_auto_command"])
+effects = {
+"attack_speed_mult": 1.15
+}

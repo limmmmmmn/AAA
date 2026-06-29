@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TrinketData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trinket_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/ring.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"t_broken_watch"
+display_name = "고장난 회중시계"
+description = "쿨타임 ×0.8, 적 HP ×1.15"
+icon = ExtResource("2")
+effects = {
+"pot_respawn_mult": 0.8,
+"enemy_hp_mult": 1.15
+}
+tags = Array[StringName]([&"time"])
+rarity = 0
+pool = &"common"

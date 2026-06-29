@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/pot.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"trk_pot_pool"
+display_name = "항아리 유물 도감"
+description = "항아리/마을 계열 트링켓 풀 해금 (수호상 즉시 획득)."
+icon = ExtResource("2")
+branch = "trinket"
+node_type = "trinket"
+base_cost = 5000
+tree_pos = Vector2i(-9, -14)
+tree_links = Array[StringName]([&"trk_cursed"])
+effects = {
+"pot_trinket_pool_enabled": true,
+"discover_trinkets": ["t_pot_idol"]
+}

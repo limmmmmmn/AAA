@@ -2,6 +2,8 @@ extends Node2D
 ## 메탈슬라임 전용 스포너. unlock_milestone(누적 토벌) 충족 뒤부터
 ## 랜덤 간격으로 외곽 영역에 1마리씩 스폰한다 (A-2).
 
+## role이 "rare"면 현재 단계(StageData)의 rare 몬스터를 쓴다. 비면 monster_data 고정.
+@export var role: String = "" # "" | rare
 @export var monster_data: MonsterData
 @export var min_interval: float = 60.0
 @export var max_interval: float = 120.0
@@ -16,7 +18,21 @@ var _announced: bool = false
 
 
 func _ready() -> void:
+	EventBus.region_changed.connect(_on_region_changed)
 	_schedule()
+
+
+## 단계 전환 → 현재 메탈(rare)을 치운다. 다음 스폰이 새 단계 rare로 뜬다.
+func _on_region_changed(_id: StringName) -> void:
+	if is_instance_valid(_current):
+		_current.queue_free()
+	_current = null
+
+
+func _resolve_monster() -> MonsterData:
+	if role != "":
+		return GameState.stage_monster(StringName(role))
+	return monster_data
 
 
 func _schedule() -> void:
@@ -26,12 +42,13 @@ func _schedule() -> void:
 func _try_spawn() -> void:
 	if not is_inside_tree():
 		return
-	if GameState.milestone_met(unlock_milestone) and _current == null and monster_data:
+	var md := _resolve_monster()
+	if GameState.milestone_met(unlock_milestone) and _current == null and md:
 		if not _announced:
 			_announced = true
 			EventBus.show_toast.emit(unlock_toast)
 		var monster: Monster = MONSTER_SCENE.instantiate()
-		monster.data = monster_data
+		monster.data = md
 		monster.vanished.connect(_on_vanished)
 		var pos := Vector2(
 			randf_range(spawn_rect.position.x, spawn_rect.end.x),

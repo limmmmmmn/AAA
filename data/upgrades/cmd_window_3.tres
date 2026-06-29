@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/helmet.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"cmd_window_3"
+display_name = "동시 전투창 II"
+description = "전투창 +1"
+icon = ExtResource("2")
+branch = "command"
+node_type = "stat"
+base_cost = 1400
+tree_pos = Vector2i(10, -6)
+tree_links = Array[StringName]([&"cmd_party_orders"])
+effects = {
+"combat_slots": 1
+}

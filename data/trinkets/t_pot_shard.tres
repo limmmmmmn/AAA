@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="TrinketData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trinket_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/pot.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"t_pot_shard"
+display_name = "깨진 항아리 조각"
+description = "항아리 골드 ×2, 일반 적 골드 ×0.85"
+icon = ExtResource("2")
+effects = {
+"pot_gold_mult": 2.0,
+"enemy_gold_mult": 0.85
+}
+tags = Array[StringName]([&"pot"])
+rarity = 0
+pool = &"pot"

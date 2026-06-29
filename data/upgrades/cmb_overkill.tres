@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/sword.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"cmb_overkill"
+display_name = "오버킬 전파"
+description = "넘치는 힘 — 파티 피해 ×1.15"
+icon = ExtResource("2")
+branch = "combat"
+node_type = "stat"
+base_cost = 1900
+tree_pos = Vector2i(10, -2)
+tree_links = Array[StringName]([&"cmb_boss_slayer"])
+effects = {
+"party_damage_mult": 1.15
+}

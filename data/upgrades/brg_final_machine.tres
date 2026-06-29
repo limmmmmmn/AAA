@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/shield.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"brg_final_machine"
+display_name = "최종전 자동화 장치"
+description = "최종 보스전 중에도 모든 파밍 유지 (모든 골드 ×1.1)."
+icon = ExtResource("2")
+branch = "bridge"
+node_type = "bridge"
+base_cost = 50000
+tree_pos = Vector2i(12, -8)
+tree_links = Array[StringName]([&"cmd_auto_boss_retry", &"trk_loadouts", &"core_final_door"])
+requires_all = true
+effects = {
+"boss_does_not_pause_farm": true,
+"all_gold_mult": 1.1
+}

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/pot.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"vlg_pot_1"
+display_name = "항아리 하나쯤은 있겠지"
+description = "마을에 항아리 1개. 깨면 쿨타임마다 골드."
+icon = ExtResource("2")
+axis = "field"
+branch = "village"
+node_type = "unlock"
+base_cost = 15
+tree_pos = Vector2i(-2, -3)
+tree_links = Array[StringName]([&"core_town_permit"])
+effects = {
+"pot_unlock": true
+}

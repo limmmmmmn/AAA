@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/ring.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"trk_loadouts"
+display_name = "장신구 갈아끼우기"
+description = "파밍/보스/항아리 로드아웃 3개 저장."
+icon = ExtResource("2")
+branch = "trinket"
+node_type = "trinket"
+base_cost = 22000
+tree_pos = Vector2i(-12, -17)
+tree_links = Array[StringName]([&"trk_slot_3"])
+effects = {
+"trinket_loadouts_enabled": true
+}

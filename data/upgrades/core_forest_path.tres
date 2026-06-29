@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/grass.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"core_forest_path"
+display_name = "숲길 개방"
+description = "숲길 지역을 연다. 더 거친 짐승과 승려 합류."
+icon = ExtResource("2")
+branch = "core"
+node_type = "region"
+base_cost = 420
+tree_pos = Vector2i(0, -5)
+tree_links = Array[StringName]([&"core_meadow_boss"])
+effects = {
+"set_stage": "stage_forest"
+}

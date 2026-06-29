@@ -33,14 +33,13 @@ func _ready() -> void:
 	var bridge_image := get_viewport().get_texture().get_image()
 	bridge_image.save_png(ProjectSettings.globalize_path("user://screenshot_bridge.png"))
 
-	# 2지역 진입 (B 전체)
-	GameState.add_gold(600)
-	var field: Node = get_tree().get_first_node_in_group("field")
-	field.get_node("BridgeGate")._on_confirmed()
-	await get_tree().create_timer(1.6).timeout
-	# 마을(여관/게시판/상점/교회)이 보이게 파티를 마을로 이동
+	# 숲길 진입 (지역 노드 구매 — 같은 맵, 적/틴트 교체)
+	GameState.gold = 99999
+	GameState.purchase(GameState.catalog[&"core_forest_path"])
+	var field: RegionBase = get_tree().get_first_node_in_group("field")
+	# 마을(상점/여관/대장간)이 보이게 파티를 마을로 이동
 	var p2: Node2D = get_tree().get_first_node_in_group("party")
-	p2.global_position = Vector2(336, 1040)
+	p2.global_position = field.home_point
 	await get_tree().create_timer(0.5).timeout
 	var region2_image := get_viewport().get_texture().get_image()
 	region2_image.save_png(ProjectSettings.globalize_path("user://screenshot_region2.png"))

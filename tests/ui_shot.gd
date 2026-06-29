@@ -16,7 +16,6 @@ func _ready() -> void:
 	GameState.gold = 360
 	GameState.gems = 2
 	GameState.purchases[&"shovel"] = 1
-	GameState.purchases[&"spell_catalog"] = 1 # 원격 상점
 	GameState.auto_enhance = true
 	GameState.set_hunted(&"slime", true)
 	GameState.recalculate_stats()
@@ -31,7 +30,7 @@ func _ready() -> void:
 	EventBus.request_close_modals.emit()
 
 	# 상점 패널 (검정 JRPG 리스트)
-	GameState.set_region(&"region2") # 2지역 상점 = 더 많은 아이템
+	GameState.set_region(&"stage_forest") # 2단계 상점 = 더 많은 아이템
 	EventBus.request_shop.emit()
 	await get_tree().create_timer(0.3).timeout
 	get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path("user://ui_shop.png"))

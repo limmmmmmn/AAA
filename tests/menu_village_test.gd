@@ -45,12 +45,12 @@ func _ready() -> void:
 	GameState.total_battles_won = 42
 	GameState.kill_count[&"slime"] = 30
 	GameState.gate_paid = true
-	GameState.current_region = &"region2"
+	GameState.current_region = &"stage_forest"
 	GameState.damage_enabled = true
 	if not GameState.member_hps.is_empty():
 		GameState.member_hps[0] = 5 # 용사 부상 상태
 	GameState.tactic_retreat_unlocked = true
-	GameState.purchases[&"sword_copper"] = 1
+	GameState.purchases[&"cmb_atk_1"] = 1
 	GameState.hunt_list[&"orc"] = false
 	GameState.save_game()
 	_check(FileAccess.file_exists(GameState.SAVE_PATH), "리셋 전 세이브 존재")
@@ -62,7 +62,7 @@ func _ready() -> void:
 	_check(GameState.total_battles_won == 0, "리셋: 격파 수 0")
 	_check(GameState.kill_count.is_empty(), "리셋: 토벌 수 초기화")
 	_check(not GameState.gate_paid, "리셋: 통행료 미지불")
-	_check(GameState.current_region == &"region1", "리셋: 1지역으로")
+	_check(GameState.current_region == &"stage_meadow", "리셋: 초원(1단계)으로")
 	_check(GameState.damage_enabled, "리셋: 데미지 on (1지역부터)")
 	_check(GameState.member_count() == 1 and GameState.member_max_hp(0) == GameState.config.hero_max_hp, "리셋: 용사 HP 기본값")
 	_check(GameState.total_hp() == GameState.total_max_hp(), "리셋: HP 가득")
@@ -75,7 +75,7 @@ func _ready() -> void:
 	GameState.save_game()
 	var f := FileAccess.open(GameState.SAVE_PATH, FileAccess.READ)
 	var d: Variant = JSON.parse_string(f.get_as_text())
-	_check(int(d.get("gold", -1)) == 0 and String(d.get("current_region", "")) == "region1", "리셋 후 세이브가 깨끗함")
+	_check(int(d.get("gold", -1)) == 0 and String(d.get("current_region", "")) == "stage_meadow", "리셋 후 세이브가 깨끗함")
 
 	print("RESULT: " + ("ALL PASS" if _fails == 0 else "%d FAILED" % _fails))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://save.json"))

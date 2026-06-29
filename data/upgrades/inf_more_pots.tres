@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/pot.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"inf_more_pots"
+display_name = "항아리 더 들여오기"
+description = "레벨당 항아리 +1 (반복)."
+icon = ExtResource("2")
+branch = "infinite"
+node_type = "repeatable"
+base_cost = 3500
+cost_growth = 1.4
+max_purchases = 99
+tree_pos = Vector2i(-13, -4)
+tree_links = Array[StringName]([&"vlg_big_pot"])
+effects = {
+"pot_count": 1
+}

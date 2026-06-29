@@ -164,6 +164,7 @@ collision_mask = 0
 monitoring = false
 monitorable = false
 script = ExtResource("5")
+role = "near"
 monster_data = ExtResource("11")
 max_count = 6
 respawn_delay = 4.0
@@ -196,6 +197,7 @@ collision_mask = 0
 monitoring = false
 monitorable = false
 script = ExtResource("5")
+role = "mid"
 monster_data = ExtResource("12")
 max_count = 5
 respawn_delay = 6.0
@@ -232,6 +234,7 @@ collision_mask = 0
 monitoring = false
 monitorable = false
 script = ExtResource("5")
+role = "far"
 monster_data = ExtResource("13")
 max_count = 3
 respawn_delay = 10.0
@@ -263,6 +266,7 @@ disabled = true
 
 [node name="MetalSlimeSpawner" type="Node2D" parent="MonsterSpawner" unique_id=1344789492]
 script = ExtResource("6")
+role = "rare"
 monster_data = ExtResource("14")
 spawn_rect = Rect2(96, 800, 1216, 150)
 

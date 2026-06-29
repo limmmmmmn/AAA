@@ -7,14 +7,23 @@ extends RegionBase
 @export var slime_radius := 8
 @export var bat_radius := 12
 @export var bridge_x := 21                     # 다리는 bridge_x, bridge_x+1 두 열
+## 칠한 맵엔 village 타일이 없어 마을 안전지대를 기하학적으로 정의한다(월드 px).
+## 마을 건물(상점/여관/대장간/촌장)이 모인 구역 — 몬스터 진입 금지·철수/부활 귀환점.
+@export var village_rect := Rect2(248, 404, 208, 150)
+@export var home_point := Vector2(360, 470)    # 마을 한복판 — 부활/철수 귀환 지점
 
 
 func region_id() -> StringName:
 	return &"region1"
 
 
+## 마을 판정: 칠한 village 타일(있으면) 또는 마을 영역 안.
+func is_village(world_pos: Vector2) -> bool:
+	return village_rect.has_point(world_pos) or super.is_village(world_pos)
+
+
 func entrance(_id: StringName) -> Vector2:
-	return Vector2(720, 576) # 파티 시작 지점
+	return home_point
 
 
 func _tile_for(cell: Vector2i) -> Vector2i:

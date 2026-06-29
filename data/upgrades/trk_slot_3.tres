@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/necklace.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"trk_slot_3"
+display_name = "장신구 과다착용"
+description = "트링켓 슬롯 +1"
+icon = ExtResource("2")
+branch = "trinket"
+node_type = "trinket"
+base_cost = 13000
+tree_pos = Vector2i(-11, -16)
+tree_links = Array[StringName]([&"trk_rare_chance"])
+effects = {
+"trinket_slots": 1
+}

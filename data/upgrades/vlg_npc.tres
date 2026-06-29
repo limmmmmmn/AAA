@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/necklace.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"vlg_npc"
+display_name = "NPC에게 말 걸기"
+description = "마을 사람들과 대화로 수입 (비전투 골드 ×1.15)"
+icon = ExtResource("2")
+axis = "field"
+branch = "village"
+node_type = "unlock"
+base_cost = 320
+tree_pos = Vector2i(-7, -4)
+tree_links = Array[StringName]([&"vlg_crate"])
+effects = {
+"npc_talk_enabled": true,
+"village_gold_mult": 1.15
+}

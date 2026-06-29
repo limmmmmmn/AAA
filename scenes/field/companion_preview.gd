@@ -12,9 +12,10 @@ var _joined: bool = false
 
 
 func _ready() -> void:
-	EventBus.gate_unlocked.connect(_on_gate_unlocked)
-	if GameState.gate_paid:
-		_reveal(false) # 이미 통과한 세이브 → 조용히 컬러 상태
+	# 동료가 합류하면(지역 노드 구매로 단계가 열릴 때) 실루엣 → 컬러 합류 컷.
+	EventBus.companion_joined.connect(_on_companion_joined)
+	if GameState.gate_paid or not GameState.companions.is_empty():
+		_reveal(false) # 이미 합류한 세이브 → 조용히 컬러 상태
 	else:
 		_start_waving()
 
@@ -26,7 +27,7 @@ func _start_waving() -> void:
 	tween.tween_property(_sprite, "rotation_degrees", -8.0, 0.4).set_trans(Tween.TRANS_SINE)
 
 
-func _on_gate_unlocked(_gate_id: StringName) -> void:
+func _on_companion_joined(_comp: CompanionData) -> void:
 	if not _joined:
 		_reveal(true)
 
@@ -43,4 +44,4 @@ func _reveal(announce: bool) -> void:
 			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		tween.tween_property(_sprite, "position:y", _sprite.position.y, 0.18) \
 			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-		EventBus.show_toast.emit(Locale.t("%s가 동료가 되었다! (2지역은 Coming soon)") % Locale.t(companion_name))
+		EventBus.show_toast.emit(Locale.t("%s가 동료가 되었다!") % Locale.t(companion_name))

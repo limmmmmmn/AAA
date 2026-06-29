@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/shield.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"core_castle_shadow"
+display_name = "마왕성의 그림자"
+description = "마왕성 외곽을 연다. 고급 적 추가."
+icon = ExtResource("2")
+branch = "core"
+node_type = "region"
+base_cost = 9000
+tree_pos = Vector2i(0, -9)
+tree_links = Array[StringName]([&"core_airship_toy"])
+effects = {
+"set_stage": "stage_castle"
+}

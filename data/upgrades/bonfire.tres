@@ -12,7 +12,7 @@ icon = ExtResource("1_3ifue")
 axis = "field"
 base_cost = 60
 tree_pos = Vector2i(0, 2)
-tree_links = Array[StringName]([&"pot_unlock"])
+tree_links = Array[StringName]([&"core"])
 effects = {
 "bonfire": true
 }

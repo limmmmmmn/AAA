@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/bow.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"cmb_limit_break"
+display_name = "리미트 브레이크"
+description = "한계 돌파 — 파티 피해 ×1.25"
+icon = ExtResource("2")
+branch = "combat"
+node_type = "stat"
+base_cost = 3300
+tree_pos = Vector2i(11, -3)
+tree_links = Array[StringName]([&"cmb_overkill"])
+effects = {
+"party_damage_mult": 1.25
+}

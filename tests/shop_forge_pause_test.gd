@@ -40,8 +40,8 @@ func _ready() -> void:
 	_check(shop_ui.visible and get_tree().paused, "상점 열림 → 세계 정지")
 
 	# 트리: 루트 노드(허브 연결)는 해금 상태 → 클릭 구매 / 잠긴 노드는 구매 거부
-	var root: UpgradeData = GameState.catalog[&"sword_copper"]
-	var locked: UpgradeData = GameState.catalog[&"sword_steel"] # 구리→철→강철, 선행 없이 잠김
+	var root: UpgradeData = GameState.catalog[&"core_start"]
+	var locked: UpgradeData = GameState.catalog[&"core_first_gold"] # core_start 선행 없이 잠김
 	_check(GameState.node_unlocked(root), "허브 연결 루트 노드는 해금")
 	_check(not GameState.node_unlocked(locked), "선행 안 산 노드는 경로 잠금")
 	_check(not shop_ui._try_buy(locked), "잠긴 노드 구매 거부")
