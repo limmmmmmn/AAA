@@ -1,16 +1,17 @@
-[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/sword.png" id="1_brbqp"]
 
 [resource]
 script = ExtResource("1")
 id = &"sword_iron"
 display_name = "철의 검"
 description = "파티 공격력 +6"
-axis = "combat"
+icon = ExtResource("1_brbqp")
 base_cost = 25
-cost_growth = 1.0
-max_purchases = 1
+tree_pos = Vector2i(2, 0)
+tree_links = Array[StringName]([&"sword_copper"])
 effects = {
 "party_attack": 6
 }

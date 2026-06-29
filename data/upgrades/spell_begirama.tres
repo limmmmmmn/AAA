@@ -1,17 +1,18 @@
-[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/mage_staff.png" id="1_ocgp8"]
 
 [resource]
 script = ExtResource("1")
 id = &"spell_begirama"
 display_name = "주문: 베기라"
 description = "전투창 내 전체 공격"
-axis = "combat"
+icon = ExtResource("1_ocgp8")
 min_region = 2
 base_cost = 600
-cost_growth = 1.0
-max_purchases = 1
+tree_pos = Vector2i(2, -2)
+tree_links = Array[StringName]([&"spell_gira"])
 effects = {
 "all_attack": true
 }

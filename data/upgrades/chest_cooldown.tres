@@ -1,18 +1,21 @@
-[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/chest.png" id="1_snibe"]
 
 [resource]
 script = ExtResource("1")
 id = &"chest_cooldown"
 display_name = "튼튼한 자물쇠"
 description = "보물상자 복구가 빨라진다. 더 자주 열 수 있다."
+icon = ExtResource("1_snibe")
 axis = "field"
-min_region = 1
 requires_flag = &"chest_unlocked"
 base_cost = 150
 cost_growth = 1.7
 max_purchases = 4
+tree_pos = Vector2i(-2, 4)
+tree_links = Array[StringName]([&"chest_count"])
 effects = {
 "chest_cooldown_lv": 1
 }

@@ -1,17 +1,20 @@
-[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/slime.png" id="1_05xkr"]
 
 [resource]
 script = ExtResource("1")
 id = &"respawn_swift"
 display_name = "소굴 자극"
 description = "몬스터 리스폰 ×0.85 (반복 — 더 빨리 다시 나타난다)"
+icon = ExtResource("1_05xkr")
 axis = "field"
-min_region = 1
 base_cost = 70
 cost_growth = 1.6
 max_purchases = 5
+tree_pos = Vector2i(-2, -2)
+tree_links = Array[StringName]([&"horde"])
 effects = {
 "respawn_delay_mult": 0.85
 }

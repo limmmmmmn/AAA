@@ -1,268 +1,399 @@
 extends Control
-## 상점 UI — 고전 드퀘식 커맨드 창의 정체성(어두운 창·픽셀 폰트·또렷한 테두리)은 지키되,
-## 모던 가독성을 얹었다: 한 덩어리 둥근 창 + 선택 하이라이트 바 + 분류 헤더(전투/필드)
-## + 헤더 소지금 + 우측 상세(이름·Lv 바·효과·상태 칩).dd
-## 열리면 세계 정지(필드·전투 멈춤). 키보드 ↑/↓로 이동, Enter로 구매. Space는 상점 토글이라 제외.
+## 상점 — 패스 오브 엑자일식 패시브 노드 트리.
+## 중앙 허브에서 세 갈래(검=오른쪽 / 마을=아래 / 사냥=왼쪽)로 뻗고, 연결된 앞 노드를
+## 사야 다음이 해금되는 경로 잠금. 노드는 16x16, 마우스 올리면 노드 위에 툴팁.
+## WASD로 패닝 · 배경 드래그로 이동 · 노드 클릭으로 구매. 열리면 세계 정지.
+##
+## 경로 잠금은 여기(표현 계층)에서만 강제한다 — GameState.purchase()는 골드/최대치만 보고,
+## 테스트가 선행 노드 없이 직접 구매할 수 있게 둔다(시뮬레이션/렌더링 분리).
 
-@onready var _title: Label = $Center/Panel/Margin/Layout/HeaderBox/Header/Title
-@onready var _gold: Label = $Center/Panel/Margin/Layout/HeaderBox/Header/Gold
-@onready var _scroll: ScrollContainer = $Center/Panel/Margin/Layout/Body/ListBox/Scroll
-@onready var _list: VBoxContainer = $Center/Panel/Margin/Layout/Body/ListBox/Scroll/List
-@onready var _d_name: Label = $Center/Panel/Margin/Layout/Body/DescBox/Desc/DName
-@onready var _d_level: Label = $Center/Panel/Margin/Layout/Body/DescBox/Desc/DLevel
-@onready var _d_text: Label = $Center/Panel/Margin/Layout/Body/DescBox/Desc/DText
-@onready var _d_status_box: PanelContainer = $Center/Panel/Margin/Layout/Body/DescBox/Desc/DStatusBox
-@onready var _d_status: Label = $Center/Panel/Margin/Layout/Body/DescBox/Desc/DStatusBox/DStatus
-@onready var _close_button: Button = $Center/Panel/Margin/Layout/CloseButton
+const SPACING := 30.0    # 그리드 1칸 = 30px
+const PAN_SPEED := 220.0 # WASD 패닝 속도(px/s)
+const REVEAL_STEP := 0.07 # 깊이 한 겹당 등장 지연(s) — 허브에서 바깥으로 번지게
+const REVEAL_GROW := 0.18 # 선이 "쭈욱" 자라는 시간(s)
 
-# ─ 팔레트 (모던 드퀘) ─
-const COL_SEL_NAME := Color(1, 1, 1)              # 선택 행 이름
-const COL_NAME := Color(0.78, 0.8, 0.86)          # 비선택 행 이름
-const COL_PRICE_OK := Color(1, 0.86, 0.4)         # 살 수 있는 가격(금색)
-const COL_PRICE_POOR := Color(0.95, 0.55, 0.5)    # 골드 부족(빨강)
-const COL_PRICE_MAX := Color(0.55, 0.58, 0.64)    # 보유 완료(회색)
-const COL_HEADER := Color(0.55, 0.72, 1.0)        # 분류 헤더
+# ─ 팔레트 ─
+const COL_BACKDROP := Color(0.07, 0.08, 0.11, 1.0) # 불투명 — 뒤 월드/HUD 가림
+const COL_OK := Color(1, 0.86, 0.4)     # 살 수 있는 가격(금색)
+const COL_POOR := Color(0.95, 0.55, 0.5) # 골드 부족(빨강)
+const COL_MAX := Color(0.6, 0.85, 0.62)  # 보유 완료(초록)
+const COL_LOCK := Color(0.6, 0.62, 0.68) # 잠김(회색)
 
-var _items: Array[UpgradeData] = []
-var _rows: Array[PanelContainer] = []
-var _cursors: Array[Label] = []
-var _names: Array[Label] = []
-var _prices: Array[Label] = []
-var _selected: int = 0
+var _canvas: Control
+var _links: TreeLinks
+var _nodes: Control
+var _tooltip: PanelContainer
+var _tip_name: Label
+var _tip_lv: Label
+var _tip_desc: Label
+var _tip_cost: Label
+var _gold_label: Label
+var _title: Label
+var _hint: Label
 
-var _sel_style: StyleBoxFlat       # 선택 행 하이라이트 바
-var _norm_style: StyleBoxEmpty     # 비선택 행 (자리 동일하게 빈 박스)
-var _pill: StyleBoxFlat            # 상태 칩 배경 (색만 바꿔 재사용)
+var _node_map: Dictionary = {}   # StringName id -> SkillNode
+var _seg_by_id: Dictionary = {}  # StringName id -> 선분 dict(부모→이 노드)
+var _shown: Dictionary = {}      # StringName id -> 이미 등장함(중복 애니 방지)
+var _pan := Vector2.ZERO
+var _pan_ext := Vector2(280, 220) # 패닝 허용 범위(±)
+var _tree_center := Vector2.ZERO  # 트리 바운딩 박스 중심(px) — 열 때 화면 가운데로
+var _dragging := false
+var _hover_id: StringName = &""
 
 
 func _ready() -> void:
 	visible = false
-	process_mode = Node.PROCESS_MODE_ALWAYS # 세계가 정지해도 구매 입력은 받는다
-	add_to_group("closable_modal") # Esc로 닫히는 모달
-	_build_styles()
+	process_mode = Node.PROCESS_MODE_ALWAYS # 세계가 정지해도 트리 조작은 받는다
+	add_to_group("closable_modal")           # Esc로 닫히는 모달
+	mouse_filter = Control.MOUSE_FILTER_STOP  # 배경 드래그(패닝)를 받기 위해
+	set_anchors_preset(Control.PRESET_FULL_RECT)
+	_build()
 	EventBus.party_entered_village.connect(_open) # 원격 상점 버튼/호환
 	EventBus.request_shop.connect(_open)          # 상점 [열기]/Space
 	EventBus.request_shop_close.connect(_close)   # 상점 [닫기]/멀어짐
 	EventBus.party_exited_village.connect(_close)
 	EventBus.request_close_modals.connect(_close) # Esc
-	EventBus.gold_changed.connect(func(_g: int) -> void: if visible: _refresh_prices(); _refresh_gold())
-	EventBus.upgrade_purchased.connect(func(_u: UpgradeData) -> void: if visible: _refresh_prices())
+	EventBus.gold_changed.connect(func(_g: int) -> void: if visible: _refresh_all())
+	EventBus.upgrade_purchased.connect(func(_u: UpgradeData) -> void: if visible: _refresh_all())
 	EventBus.language_changed.connect(func() -> void: if visible: _rebuild())
-	_close_button.pressed.connect(_close)
 
 
-## 코드로 만드는 스타일들 (선택 바·상태 칩). 행마다 같은 안쪽 여백이라 선택 시 글자가 안 흔들린다.
-func _build_styles() -> void:
-	_sel_style = StyleBoxFlat.new()
-	_sel_style.bg_color = Color(0.16, 0.4, 0.86, 0.96)
-	_sel_style.border_width_left = 3
-	_sel_style.border_color = Color(0.6, 0.85, 1.0)
-	_sel_style.corner_radius_top_left = 4
-	_sel_style.corner_radius_top_right = 4
-	_sel_style.corner_radius_bottom_right = 4
-	_sel_style.corner_radius_bottom_left = 4
-	_sel_style.content_margin_left = 7
-	_sel_style.content_margin_right = 7
-	_sel_style.content_margin_top = 2
-	_sel_style.content_margin_bottom = 2
+# ─── UI 골격(코드 생성) ───
 
-	_norm_style = StyleBoxEmpty.new()
-	_norm_style.content_margin_left = 7
-	_norm_style.content_margin_right = 7
-	_norm_style.content_margin_top = 2
-	_norm_style.content_margin_bottom = 2
+func _build() -> void:
+	var backdrop := ColorRect.new()
+	backdrop.color = COL_BACKDROP
+	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(backdrop)
 
-	_pill = StyleBoxFlat.new()
-	_pill.corner_radius_top_left = 4
-	_pill.corner_radius_top_right = 4
-	_pill.corner_radius_bottom_right = 4
-	_pill.corner_radius_bottom_left = 4
-	_pill.content_margin_top = 3
-	_pill.content_margin_bottom = 3
-	_d_status_box.add_theme_stylebox_override("panel", _pill)
+	# 트리가 얹히는 캔버스(패닝 시 통째로 이동). 자식 좌표는 허브(0,0) 기준.
+	_canvas = Control.new()
+	_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_canvas)
+	_links = TreeLinks.new()
+	_links.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_canvas.add_child(_links)
+	_nodes = Control.new()
+	_nodes.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_canvas.add_child(_nodes)
+
+	# 헤더(제목 + 소지금)
+	_title = _chrome_label(8, 6, 14, Color(0.92, 0.94, 1))
+	_gold_label = _chrome_label(8, 22, 12, COL_OK)
+
+	# 하단 조작 힌트
+	_hint = Label.new()
+	_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hint.add_theme_font_size_override("font_size", 10)
+	_hint.add_theme_color_override("font_color", Color(0.7, 0.73, 0.8))
+	_hint.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	_hint.position = Vector2(8, -18)
+	_hint.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	add_child(_hint)
+
+	# 닫기 버튼(우상단)
+	var close := Button.new()
+	close.text = "X"
+	close.add_theme_font_size_override("font_size", 12)
+	close.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	close.position = Vector2(-26, 6)
+	close.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	close.custom_minimum_size = Vector2(20, 18)
+	close.pressed.connect(_close)
+	add_child(close)
+
+	_build_tooltip()
 
 
-## 상점 패널을 띄우고 세계를 정지시킨다 (필드 이동·전투 모두 멈춤).
+func _chrome_label(x: float, y: float, fsize: int, col: Color) -> Label:
+	var lbl := Label.new()
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.position = Vector2(x, y)
+	lbl.add_theme_font_size_override("font_size", fsize)
+	lbl.add_theme_color_override("font_color", col)
+	add_child(lbl)
+	return lbl
+
+
+func _build_tooltip() -> void:
+	_tooltip = PanelContainer.new()
+	_tooltip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tooltip.visible = false
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.09, 0.1, 0.14, 0.98)
+	sb.border_color = Color(0.5, 0.55, 0.66)
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(4)
+	sb.set_content_margin_all(6)
+	_tooltip.add_theme_stylebox_override("panel", sb)
+	var vb := VBoxContainer.new()
+	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_theme_constant_override("separation", 2)
+	_tooltip.add_child(vb)
+	_tip_name = _tip_label(vb, 12, Color(1, 1, 1))
+	_tip_lv = _tip_label(vb, 10, Color(0.7, 0.78, 0.92))
+	_tip_desc = _tip_label(vb, 10, Color(0.82, 0.84, 0.9))
+	_tip_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_tip_desc.custom_minimum_size = Vector2(150, 0)
+	_tip_cost = _tip_label(vb, 11, COL_OK)
+	add_child(_tooltip) # 항상 맨 위
+
+
+func _tip_label(parent: Node, fsize: int, col: Color) -> Label:
+	var lbl := Label.new()
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.add_theme_font_size_override("font_size", fsize)
+	lbl.add_theme_color_override("font_color", col)
+	parent.add_child(lbl)
+	return lbl
+
+
+# ─── 열기/닫기(세계 정지) ───
+
 func _open() -> void:
 	visible = true
 	_rebuild()
+	_pan = -_tree_center # 트리 전체를 화면 가운데에 두고 시작
 	get_tree().paused = true
 
 
-## [닫기]/Esc/멀어짐 → 패널을 내리고 정지를 푼다. 상점 버튼 동기화를 위해 shop_closed 통지.
 func _close() -> void:
 	if not visible:
 		return
 	visible = false
+	_hide_tooltip()
 	get_tree().paused = false
 	EventBus.shop_closed.emit()
 
 
-func _input(event: InputEvent) -> void:
-	if not visible:
-		return
-	if not (event is InputEventKey and event.pressed and not event.echo):
-		return
-	match event.keycode:
-		# ↑/↓ (또는 W/S) = 목록 커서 이동. 세계가 정지라 방향키가 용사를 안 움직인다.
-		KEY_UP, KEY_W:
-			_select(_selected - 1)
-			get_viewport().set_input_as_handled()
-		KEY_DOWN, KEY_S:
-			_select(_selected + 1)
-			get_viewport().set_input_as_handled()
-		# Enter = 선택 아이템 구매 (Space는 '상호작용'이라 상점 토글에 쓰여 충돌 → 제외)
-		KEY_ENTER, KEY_KP_ENTER:
-			_buy()
-			get_viewport().set_input_as_handled()
-
-
-# ─── 목록 구성 (실제 업그레이드 데이터) ───
+# ─── 트리 구성 ───
 
 func _rebuild() -> void:
-	for child in _list.get_children():
-		_list.remove_child(child)
-		child.queue_free()
-	_rows.clear()
-	_cursors.clear()
-	_names.clear()
-	_prices.clear()
+	for c in _nodes.get_children():
+		c.queue_free()
+	_node_map.clear()
+	_seg_by_id.clear()
+	_shown.clear()
+	_hover_id = &""
+	_links.segs.clear()
 
-	# 현재 지역 상점 = 전투 축 + 필드 축. 축마다 헤더를 달아 한눈에 묶이게 한다.
-	var combat := GameState.upgrades_for_axis("combat")
-	var field := GameState.upgrades_for_axis("field")
-	_items = []
-	_items.append_array(combat)
-	_items.append_array(field)
+	var ups := GameState.tree_upgrades()
+	var lo := Vector2.INF
+	var hi := -Vector2.INF
+	for up in ups:
+		var p := Vector2(up.tree_pos) * SPACING
+		lo = lo.min(p)
+		hi = hi.max(p)
+		var node := SkillNode.new()
+		node.up = up
+		node.position = p - Vector2(SkillNode.SIZE, SkillNode.SIZE) * 0.5
+		node.visible = false        # 처음엔 다 숨김 — 해금되는 순서대로 등장
+		node.scale = Vector2.ZERO
+		node.hovered.connect(_on_node_hover)
+		node.unhovered.connect(_on_node_unhover)
+		node.picked.connect(_on_node_pick)
+		_nodes.add_child(node)
+		_node_map[up.id] = node
+		# 부모→이 노드 선분(grow=0이면 안 그려짐). 등장 때 0→1로 "쭈욱".
+		var pid: StringName = up.tree_links[0] if not up.tree_links.is_empty() else GameState.TREE_CORE
+		var seg := {"from": _grid_local(pid), "to": p, "on": false, "grow": 0.0}
+		_links.segs.append(seg)
+		_seg_by_id[up.id] = seg
+
+	# 패닝 범위: 트리 절반폭 + 여유. 작은 트리도 가운데를 크게 못 벗어나게.
+	var half := (hi - lo) * 0.5
+	_tree_center = (lo + hi) * 0.5
+	_pan_ext = Vector2(maxf(half.x, 40) + 150, maxf(half.y, 40) + 110) + _tree_center.abs()
 
 	var ko := GameState.language == "ko"
-	_title.text = "상점" if ko else "SHOP"
+	_title.text = "상점 — 패시브 트리" if ko else "SHOP — PASSIVE TREE"
+	_hint.text = ("WASD 패닝 · 드래그 이동 · 클릭 구매 · Esc 닫기" if ko
+		else "WASD pan · drag · click to buy · Esc")
+
+	for id: StringName in _node_map:
+		_update_node_state(id)
+	_update_link_colors()
 	_refresh_gold()
-
-	if not combat.is_empty():
-		_list.add_child(_make_header("전투" if ko else "COMBAT"))
-		for i in combat.size():
-			_add_row(i)
-	if not field.is_empty():
-		_list.add_child(_make_header("필드" if ko else "FIELD"))
-		for i in range(combat.size(), _items.size()):
-			_add_row(i)
-
-	_selected = clampi(_selected, 0, maxi(0, _items.size() - 1))
-	_select(_selected)
+	# 허브에서 바깥으로 한 겹씩(깊이 순) 등장시킨다 — 원 하나 → 선 쭈욱 → 노드 팝
+	for id: StringName in _node_map:
+		var up2: UpgradeData = _node_map[id].up
+		if _node_visible(up2):
+			_schedule_reveal(id, float(_depth(up2) - 1) * REVEAL_STEP)
 
 
-## "── 전투 ──" 같은 분류 헤더 (선택 불가, 목록 가독성용).
-func _make_header(text: String) -> Control:
-	var lbl := Label.new()
-	lbl.text = "─  %s" % text
-	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	lbl.add_theme_font_size_override("font_size", 10)
-	lbl.add_theme_color_override("font_color", COL_HEADER)
-	lbl.custom_minimum_size = Vector2(0, 15)
-	lbl.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	return lbl
+func _refresh_all() -> void:
+	for id: StringName in _node_map:
+		_update_node_state(id)
+	_update_link_colors()
+	_refresh_gold()
+	# 구매로 새로 해금된 노드를 즉시 등장(선 쭈욱 + 팝)
+	for id: StringName in _node_map:
+		if _node_visible(_node_map[id].up) and not _shown.get(id, false):
+			_schedule_reveal(id, 0.0)
+	if _hover_id != &"":
+		_update_tooltip(_hover_id)
 
 
-func _add_row(i: int) -> void:
-	_list.add_child(_make_row(i))
+func _update_node_state(id: StringName) -> void:
+	var node: SkillNode = _node_map[id]
+	node.set_state(_state_of(node.up))
 
 
-## "▶ 이름 ............ 가격" 한 줄 — PanelContainer로 감싸 선택 시 하이라이트 바가 깔린다.
-func _make_row(i: int) -> PanelContainer:
-	var row := PanelContainer.new()
-	row.mouse_filter = Control.MOUSE_FILTER_STOP
-	row.add_theme_stylebox_override("panel", _norm_style)
-
-	var hb := HBoxContainer.new()
-	hb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hb.add_theme_constant_override("separation", 2)
-	hb.custom_minimum_size = Vector2(0, 18)
-	row.add_child(hb)
-
-	var cursor := Label.new()
-	cursor.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	cursor.custom_minimum_size = Vector2(12, 0)
-	cursor.add_theme_font_size_override("font_size", 11)
-	cursor.add_theme_color_override("font_color", Color(1, 0.9, 0.4))
-	cursor.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-
-	var nm := Label.new()
-	nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	nm.add_theme_font_size_override("font_size", 12)
-	nm.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	nm.text = _items[i].display_name
-
-	var price := Label.new()
-	price.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	price.custom_minimum_size = Vector2(56, 0)
-	price.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	price.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	price.add_theme_font_size_override("font_size", 12)
-
-	hb.add_child(cursor)
-	hb.add_child(nm)
-	hb.add_child(price)
-	row.mouse_entered.connect(_select.bind(i))
-	row.gui_input.connect(func(e: InputEvent) -> void:
-		if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
-			_select(i)
-			_buy())
-	_rows.append(row)
-	_cursors.append(cursor)
-	_names.append(nm)
-	_prices.append(price)
-	return row
+func _state_of(up: UpgradeData) -> int:
+	var owned := GameState.owned_count(up)
+	if owned >= up.max_purchases:
+		return SkillNode.State.MAXED
+	if owned >= 1:
+		return SkillNode.State.OWNED # 일부 보유(반복형) — 더 살 수 있음
+	if not GameState.node_unlocked(up):
+		return SkillNode.State.LOCKED
+	return (SkillNode.State.BUYABLE if GameState.gold >= GameState.current_cost(up)
+		else SkillNode.State.POOR)
 
 
-func _select(i: int) -> void:
-	if _items.is_empty():
+## 노드가 보일 대상인가 — 보유했거나(소유) 선행이 할당돼 해금된(프론티어) 노드만 등장.
+## 그 너머(선행 미보유)는 숨긴다 → 끝 노드를 사야 다음이 생긴다.
+func _node_visible(up: UpgradeData) -> bool:
+	return GameState.owned_count(up) >= 1 or GameState.node_unlocked(up)
+
+
+## 허브(깊이0)에서의 거리 — 루트=1, 그 자식=2 … 등장 스태거에 쓴다.
+func _depth(up: UpgradeData) -> int:
+	var d := 0
+	var cur := up
+	while cur != null and not cur.tree_links.is_empty() and cur.tree_links[0] != GameState.TREE_CORE:
+		cur = GameState.upgrade_by_id(cur.tree_links[0])
+		d += 1
+		if d > 30:
+			break
+	return d + 1
+
+
+## 선분 색만 갱신(grow는 안 건드림). 양끝 모두 할당되면 활성(초록).
+func _update_link_colors() -> void:
+	for id: StringName in _seg_by_id:
+		var up: UpgradeData = _node_map[id].up
+		var pid: StringName = up.tree_links[0] if not up.tree_links.is_empty() else GameState.TREE_CORE
+		_seg_by_id[id]["on"] = GameState.node_allocated(pid) and GameState.owned_count(up) >= 1
+	_links.queue_redraw()
+
+
+## 노드 등장: (delay 후) 선이 쭈욱 자라고 → 노드가 팝 하고 나타난다.
+func _schedule_reveal(id: StringName, delay: float) -> void:
+	if _shown.get(id, false):
 		return
-	_selected = clampi(i, 0, _items.size() - 1)
-	for j in _rows.size():
-		var on := j == _selected
-		_rows[j].add_theme_stylebox_override("panel", _sel_style if on else _norm_style)
-		_cursors[j].text = "▶" if on else ""
-		_names[j].add_theme_color_override("font_color", COL_SEL_NAME if on else COL_NAME)
-	_refresh_prices()
-	_update_desc()
-	if _selected < _rows.size():
-		_scroll.ensure_control_visible(_rows[_selected]) # 키보드 이동 시 화면 밖이면 따라 스크롤
+	_shown[id] = true
+	var node: SkillNode = _node_map[id]
+	var seg: Dictionary = _seg_by_id[id]
+	var t := create_tween()
+	t.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS) # 상점=세계정지 중에도 등장 애니가 돈다
+	if delay > 0.0:
+		t.tween_interval(delay)
+	t.tween_method(_set_seg_grow.bind(seg), 0.0, 1.0, REVEAL_GROW) # 선 쭈욱
+	t.tween_callback(_show_node.bind(node))                        # 노드 켜기
+	t.tween_property(node, "scale", Vector2(1.25, 1.25), 0.14) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)      # 팝
+	t.tween_property(node, "scale", Vector2.ONE, 0.1)
+
+
+func _set_seg_grow(v: float, seg: Dictionary) -> void:
+	seg["grow"] = v
+	_links.queue_redraw()
+
+
+func _show_node(node: SkillNode) -> void:
+	node.visible = true
+	node.scale = Vector2.ZERO
+
+
+func _grid_local(id: StringName) -> Vector2:
+	if id == GameState.TREE_CORE:
+		return Vector2.ZERO
+	var up := GameState.upgrade_by_id(id)
+	return Vector2(up.tree_pos) * SPACING if up != null else Vector2.ZERO
 
 
 func _refresh_gold() -> void:
-	_gold.text = "GOLD %d" % GameState.gold
+	var ko := GameState.language == "ko"
+	_gold_label.text = ("골드 %d" % GameState.gold) if ko else ("GOLD %d" % GameState.gold)
 
 
-## 가격/품절 표시 갱신 (구매·골드 변동 시).
-func _refresh_prices() -> void:
-	for i in _prices.size():
-		var up := _items[i]
-		if GameState.owned_count(up) >= up.max_purchases:
-			_prices[i].text = "MAX"
-			_prices[i].add_theme_color_override("font_color", COL_PRICE_MAX)
-		else:
-			var cost := GameState.current_cost(up)
-			_prices[i].text = "%d" % cost
-			_prices[i].add_theme_color_override("font_color",
-				COL_PRICE_OK if GameState.gold >= cost else COL_PRICE_POOR)
-	if _selected < _items.size():
-		_update_status(_items[_selected])
+# ─── 패닝 / 드래그 ───
 
-
-## 설명창: 이름 / Lv 바 / 효과 설명 / 상태 칩.
-func _update_desc() -> void:
-	if _selected >= _items.size():
+func _process(delta: float) -> void:
+	if not visible:
 		return
-	var up := _items[_selected]
-	_d_name.text = up.display_name
-	_d_level.text = _level_text(up)
-	_d_text.text = up.description
-	_update_status(up)
+	var v := Vector2.ZERO
+	if Input.is_key_pressed(KEY_W): v.y += 1.0
+	if Input.is_key_pressed(KEY_S): v.y -= 1.0
+	if Input.is_key_pressed(KEY_A): v.x += 1.0
+	if Input.is_key_pressed(KEY_D): v.x -= 1.0
+	if v != Vector2.ZERO:
+		_pan += v * PAN_SPEED * delta
+	_pan = _pan.clamp(-_pan_ext, _pan_ext)
+	_canvas.position = (size * 0.5 + _pan).round()
+	if _hover_id != &"":
+		_place_tooltip(_hover_id)
 
 
-## Lv 표시. 반복 구매형(최대>1)이면 [###--] 진행 바를 붙여 한눈에 보이게 한다.
+func _gui_input(e: InputEvent) -> void:
+	# 배경(노드/버튼이 아닌 곳) 드래그 → 트리 패닝.
+	if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
+		_dragging = e.pressed
+	elif e is InputEventMouseMotion and _dragging:
+		_pan += e.relative
+
+
+# ─── 호버 툴팁 / 구매 ───
+
+func _on_node_hover(node: SkillNode) -> void:
+	_hover_id = node.up.id
+	_update_tooltip(_hover_id)
+	_place_tooltip(_hover_id)
+	_tooltip.visible = true
+
+
+func _on_node_unhover(node: SkillNode) -> void:
+	if _hover_id == node.up.id:
+		_hide_tooltip()
+
+
+func _on_node_pick(node: SkillNode) -> void:
+	_try_buy(node.up)
+
+
+func _try_buy(up: UpgradeData) -> bool:
+	if GameState.owned_count(up) >= up.max_purchases:
+		return false
+	if not GameState.node_unlocked(up):
+		return false # 경로 잠금: 선행 노드 먼저
+	return GameState.purchase(up) # 성공 시 upgrade_purchased → _refresh_all
+
+
+func _update_tooltip(id: StringName) -> void:
+	if not _node_map.has(id):
+		return
+	var up: UpgradeData = _node_map[id].up
+	var ko := GameState.language == "ko"
+	_tip_name.text = up.display_name
+	_tip_lv.text = _level_text(up)
+	_tip_desc.text = up.description
+	var owned := GameState.owned_count(up)
+	if owned >= up.max_purchases:
+		_tip_cost.text = "보유 완료" if ko else "OWNED"
+		_tip_cost.add_theme_color_override("font_color", COL_MAX)
+	elif not GameState.node_unlocked(up):
+		_tip_cost.text = "잠김 — 앞 노드 먼저" if ko else "LOCKED — buy a linked node"
+		_tip_cost.add_theme_color_override("font_color", COL_LOCK)
+	else:
+		var cost := GameState.current_cost(up)
+		_tip_cost.text = ("%d G" % cost)
+		_tip_cost.add_theme_color_override("font_color",
+			COL_OK if GameState.gold >= cost else COL_POOR)
+
+
+## "Lv N / M" — 반복 구매형이면 [###--] 진행 바를 붙인다.
 func _level_text(up: UpgradeData) -> String:
 	var owned := GameState.owned_count(up)
 	var mx := up.max_purchases
@@ -274,26 +405,20 @@ func _level_text(up: UpgradeData) -> String:
 	return "Lv %d / %d  [%s]" % [owned, mx, bar]
 
 
-## 상태 칩: 보유 완료(회색) / 구매 가능(초록) / 골드 부족(빨강).
-func _update_status(up: UpgradeData) -> void:
-	var ko := GameState.language == "ko"
-	if GameState.owned_count(up) >= up.max_purchases:
-		_pill.bg_color = Color(0.22, 0.24, 0.28, 1)
-		_d_status.text = "보유 완료" if ko else "OWNED"
-		_d_status.add_theme_color_override("font_color", Color(0.75, 0.78, 0.82))
+## 툴팁을 호버 노드 위쪽에 띄우고 화면 안으로 클램프.
+func _place_tooltip(id: StringName) -> void:
+	if not _node_map.has(id):
 		return
-	var cost := GameState.current_cost(up)
-	if GameState.gold >= cost:
-		_pill.bg_color = Color(0.13, 0.42, 0.2, 1)
-		_d_status.text = ("구매 가능   %d G" % cost) if ko else ("BUY   %d G" % cost)
-		_d_status.add_theme_color_override("font_color", Color(0.75, 1, 0.78))
-	else:
-		_pill.bg_color = Color(0.42, 0.15, 0.15, 1)
-		_d_status.text = ("골드 부족   %d G" % cost) if ko else ("NEED   %d G" % cost)
-		_d_status.add_theme_color_override("font_color", Color(1, 0.78, 0.74))
+	var node: SkillNode = _node_map[id]
+	_tooltip.reset_size()
+	var ts := _tooltip.size
+	var center := _canvas.position + node.position + Vector2(SkillNode.SIZE, SkillNode.SIZE) * 0.5
+	var pos := center + Vector2(-ts.x * 0.5, -ts.y - SkillNode.SIZE * 0.5 - 4.0)
+	pos.x = clampf(pos.x, 4.0, maxf(4.0, size.x - ts.x - 4.0))
+	pos.y = clampf(pos.y, 4.0, maxf(4.0, size.y - ts.y - 4.0))
+	_tooltip.position = pos.round()
 
 
-func _buy() -> void:
-	if _selected >= _items.size():
-		return
-	GameState.purchase(_items[_selected]) # 골드 차감·레벨업·재계산은 기존 로직
+func _hide_tooltip() -> void:
+	_hover_id = &""
+	_tooltip.visible = false

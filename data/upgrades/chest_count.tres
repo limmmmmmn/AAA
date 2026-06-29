@@ -1,18 +1,21 @@
-[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/chest.png" id="1_4r3yo"]
 
 [resource]
 script = ExtResource("1")
 id = &"chest_count"
 display_name = "보물상자 증설"
 description = "마을에 보물상자를 하나 더 놓는다."
+icon = ExtResource("1_4r3yo")
 axis = "field"
-min_region = 1
 requires_flag = &"chest_unlocked"
 base_cost = 180
 cost_growth = 1.7
 max_purchases = 2
+tree_pos = Vector2i(-1, 4)
+tree_links = Array[StringName]([&"chest_unlock"])
 effects = {
 "chest_count": 1
 }

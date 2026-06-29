@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c5xlcobrenar1"
-path="res://.godot/imported/grass_1.png-c68db0f594b017c7e81ea823b281706c.ctex"
+uid="uid://bi8wnhg4anmb2"
+path="res://.godot/imported/priest_staff.png-d4a07acb03faecbb002b7e946a54e5c6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/decor/grass_1.png"
-dest_files=["res://.godot/imported/grass_1.png-c68db0f594b017c7e81ea823b281706c.ctex"]
+source_file="res://assets/node_icons/priest_staff.png"
+dest_files=["res://.godot/imported/priest_staff.png-d4a07acb03faecbb002b7e946a54e5c6.ctex"]
 
 [params]
 

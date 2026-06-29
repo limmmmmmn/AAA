@@ -1,16 +1,18 @@
-[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/bow.png" id="1_q5lbb"]
 
 [resource]
 script = ExtResource("1")
 id = &"compass_hunt"
 display_name = "사냥꾼의 나침반"
 description = "자동 이동 해금 — 우측에 자동이동 토글 버튼이 생긴다"
+icon = ExtResource("1_q5lbb")
 axis = "field"
 base_cost = 120
-cost_growth = 1.0
-max_purchases = 1
+tree_pos = Vector2i(-2, -1)
+tree_links = Array[StringName]([&"luck_charm"])
 effects = {
 "auto_hunt": true
 }

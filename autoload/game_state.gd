@@ -249,6 +249,41 @@ func owned_count(upgrade: UpgradeData) -> int:
 	return purchases.get(upgrade.id, 0)
 
 
+# ─── 패시브 트리(상점) ───
+const TREE_CORE := &"core"
+
+## 현재 지역에 노출되는 모든 노드(잠긴 것 포함 — 트리는 숨기지 않고 회색으로 보여준다).
+func tree_upgrades() -> Array[UpgradeData]:
+	var list: Array[UpgradeData] = []
+	var region := region_number()
+	for upgrade: UpgradeData in catalog.values():
+		if upgrade.min_region <= region:
+			list.append(upgrade)
+	return list
+
+
+func upgrade_by_id(id: StringName) -> UpgradeData:
+	return catalog.get(id)
+
+
+## 노드가 "할당됨"(트리 경로상 활성)인가 — 한 번이라도 샀으면 활성. 허브(core)는 항상 활성.
+func node_allocated(id: StringName) -> bool:
+	if id == TREE_CORE:
+		return true
+	var up: UpgradeData = catalog.get(id)
+	return up != null and owned_count(up) >= 1
+
+
+## 경로 잠금 해제 여부 — 연결된 선행 노드 중 하나라도 할당됐으면 구매 가능.
+func node_unlocked(upgrade: UpgradeData) -> bool:
+	if upgrade.tree_links.is_empty():
+		return true # 링크 미설정 노드는 잠그지 않음(안전장치)
+	for link: StringName in upgrade.tree_links:
+		if node_allocated(link):
+			return true
+	return false
+
+
 func current_cost(upgrade: UpgradeData) -> int:
 	return int(round(upgrade.base_cost * pow(upgrade.cost_growth, owned_count(upgrade))))
 

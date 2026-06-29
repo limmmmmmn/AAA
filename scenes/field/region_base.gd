@@ -7,9 +7,14 @@ class_name RegionBase extends Node2D
 ## true = 코드로 맵 생성(레거시). false = 에디터에서 칠한 TileMapLayer를 그대로 사용.
 @export var procedural := false
 
-const GRASS_DECO := preload("res://scenes/field/GrassDeco.tscn")
-const GRASS_DENSITY := 0.10  # 풀 타일당 풀 장식이 놓일 확률
-const GRASS_MAX := 160       # 성능 상한 (Area2D 수)
+const GRASS_FIELD := preload("res://scenes/field/grass_field.gd")
+## 칠한 풀 타일에 자동으로 깔리는 '살랑이는 풀'(2프레임 sway). 에디터에서 바로 조절하라고 export.
+@export var grass_frame_a: Texture2D = preload("res://assets/deco/grass_1.png")
+@export var grass_frame_b: Texture2D = preload("res://assets/deco/grass_2.png")
+@export_range(0.0, 1.0) var grass_density := 0.45 # 풀 타일당 풀 확률(1=빈틈없이, 낮출수록 듬성)
+@export var grass_jitter := 5.0                  # 타일 안에서 위치 흔들기(px)
+@export var grass_revert_delay := 0.45           # 밟힌 풀이 다시 서기까지(s)
+@export var grass_foot_lift := 12.0              # 캐릭터 중심→발 거리(px). 풀을 발 기준 정렬해 발치만 겹치게(↑일수록 빨리 뒤로)
 
 const TILE_GRASS_LIGHT := Vector2i(0, 0)
 const TILE_GRASS_MID := Vector2i(1, 0)
@@ -144,25 +149,30 @@ func _resolve_visual(cell: Vector2i) -> Vector2i:
 	return block + Vector2i(col, row)
 
 
-## 초원/숲 타일 위에 풀 장식(밟으면 눕는다)을 흩뿌린다. 배치는 지역마다 일정(시드 고정).
+## 에디터에서 칠한 풀 타일을 전부 찾아 '움직이는 풀'을 자동으로 깐다(범위 지정 불필요).
+## 클럼프마다 노드를 두지 않고 GrassField 한 노드에 모아 그린다 → 칠한 풀 전체를 빈틈없이 덮어도 가볍다.
 func _scatter_grass() -> void:
+	if grass_frame_a == null or grass_frame_b == null:
+		return
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(hash(region_id())) # 같은 지역은 항상 같은 배치 (저장 불필요)
-	var placed := 0
+	var cells: Array[Vector2i] = []
 	for y in map_size.y:
 		for x in map_size.x:
-			if placed >= GRASS_MAX:
-				return
 			var cell := Vector2i(x, y)
 			if not _is_grass_at(cell):
 				continue
-			if rng.randf() > GRASS_DENSITY:
-				continue
-			var deco := GRASS_DECO.instantiate()
-			deco.position = _tiles.map_to_local(cell) \
-				+ Vector2(rng.randf_range(-6, 6), rng.randf_range(-6, 6))
-			add_child(deco)
-			placed += 1
+			if grass_density < 1.0 and rng.randf() > grass_density:
+				continue # density<1이면 솎아낸다(고정 시드라 항상 같은 패턴)
+			cells.append(cell)
+	if cells.is_empty():
+		return
+	var field: Node2D = GRASS_FIELD.new()
+	field.name = "GrassField"
+	field.z_index = 0 # 타일맵 위 · 캐릭터 아래(Field가 y_sort라 y=0이면 캐릭터 뒤로 깔림)
+	add_child(field)
+	field.build(grass_frame_a, grass_frame_b, _tiles, cells, grass_revert_delay, grass_jitter,
+		grass_foot_lift, int(hash(region_id())))
 
 
 ## 파생 클래스가 오버라이드한다.

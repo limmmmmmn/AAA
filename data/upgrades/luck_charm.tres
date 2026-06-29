@@ -1,17 +1,20 @@
-[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
 
 [ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/necklace.png" id="1_x8syj"]
 
 [resource]
 script = ExtResource("1")
 id = &"luck_charm"
 display_name = "행운의 부적"
 description = "운 +1 (회심·발견 골드·아이템 발견 ↑, 항아리 꽝 ↓)"
+icon = ExtResource("1_x8syj")
 axis = "field"
-min_region = 1
 base_cost = 40
 cost_growth = 1.7
 max_purchases = 8
+tree_pos = Vector2i(-1, -1)
+tree_links = Array[StringName]([&"boots_swift"])
 effects = {
 "luck": 1
 }

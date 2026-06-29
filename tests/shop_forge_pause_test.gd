@@ -39,14 +39,15 @@ func _ready() -> void:
 	shop._activate() # Space로 열기
 	_check(shop_ui.visible and get_tree().paused, "상점 열림 → 세계 정지")
 
-	# ↓ 로 커서 이동 후 Enter 구매
-	shop_ui._select(0)
-	_key(shop_ui, KEY_DOWN)
-	_check(shop_ui._selected == 1, "↓ 키로 상점 커서 이동")
-	var target: UpgradeData = shop_ui._items[shop_ui._selected]
-	var owned_before := GameState.owned_count(target)
-	_key(shop_ui, KEY_ENTER)
-	_check(GameState.owned_count(target) == owned_before + 1, "Enter로 선택 아이템 구매")
+	# 트리: 루트 노드(허브 연결)는 해금 상태 → 클릭 구매 / 잠긴 노드는 구매 거부
+	var root: UpgradeData = GameState.catalog[&"sword_copper"]
+	var locked: UpgradeData = GameState.catalog[&"sword_steel"] # 구리→철→강철, 선행 없이 잠김
+	_check(GameState.node_unlocked(root), "허브 연결 루트 노드는 해금")
+	_check(not GameState.node_unlocked(locked), "선행 안 산 노드는 경로 잠금")
+	_check(not shop_ui._try_buy(locked), "잠긴 노드 구매 거부")
+	var owned_before := GameState.owned_count(root)
+	_check(shop_ui._try_buy(root), "해금 노드 클릭 구매")
+	_check(GameState.owned_count(root) == owned_before + 1, "구매 반영")
 
 	# Space(건물 토글)로 닫기 → 정지 해제
 	shop._activate()
