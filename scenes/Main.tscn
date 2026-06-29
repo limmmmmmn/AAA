@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scenes/main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="3"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/ForgeUI.tscn" id="8"]
 [ext_resource type="PackedScene" path="res://scenes/ui/MonsterUI.tscn" id="9"]
 [ext_resource type="PackedScene" path="res://scenes/ui/InnUI.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://scenes/ui/CatalogUI.tscn" id="11"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1")
@@ -43,6 +44,8 @@ script = ExtResource("4")
 [node name="InnUI" parent="UILayer" instance=ExtResource("10")]
 
 [node name="MonsterUI" parent="UILayer" instance=ExtResource("9")]
+
+[node name="CatalogUI" parent="UILayer" instance=ExtResource("11")]
 
 [node name="Overlay" type="Control" parent="UILayer"]
 layout_mode = 3

@@ -87,9 +87,9 @@ func _ready() -> void:
 	GameState.purchase(_u(&"trk_unlock"))
 	GameState.purchase(_u(&"trk_slot_2"))
 	GameState.purchase(_u(&"trk_pot_pool")) # 항아리 풀 + t_pot_idol 획득 (pot 태그)
-	# 강제로 pot 태그 2개 장착 (깨진 항아리 조각 + 항아리 수호상)
-	GameState.equipped_trinkets = [&"t_pot_shard", &"t_pot_idol"]
-	GameState.purchase(_u(&"trk_tags")) # 세트 해금 → recalc
+	# pot 태그 2개만 보유 → 멤버 슬롯 자동장착이 둘 다 장착 (슬롯2, 용사 1인)
+	GameState.owned_trinkets = [&"t_pot_shard", &"t_pot_idol"]
+	GameState.purchase(_u(&"trk_tags")) # 세트 해금 → recalc → 자동장착
 	# pot 태그 2개 → 파티 피해 ×1.1 세트 보너스 (트링켓 자체엔 party_damage 없음)
 	_check(float(GameState.stat("party_damage_mult")) >= 1.1, "세트 효과: pot 태그 2개 → 파티 피해 ×1.1+")
 

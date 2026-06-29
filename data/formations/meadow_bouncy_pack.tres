@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EncounterFormationDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/encounter_formation_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"meadow_bouncy_pack"
+display_name = "통통 슬라임 무리"
+region_id = &"stage_meadow"
+enemy_slots = [{"enemy_id": &"bouncy_slime", "count_min": 1, "count_max": 1}, {"enemy_id": &"slime", "count_min": 2, "count_max": 2}]
+spawn_weight = 4.0
+unlock = {"discovered": "bouncy_slime"}
+survey_reward = 0.016
+tags = Array[StringName]([&"group"])

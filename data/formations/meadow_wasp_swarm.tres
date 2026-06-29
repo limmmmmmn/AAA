@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EncounterFormationDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/encounter_formation_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"meadow_wasp_swarm"
+display_name = "풀벌 무리"
+region_id = &"stage_meadow"
+enemy_slots = [{"enemy_id": &"grass_wasp", "count_min": 2, "count_max": 3}]
+spawn_weight = 5.0
+unlock = {"survey": 0.25}
+survey_reward = 0.012
+tags = Array[StringName]([&"group"])

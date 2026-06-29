@@ -13,7 +13,7 @@ func _ready() -> void:
 	# 1지역에서 마을 건물 해금/증설
 	GameState.gold = 99999
 	for id in [&"vlg_pot_1", &"vlg_pot_plus", &"vlg_big_pot",
-			&"vlg_chest", &"bonfire", &"vlg_inn"]:
+			&"vlg_chest", &"vlg_inn"]:
 		GameState.purchase(GameState.catalog[id])
 
 	# 숲길로 전환 (지역 노드 구매 — 맵은 그대로, 적/틴트만 바뀜)

@@ -28,9 +28,11 @@ func _ready() -> void:
 	EventBus.tactic_retreat_triggered.connect(func() -> void: _retreat_triggered = true)
 	EventBus.tactic_retreat_finished.connect(func() -> void: _retreat_finished = true)
 
-	# 숲길 진입 (지역 노드 구매 → 승려 합류)
+	# 숲길 진입 (지역 해금 → 마을 표지판 이동 → 승려 합류)
 	GameState.gold = 1000
-	GameState.purchase(GameState.catalog[&"core_forest_path"])
+	GameState.purchase(GameState.catalog[&"core_forest_path"]) # 숲길 해금
+	GameState.party_in_town = true
+	GameState.travel_to_region(&"stage_forest") # 마을에서 이동 → 숲길 + 승려
 	await get_tree().process_frame
 
 	# §9 해금

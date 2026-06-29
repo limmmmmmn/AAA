@@ -346,6 +346,8 @@ func _slot_specs() -> Array[Dictionary]:
 			"press": func() -> void: _toggle_auto()},
 		{"id": "mon", "icon": ICON_SLIME, "shown": true,     # 몬스터 패널 (슬라임 아이콘)
 			"press": func() -> void: EventBus.request_monsters.emit()},
+		{"id": "catalog", "text": "목록", "shown": true,      # 비정지 카탈로그 (R5)
+			"press": func() -> void: EventBus.request_catalog.emit()},
 		{"id": "shop", "icon": ICON_SHOP, "shown": GameState.remote_shop_unlocked,
 			"press": func() -> void: EventBus.request_shop.emit()},
 		{"id": "forge", "icon": ICON_FORGE, "shown": GameState.auto_enhance or GameState.auto_deliver,

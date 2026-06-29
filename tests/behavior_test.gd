@@ -35,9 +35,11 @@ func _ready() -> void:
 	GameState.gold = 1000
 	var joined := [false]
 	EventBus.companion_joined.connect(func(_c: CompanionData) -> void: joined[0] = true)
-	GameState.purchase(GameState.catalog[&"core_forest_path"]) # set_stage → 숲길 + 승려
+	GameState.purchase(GameState.catalog[&"core_forest_path"]) # 숲길 해금
+	GameState.party_in_town = true
+	GameState.travel_to_region(&"stage_forest") # 마을 표지판 이동 → 숲길 + 승려
 	await get_tree().process_frame
-	_check(GameState.current_region == &"stage_forest", "지역 노드 구매 → 숲길")
+	_check(GameState.current_region == &"stage_forest", "마을에서 이동 → 숲길")
 	_check(joined[0], "승려 합류 시그널 발신")
 	_check(sprite.texture != silhouette_tex, "동료 실루엣 → 컬러로 전환 (합류 컷)")
 

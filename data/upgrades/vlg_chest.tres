@@ -13,7 +13,7 @@ axis = "field"
 branch = "village"
 node_type = "unlock"
 base_cost = 2600
-tree_pos = Vector2i(-11, -5)
+tree_pos = Vector2i(-11, -4)
 tree_links = Array[StringName]([&"vlg_village_worker"])
 effects = {
 "chest_unlock": true

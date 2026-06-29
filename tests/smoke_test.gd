@@ -28,10 +28,10 @@ func _ready() -> void:
 
 	# A-2: 시작 시 슬라임존만 활성 (6마리), 박쥐/정예존은 잠금
 	_check(get_tree().get_nodes_in_group("monsters").size() == 6, "시작 시 슬라임존만 활성(6마리)")
-	_check(GameState.catalog.size() == 106, "업그레이드 카탈로그 106종 (+ brg 8 + inf 5)")
-	# 레거시 axis 헬퍼는 옛 노드만 — 새 가지(core/combat/village)는 tree_upgrades로 노출.
+	_check(GameState.catalog.size() == 97, "카탈로그 97종 (v0.1 89 + 파티 8)")
+	# 옛 레거시 노드 전부 제거 — 라이브 트리는 tree_upgrades(브랜치) 사용. 레거시 field axis는 비었다.
 	_check(GameState.upgrades_for_axis("combat").size() == 17, "전투 가지 17종 (cmb_* + 전사의 맹세)")
-	_check(GameState.upgrades_for_axis("field").size() == 10, "레거시 필드 노드 10종 (항아리/상자/여관 vlg로 이동)")
+	_check(GameState.upgrades_for_axis("field").size() == 0, "레거시 필드 노드 0종 (전부 제거)")
 
 	# A-1: 솔로 용사 — 파티 멤버 1명, 기본 공격력 3
 	_check(GameState.party_members().size() == 1, "파티 = 용사 1인")
@@ -44,7 +44,7 @@ func _ready() -> void:
 	_check(battle != null and battle.enemies.size() == 1, "전투 시작 (enemies 길이 1)")
 	_check(not BattleManager.can_start_battle(), "전투창 1개 제한 동작")
 	var result: Dictionary = await battle.finished
-	_check(result.turns == 3, "슬라임 3턴 격파 (실제 %d턴)" % result.turns)
+	_check(result.turns == 4, "슬라임 4턴 격파 (HP10/공3, 실제 %d턴)" % result.turns)
 	_check(GameState.gold == gold_before + slime.gold_reward, "골드 +%d 지급" % slime.gold_reward)
 
 	await get_tree().create_timer(1.0).timeout

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="TrinketData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trinket_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/bonfire.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"t_coward_incense"
+display_name = "겁쟁이 향"
+description = "적이 겁먹어 무리가 -1마리 작아진다. (힐러 장착 시 파티 HP ×1.1)"
+icon = ExtResource("2")
+effects = {
+"max_enemies_bonus": -1
+}
+tags = Array[StringName]([&"lure"])
+rarity = 0
+pool = &"common"
+affinity_role = &"priest"
+affinity_bonus = {
+"party_hp_mult": 1.1
+}

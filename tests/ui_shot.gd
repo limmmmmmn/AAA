@@ -15,7 +15,6 @@ func _ready() -> void:
 		GameState.add_companion(priest)
 	GameState.gold = 360
 	GameState.gems = 2
-	GameState.purchases[&"shovel"] = 1
 	GameState.auto_enhance = true
 	GameState.set_hunted(&"slime", true)
 	GameState.recalculate_stats()

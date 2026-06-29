@@ -13,7 +13,7 @@ func _ready() -> void:
 
 	# 자동이동 스킬 해금 → 버튼 등장 + 켜둠(초록)
 	GameState.gold = 9999
-	GameState.purchase(GameState.catalog[&"compass_hunt"])
+	GameState.purchase(GameState.catalog[&"cmd_battle_queue"])
 	var hud: Node = main.find_child("HUD", true, false)
 	hud._toggle_auto() # ON (초록)
 	await get_tree().create_timer(0.3).timeout

@@ -12,9 +12,8 @@ func _ready() -> void:
 	# 스탯에 값이 보이도록 약간 강화
 	GameState.gold = 9999
 	GameState.purchase(GameState.catalog[&"cmb_atk_1"]) # 공격력
-	GameState.purchase(GameState.catalog[&"boots_swift"])   # 속도
-	for i in 4:
-		GameState.purchase(GameState.catalog[&"luck_charm"]) # 운
+	GameState.purchase(GameState.catalog[&"cmb_atk_2"]) # 공격력 더
+	GameState.purchase(GameState.catalog[&"cmb_crit"])  # 회심
 	GameState.add_companion(GameState.companion_catalog[&"priest"]) # 동료 개별 스탯
 	var hud: Node = main.find_child("HUD", true, false)
 	hud._user_expanded = true

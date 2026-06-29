@@ -12,7 +12,7 @@ icon = ExtResource("2")
 branch = "command"
 node_type = "unlock"
 base_cost = 240
-tree_pos = Vector2i(6, -5)
+tree_pos = Vector2i(6, -4)
 tree_links = Array[StringName]([&"cmd_window_train"])
 effects = {
 "recruit": "priest",

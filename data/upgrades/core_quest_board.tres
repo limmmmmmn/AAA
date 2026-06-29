@@ -12,7 +12,7 @@ icon = ExtResource("2")
 branch = "core"
 node_type = "unlock"
 base_cost = 800
-tree_pos = Vector2i(0, -6)
+tree_pos = Vector2i(0, -5)
 tree_links = Array[StringName]([&"core_forest_path"])
 effects = {
 "quest_unlocked": true

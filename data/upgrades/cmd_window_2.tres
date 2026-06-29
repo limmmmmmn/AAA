@@ -12,7 +12,7 @@ icon = ExtResource("2")
 branch = "command"
 node_type = "unlock"
 base_cost = 85
-tree_pos = Vector2i(4, -4)
+tree_pos = Vector2i(4, -3)
 tree_links = Array[StringName]([&"cmd_battle_queue"])
 effects = {
 "combat_slots": 1

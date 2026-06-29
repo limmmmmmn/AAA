@@ -12,7 +12,7 @@ icon = ExtResource("2")
 branch = "core"
 node_type = "unlock"
 base_cost = 0
-tree_pos = Vector2i(0, -12)
+tree_pos = Vector2i(0, -11)
 tree_links = Array[StringName]([&"core_final_door"])
 effects = {
 "ending_reached": true

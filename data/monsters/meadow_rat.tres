@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/monster_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/enemies/slime_chaser.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"meadow_rat"
+display_name = "들쥐"
+sprite = ExtResource("2")
+max_hp = 8
+attack = 2
+gold_reward = 3
+exp_reward = 1
+move_speed = 45.0
+erratic_movement = true
+stone_drop = 0.1

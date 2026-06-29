@@ -84,8 +84,8 @@ func _ready() -> void:
 	var b3 := BattleManager.start_battle([slime])
 	var b4 := BattleManager.start_battle([slime])
 	_check(is_equal_approx(b4.window_efficiency, 1.0), "분신술 후 2번 창도 100% (캡 1.0)")
-	# 적 HP ×1.4 (slime 8 → 11)
-	_check(b3.enemies[0].hp == int(round(8 * 1.4)), "분신술 → 적 HP ×1.4 (%d)" % b3.enemies[0].hp)
+	# 적 HP ×1.4 (slime 10 → 14)
+	_check(b3.enemies[0].hp == int(round(slime.max_hp * 1.4)), "분신술 → 적 HP ×1.4 (%d)" % b3.enemies[0].hp)
 	BattleManager.abort_all()
 
 	# ── 8. cmb_warrior_oath ──

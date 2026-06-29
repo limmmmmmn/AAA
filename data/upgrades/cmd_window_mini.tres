@@ -12,7 +12,7 @@ icon = ExtResource("2")
 branch = "command"
 node_type = "stat"
 base_cost = 550
-tree_pos = Vector2i(8, -5)
+tree_pos = Vector2i(8, -4)
 tree_links = Array[StringName]([&"cmd_target_rules"])
 effects = {
 "extra_window_efficiency": 0.05

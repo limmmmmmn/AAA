@@ -69,10 +69,51 @@ func _on_exit() -> void:
 	unhovered.emit(self)
 
 
-# ─── 그리기: 배경 + 아이콘 + 상태 테두리 ───
+## 구매 순간 "퍽!" — 크게 부풀었다 탄성으로 돌아오며 살짝 흔들린다.
+func purchase_pop() -> void:
+	if _tw != null and _tw.is_valid():
+		_tw.kill()
+	scale = Vector2(1.6, 1.6)
+	rotation = 0.18
+	queue_redraw()
+	_tw = create_tween().set_parallel(true)
+	_tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_tw.tween_property(self, "scale", Vector2.ONE, 0.4) \
+		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	_tw.tween_property(self, "rotation", 0.0, 0.45) \
+		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+
+
+# ─── 노드 모양 (node_type별, 스펙 §14) ───
+# 원형=stat · 사각=unlock/automation · 다이아=bridge · 왕관=boss/region · 톱니=repeatable
+# 트링켓(trinket)은 사각 + 보라 테두리.
+const PURPLE := Color(0.74, 0.5, 0.98) # 트링켓 테두리
+
+# 16x16 기준 폴리곤 점들 (모양별) — Vector2 생성자는 const 평가가 안 되므로 static var
+static var DIAMOND := PackedVector2Array([Vector2(8, 0), Vector2(16, 8), Vector2(8, 16), Vector2(0, 8)])
+static var CROWN := PackedVector2Array([ # 아래 사각 + 위 3갈래 (왕관)
+	Vector2(1, 15), Vector2(15, 15), Vector2(15, 6), Vector2(12, 2), Vector2(10, 5),
+	Vector2(8, 1), Vector2(6, 5), Vector2(4, 2), Vector2(1, 6)])
+static var GEAR := PackedVector2Array([ # 팔각형 (톱니 느낌)
+	Vector2(5, 0), Vector2(11, 0), Vector2(16, 5), Vector2(16, 11),
+	Vector2(11, 16), Vector2(5, 16), Vector2(0, 11), Vector2(0, 5)])
+
+
+## 이 노드의 모양 키. up이 없으면 사각.
+func _shape() -> String:
+	if up == null:
+		return "square"
+	match up.node_type:
+		"stat": return "circle"
+		"bridge": return "diamond"
+		"boss", "region": return "crown"
+		"repeatable": return "gear"
+		_: return "square" # unlock / automation / trinket
+
+
+# ─── 그리기: 모양 배경 + 아이콘 + 상태 테두리 ───
 
 func _draw() -> void:
-	var r := Rect2(Vector2.ZERO, Vector2(SIZE, SIZE))
 	var bg: Color
 	var border: Color
 	match state:
@@ -86,17 +127,57 @@ func _draw() -> void:
 			bg = Color(0.18, 0.18, 0.21); border = Color(0.5, 0.5, 0.56)
 		_: # LOCKED
 			bg = Color(0.13, 0.14, 0.17); border = Color(0.3, 0.32, 0.38)
-	draw_rect(r, bg)
+	var shape := _shape()
+	# 트링켓: 테두리를 보라색으로 (상태 밝기 유지)
+	if up != null and up.node_type == "trinket":
+		border = PURPLE if state != State.LOCKED else PURPLE.darkened(0.45)
+
+	_fill_shape(shape, bg)
 	if up != null and up.icon != null:
-		# 잠김/부족은 아이콘을 어둡게 탈색해 상태가 읽히게
 		var mod := Color.WHITE
 		if state == State.LOCKED:
 			mod = Color(0.42, 0.44, 0.5, 1.0)
 		elif state == State.POOR:
 			mod = Color(0.78, 0.78, 0.8, 1.0)
-		draw_texture_rect(up.icon, r, false, mod)
-	else: # 아이콘 없을 때 폴백 점
-		if state == State.OWNED or state == State.MAXED:
-			draw_rect(Rect2(6, 6, 4, 4), Color(0.9, 1, 0.92))
+		# 원형/다이아/왕관/톱니는 아이콘을 살짝 안쪽으로 (모서리가 모양 밖으로 안 삐져나오게)
+		var pad := 0.0 if shape == "square" else 2.0
+		draw_texture_rect(up.icon, Rect2(pad, pad, SIZE - pad * 2, SIZE - pad * 2), false, mod)
 	var bw := 2.0 if (state == State.OWNED or state == State.MAXED or _hot) else 1.0
-	draw_rect(r, border if not _hot else Color(1, 1, 1, 0.95), false, bw)
+	_stroke_shape(shape, border if not _hot else Color(1, 1, 1, 0.95), bw)
+
+
+## 모양 채우기.
+func _fill_shape(shape: String, col: Color) -> void:
+	match shape:
+		"circle":
+			draw_circle(Vector2(SIZE, SIZE) * 0.5, SIZE * 0.5, col)
+		"diamond":
+			draw_colored_polygon(DIAMOND, col)
+		"crown":
+			draw_colored_polygon(CROWN, col)
+		"gear":
+			draw_colored_polygon(GEAR, col)
+		_:
+			draw_rect(Rect2(Vector2.ZERO, Vector2(SIZE, SIZE)), col)
+
+
+## 모양 테두리(외곽선).
+func _stroke_shape(shape: String, col: Color, w: float) -> void:
+	match shape:
+		"circle":
+			draw_arc(Vector2(SIZE, SIZE) * 0.5, SIZE * 0.5 - w * 0.5, 0.0, TAU, 28, col, w)
+		"diamond":
+			draw_polyline(_closed(DIAMOND), col, w)
+		"crown":
+			draw_polyline(_closed(CROWN), col, w)
+		"gear":
+			draw_polyline(_closed(GEAR), col, w)
+		_:
+			draw_rect(Rect2(Vector2.ZERO, Vector2(SIZE, SIZE)), col, false, w)
+
+
+func _closed(pts: PackedVector2Array) -> PackedVector2Array:
+	var c := PackedVector2Array(pts)
+	c.append(pts[0])
+	return c
+

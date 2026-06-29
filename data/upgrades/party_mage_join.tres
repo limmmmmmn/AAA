@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/mage_staff.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"party_mage_join"
+display_name = "떠돌이 마법사"
+description = "마법사가 합류한다. 무리 전투에 강하다. (초원 조사도 35%)"
+icon = ExtResource("2")
+branch = "party"
+node_type = "unlock"
+base_cost = 180
+tree_pos = Vector2i(0, 2)
+tree_links = Array[StringName]([&"party_warrior_join"])
+unlock = {
+"survey": 0.35
+}
+effects = {
+"recruit": "mage"
+}

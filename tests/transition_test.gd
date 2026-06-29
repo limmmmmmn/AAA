@@ -32,12 +32,14 @@ func _ready() -> void:
 	_check(GameState.damage_enabled, "1지역부터 데미지 on")
 	_check(GameState.party_members().size() == 1, "초원 파티 1인")
 
-	# 지역 노드 구매 → 숲길로 진행 (맵 스왑 없음, 같은 맵에서 적/지역명만 바뀜)
+	# 지역 해금 → 마을 표지판에서 숲길로 이동 (맵 스왑 없음, 같은 맵에서 적/지역명만 바뀜)
 	GameState.gold = 1000
-	GameState.purchase(GameState.catalog[&"core_forest_path"]) # set_stage → stage_forest + 승려 합류
+	GameState.purchase(GameState.catalog[&"core_forest_path"]) # 숲길 해금
+	GameState.party_in_town = true
+	GameState.travel_to_region(&"stage_forest") # 마을 표지판 이동 → 숲길 + 승려
 	await get_tree().process_frame
 
-	_check(GameState.current_region == &"stage_forest", "지역 노드 구매 → 단계 = 숲길")
+	_check(GameState.current_region == &"stage_forest", "마을에서 이동 → 단계 = 숲길")
 	_check(GameState.region_number() == 2, "단계 번호 2 (같은 맵)")
 	_check(_current_region().region_id() == &"region1", "맵은 그대로 1지역")
 	_check(GameState.damage_enabled, "데미지 on")

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EncounterFormationDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/encounter_formation_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"meadow_gold_ambush"
+display_name = "황금빛 난입"
+region_id = &"stage_meadow"
+enemy_slots = [{"enemy_id": &"gold_slime", "count_min": 1, "count_max": 1}, {"enemy_id": &"meadow_rat", "count_min": 1, "count_max": 2}]
+spawn_weight = 0.8
+unlock = {"discovered": "gold_slime"}
+reward_mult = 1.5
+is_rare = true
+tags = Array[StringName]([&"rare", &"group"])

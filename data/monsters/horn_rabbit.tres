@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/monster_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/enemies/blade_bug.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"horn_rabbit"
+display_name = "뿔토끼"
+sprite = ExtResource("2")
+max_hp = 16
+attack = 4
+gold_reward = 5
+exp_reward = 2
+move_speed = 40.0
+stone_drop = 0.12
+unlock = {
+"region_kills": 10
+}

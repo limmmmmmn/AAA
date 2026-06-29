@@ -12,7 +12,7 @@ icon = ExtResource("2")
 branch = "command"
 node_type = "unlock"
 base_cost = 380
-tree_pos = Vector2i(7, -5)
+tree_pos = Vector2i(7, -4)
 tree_links = Array[StringName]([&"cmd_healer"])
 effects = {
 "target_priority_enabled": true

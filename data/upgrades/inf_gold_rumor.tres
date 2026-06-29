@@ -14,7 +14,7 @@ node_type = "repeatable"
 base_cost = 10000
 cost_growth = 1.5
 max_purchases = 99
-tree_pos = Vector2i(1, -9)
+tree_pos = Vector2i(1, -8)
 tree_links = Array[StringName]([&"core_castle_shadow"])
 effects = {
 "enemy_gold_mult": 1.1

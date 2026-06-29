@@ -12,7 +12,7 @@ icon = ExtResource("2")
 branch = "command"
 node_type = "stat"
 base_cost = 6000
-tree_pos = Vector2i(13, -7)
+tree_pos = Vector2i(13, -6)
 tree_links = Array[StringName]([&"cmd_auto_boss_retry"])
 effects = {
 "extra_window_efficiency": 0.25

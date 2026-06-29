@@ -19,3 +19,7 @@ class_name MonsterData extends Resource
 # ─── 드롭 (전투 → 마을 재료 루프) ───
 @export var stone_drop: float = 0.0         # 처치 시 돌멩이 1개 드롭 확률
 @export var sword_drop: float = 0.0         # 처치 시 녹슨 검 1개 드롭 확률
+# ─── 도감/해금 (v1: 적 다양화) ───
+@export var rare: bool = false              # 희귀 적 (골드 슬라임 등 — 큰 보상, 보통 도주)
+@export var boss: bool = false              # 보스 적 (킹 슬라임 등)
+@export var unlock: Dictionary = {}         # 해금 조건 (비면 시작부터). region_kills/survey/discovered/monster_kills/requires_flag

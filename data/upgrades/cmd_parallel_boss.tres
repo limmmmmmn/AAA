@@ -12,7 +12,7 @@ icon = ExtResource("2")
 branch = "command"
 node_type = "automation"
 base_cost = 2400
-tree_pos = Vector2i(11, -6)
+tree_pos = Vector2i(11, -5)
 tree_links = Array[StringName]([&"cmd_window_3"])
 effects = {
 "boss_does_not_pause_farm": true

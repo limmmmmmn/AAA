@@ -13,7 +13,7 @@ axis = "field"
 branch = "village"
 node_type = "stat"
 base_cost = 25
-tree_pos = Vector2i(-3, -3)
+tree_pos = Vector2i(-3, -2)
 tree_links = Array[StringName]([&"vlg_pot_1"])
 effects = {
 "pot_count": 1

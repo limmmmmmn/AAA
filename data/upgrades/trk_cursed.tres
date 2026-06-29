@@ -12,7 +12,7 @@ icon = ExtResource("2")
 branch = "trinket"
 node_type = "trinket"
 base_cost = 3300
-tree_pos = Vector2i(-8, -13)
+tree_pos = Vector2i(-7, -9)
 tree_links = Array[StringName]([&"trk_tags"])
 effects = {
 "cursed_trinkets_enabled": true

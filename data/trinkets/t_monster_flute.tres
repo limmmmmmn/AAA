@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="TrinketData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trinket_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/bow.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"t_monster_flute"
+display_name = "마물 피리"
+description = "마물을 꾀어 무리가 +1마리 커진다. (용사 장착 시 적 골드 ×1.15)"
+icon = ExtResource("2")
+effects = {
+"max_enemies_bonus": 1
+}
+tags = Array[StringName]([&"lure"])
+rarity = 1
+pool = &"common"
+affinity_role = &"hero"
+affinity_bonus = {
+"enemy_gold_mult": 1.15
+}

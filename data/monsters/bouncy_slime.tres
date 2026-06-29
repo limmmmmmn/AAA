@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/monster_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/enemies/slime_fly.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"bouncy_slime"
+display_name = "통통 슬라임"
+sprite = ExtResource("2")
+max_hp = 28
+attack = 3
+gold_reward = 7
+exp_reward = 3
+move_speed = 35.0
+stone_drop = 0.14
+unlock = {
+"monster_kills": {
+"slime": 15
+}
+}

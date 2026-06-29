@@ -12,3 +12,7 @@ class_name TrinketData extends Resource
 @export var rarity: int = 0               # 0 일반, 1 희귀
 @export var cursed: bool = false          # 저주 트링켓 (높은 효과 + 패널티)
 @export var pool: StringName = &"common"  # 드랍 풀 (common / pot ...)
+## 파티원 슬롯 친화 (R4): 이 역할 멤버에게 장착되면 affinity_bonus가 추가로 적용된다.
+## 값: &"hero" / &"warrior" / &"mage" / &"priest" / &"" (없음)
+@export var affinity_role: StringName = &""
+@export var affinity_bonus: Dictionary = {} # affinity_role 일치 시 추가 효과 (제너릭 스탯 키)

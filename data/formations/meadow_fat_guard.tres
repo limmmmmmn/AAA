@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EncounterFormationDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/encounter_formation_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"meadow_fat_guard"
+display_name = "뚱뚱한 슬라임 호위"
+region_id = &"stage_meadow"
+enemy_slots = [{"enemy_id": &"fat_slime", "count_min": 1, "count_max": 1}, {"enemy_id": &"slime", "count_min": 2, "count_max": 2}]
+spawn_weight = 3.0
+unlock = {"survey": 0.6}
+survey_reward = 0.02
+tags = Array[StringName]([&"group"])

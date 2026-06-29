@@ -211,13 +211,25 @@ func _physics_process(delta: float) -> void:
 			_retreat_hold = false # 플레이어가 조작을 잡으면 대기 해제
 		else:
 			_idle_time += delta
-			if _can_auto_hunt():
+			if GameState.pending_travel != &"" and _field != null:
+				dir = global_position.direction_to(_field.entrance(&"village")) # 예약 이동: 마을로 복귀
+			elif _can_auto_hunt():
 				dir = _auto_hunt_direction()
 		velocity = dir * GameState.move_speed
 	move_and_slide()
 	_update_hero_anim()
 	_update_follow()
+	_update_town_state()
 	_check_encounters()
+
+
+## 마을 안/밖 갱신 + 막 마을에 들어왔으면 예약된 지역 이동을 실행한다.
+func _update_town_state() -> void:
+	var in_town: bool = _field != null and _field.is_village(global_position)
+	var just_entered := in_town and not GameState.party_in_town
+	GameState.party_in_town = in_town
+	if just_entered:
+		GameState.try_pending_travel()
 
 
 ## 전투창이 가득 찼는가 (= 새 전투를 더 못 여는 상태). 가득이면 필드 이동을 멈춘다.
@@ -266,14 +278,18 @@ func _check_encounters() -> void:
 			_start_encounter(monster)
 
 
-## 무리 출현 (v3 §4): 필드 몬스터 1마리와 충돌 → 전투창 안에서 같은 종이 무리로 출현.
-## 필드의 다른 몬스터는 끌어들이지 않는다. 무리 규모는 전투창이 정한다.
+## 인카운터 (v1): 필드 몬스터와 충돌 → 현재 지역의 포메이션을 롤해 적 무리가 출현.
+## 메탈/희귀(allow_group=false)는 자기 1마리만. 그 외는 지역 포메이션 풀에서 추첨.
 func _start_encounter(primary: Monster) -> void:
-	var count := 1
-	if primary.data.allow_group: # 메탈은 항상 1마리
-		count = GameState.roll_group_size()
-	var datas: Array = []
-	for i in count:
-		datas.append(primary.data)
-	if BattleManager.start_battle(datas, primary.global_position) != null:
+	var datas: Array
+	var fid: StringName = &""
+	if primary.data.allow_group:
+		var roll := GameState.roll_encounter_formation(primary.data)
+		datas = roll["datas"]
+		fid = roll["formation_id"]
+	else:
+		datas = [primary.data] # 메탈/골드 슬라임 등은 단독
+	if datas.is_empty():
+		datas = [primary.data]
+	if BattleManager.start_battle(datas, primary.global_position, fid) != null:
 		primary.consume()

@@ -12,8 +12,8 @@ icon = ExtResource("2")
 branch = "core"
 node_type = "unlock"
 base_cost = 0
-tree_pos = Vector2i(0, -1)
-tree_links = Array[StringName]([&"core"])
+tree_pos = Vector2i(0, 0)
+tree_links = Array[StringName]([])
 effects = {
 "adventure_started": true
 }

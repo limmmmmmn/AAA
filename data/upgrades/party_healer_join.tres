@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/priest_staff.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"party_healer_join"
+display_name = "여관의 힐러"
+description = "힐러(승려)가 합류한다. 매 턴 회복. (충분히 싸운 뒤 등장)"
+icon = ExtResource("2")
+branch = "party"
+node_type = "unlock"
+base_cost = 650
+tree_pos = Vector2i(0, 3)
+tree_links = Array[StringName]([&"party_mage_join"])
+unlock = {
+"region_kills": 30
+}
+effects = {
+"recruit": "priest",
+"healer_enabled": true
+}

@@ -14,7 +14,7 @@ node_type = "repeatable"
 base_cost = 3500
 cost_growth = 1.4
 max_purchases = 99
-tree_pos = Vector2i(-13, -4)
+tree_pos = Vector2i(-12, -3)
 tree_links = Array[StringName]([&"vlg_big_pot"])
 effects = {
 "pot_count": 1

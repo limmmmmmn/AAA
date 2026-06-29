@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/monster_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/enemies/slime_fly.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"leaf_sprite"
+display_name = "풀잎 정령"
+sprite = ExtResource("2")
+max_hp = 22
+attack = 2
+gold_reward = 7
+exp_reward = 3
+move_speed = 30.0
+erratic_movement = true
+unlock = {
+"survey": 0.25
+}

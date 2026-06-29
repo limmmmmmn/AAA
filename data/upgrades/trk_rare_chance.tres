@@ -12,7 +12,7 @@ icon = ExtResource("2")
 branch = "trinket"
 node_type = "trinket"
 base_cost = 8000
-tree_pos = Vector2i(-10, -15)
+tree_pos = Vector2i(-9, -11)
 tree_links = Array[StringName]([&"trk_pot_pool"])
 effects = {
 "rare_trinket_chance": 0.05

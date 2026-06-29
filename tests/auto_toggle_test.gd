@@ -34,9 +34,9 @@ func _ready() -> void:
 	# 스킬 배우기 전엔 자동이동 버튼 숨김
 	_check(hud._auto_slot == null, "스킬 배우기 전엔 자동이동 버튼 없음")
 
-	# 자동이동 스킬(사냥꾼의 나침반) 해금 → 버튼 등장
+	# 자동이동 스킬(전투 대기열) 해금 → 버튼 등장
 	GameState.gold = 9999
-	GameState.purchase(GameState.catalog[&"compass_hunt"]) # stats_changed → 슬롯 재구성
+	GameState.purchase(GameState.catalog[&"cmd_battle_queue"]) # auto_hunt → stats_changed → 슬롯 재구성
 	_check(hud._auto_slot != null, "스킬 배우면 자동이동 버튼 등장")
 	_check(hud._auto_slot.custom_minimum_size == Vector2(20, 20), "버튼 20x20 크기")
 

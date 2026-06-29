@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/monster_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/enemies/slime.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"fat_slime"
+display_name = "뚱뚱한 슬라임"
+sprite = ExtResource("2")
+max_hp = 60
+attack = 4
+gold_reward = 16
+exp_reward = 5
+move_speed = 18.0
+stone_drop = 0.2
+unlock = {
+"survey": 0.55
+}

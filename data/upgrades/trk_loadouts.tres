@@ -12,7 +12,7 @@ icon = ExtResource("2")
 branch = "trinket"
 node_type = "trinket"
 base_cost = 22000
-tree_pos = Vector2i(-12, -17)
+tree_pos = Vector2i(-11, -13)
 tree_links = Array[StringName]([&"trk_slot_3"])
 effects = {
 "trinket_loadouts_enabled": true

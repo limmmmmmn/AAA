@@ -14,7 +14,7 @@ node_type = "repeatable"
 base_cost = 12000
 cost_growth = 1.55
 max_purchases = 99
-tree_pos = Vector2i(-12, -15)
+tree_pos = Vector2i(-11, -12)
 tree_links = Array[StringName]([&"trk_slot_3"])
 effects = {
 "all_gold_mult": 1.02

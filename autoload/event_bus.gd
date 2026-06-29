@@ -30,6 +30,7 @@ signal quest_completed(quest: QuestData)         # 의뢰 완료 (B-4)
 signal inn_rested                                # 여관 숙박 (B-3)
 signal request_quest_board                       # 게시판 진입 → UI 열기 (B-4)
 signal request_menu                              # HUD 메뉴 버튼 → 메뉴 열기
+signal request_catalog                           # HUD 카탈로그 슬롯 → 비정지 카탈로그 토글 (R5)
 signal request_monsters                          # 우측 MON 슬롯 → 몬스터 허가 패널 열기
 signal language_changed                          # 언어 전환 → 동적 UI 다시 그리기
 signal debug_mode_changed(on: bool)              # 디버그 모드 토글

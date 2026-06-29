@@ -12,7 +12,7 @@ icon = ExtResource("2")
 branch = "combat"
 node_type = "stat"
 base_cost = 360
-tree_pos = Vector2i(1, -5)
+tree_pos = Vector2i(2, -4)
 tree_links = Array[StringName]([&"cmd_recruit_warrior"])
 effects = {
 "party_damage_mult": 1.25

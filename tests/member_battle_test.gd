@@ -67,6 +67,7 @@ func _ready() -> void:
 	var acted_b := [0]
 	var enemy_b := [0]
 	var log_b: Array = []
+	GameState.crit_chance = 0.0 # 회심 끄기 — 데미지/로그 결정적으로 (승려 운으로 가끔 크리 → 플래키 방지)
 	var d2 := _dummy(1000, 6)
 	var b2 := BattleManager.start_battle([d2])
 	b2.party_acted.connect(func(_t: int, _d: int, _c: bool) -> void: acted_b[0] += 1)

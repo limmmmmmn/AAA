@@ -12,7 +12,7 @@ icon = ExtResource("2")
 branch = "core"
 node_type = "stat"
 base_cost = 10
-tree_pos = Vector2i(0, -3)
+tree_pos = Vector2i(0, -2)
 tree_links = Array[StringName]([&"core_first_gold"])
 effects = {
 "respawn_delay_mult": 0.91

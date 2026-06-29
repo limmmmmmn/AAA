@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/monster_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/enemies/slime.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"gold_slime"
+display_name = "골드 슬라임"
+sprite = ExtResource("2")
+max_hp = 24
+attack = 0
+gold_reward = 80
+exp_reward = 4
+move_speed = 70.0
+erratic_movement = true
+flee_after_seconds = 8.0
+allow_group = false
+hunt_default = false
+rare = true
+unlock = {
+"survey": 0.75,
+"requires_flag": "trinkets_enabled"
+}

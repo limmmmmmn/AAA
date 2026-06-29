@@ -12,7 +12,7 @@ icon = ExtResource("2")
 branch = "command"
 node_type = "stat"
 base_cost = 80000
-tree_pos = Vector2i(17, -8)
+tree_pos = Vector2i(17, -7)
 tree_links = Array[StringName]([&"cmd_window_5"])
 effects = {
 "combat_slots": 1

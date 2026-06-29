@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EncounterFormationDef" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/encounter_formation_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"meadow_rabbit_mix"
+display_name = "토끼와 슬라임"
+region_id = &"stage_meadow"
+enemy_slots = [{"enemy_id": &"horn_rabbit", "count_min": 1, "count_max": 1}, {"enemy_id": &"slime", "count_min": 1, "count_max": 1}]
+spawn_weight = 5.0
+unlock = {"discovered": "horn_rabbit"}
+survey_reward = 0.01
+tags = Array[StringName]([&"group"])

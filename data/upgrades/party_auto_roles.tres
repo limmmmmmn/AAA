@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/ring.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"party_auto_roles"
+display_name = "자동 역할 분담"
+description = "전사가 강한 적, 마법사가 무리, 힐러가 낮은 HP 우선."
+icon = ExtResource("2")
+branch = "party"
+node_type = "automation"
+base_cost = 2000
+tree_pos = Vector2i(0, 5)
+tree_links = Array[StringName]([&"party_full_formation"])
+effects = {
+"target_priority_enabled": true
+}

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/priest_staff.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"party_status_care"
+display_name = "상태이상 돌보기"
+description = "독/저주 지속 시간 감소."
+icon = ExtResource("2")
+branch = "party"
+node_type = "unlock"
+base_cost = 900
+tree_pos = Vector2i(-1, 3)
+tree_links = Array[StringName]([&"party_healer_join"])
+effects = {
+"status_care_enabled": true
+}

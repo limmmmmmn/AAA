@@ -13,7 +13,7 @@ axis = "field"
 branch = "village"
 node_type = "automation"
 base_cost = 1600
-tree_pos = Vector2i(-10, -5)
+tree_pos = Vector2i(-10, -4)
 tree_links = Array[StringName]([&"vlg_pot_chain"])
 effects = {
 "village_gold_mult": 1.3

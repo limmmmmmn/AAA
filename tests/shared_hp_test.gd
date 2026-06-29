@@ -69,7 +69,7 @@ func _ready() -> void:
 	var slime: MonsterData = load("res://data/monsters/slime.tres")
 	var multi := BattleManager.start_battle([slime, slime])
 	multi.tick(GameState.turn_interval)
-	_check(multi.enemies[0].hp == 3 and multi.enemies[1].hp == 3, "베기라: 두 적 동시에 -5")
+	_check(multi.enemies[0].hp == 5 and multi.enemies[1].hp == 5, "베기라: 두 적 동시에 -5 (슬라임 10→5)")
 	GameState.all_attack = false
 
 	print("RESULT: " + ("ALL PASS" if _fails == 0 else "%d FAILED" % _fails))

@@ -34,22 +34,15 @@ func _ready() -> void:
 	await get_tree().process_frame
 	EventBus.quest_completed.connect(func(_q: QuestData) -> void: _quest_done = true)
 
-	# 초원(1단계)에선 2단계 전용 필드 아이템(용맹의 깃발)이 안 보인다
-	_check(not _has(GameState.upgrades_for_axis("field"), &"banner_valor"), "초원 상점에 용맹의 깃발 미노출")
-
-	# 숲길(2단계) 전환 — 지역 노드 구매
+	# 숲길(2단계) 전환 — 지역 해금 후 마을 표지판에서 이동
 	GameState.gold = 1000
-	GameState.purchase(GameState.catalog[&"core_forest_path"]) # 지역 노드 구매 → 숲길
+	GameState.purchase(GameState.catalog[&"core_forest_path"]) # 숲길 해금
+	GameState.party_in_town = true
+	GameState.travel_to_region(&"stage_forest") # 마을에서 이동 → 숲길
 	await get_tree().process_frame
 	_check(GameState.region_number() == 2, "2단계(숲길) 진입")
 
-	# 2단계 상점엔 신규 필드 아이템(용맹의 깃발) 노출
-	_check(_has(GameState.upgrades_for_axis("field"), &"banner_valor"), "숲길 상점에 용맹의 깃발 노출")
-
 	GameState.add_gold(5000)
-	# 무리 출현 (용맹의 깃발 — 필드 가지)
-	_check(GameState.purchase(GameState.catalog[&"banner_valor"]), "용맹의 깃발 구매")
-	_check(GameState.group_table.size() == 2, "무리 출현: 2마리 확률표")
 	# 전체 공격 (마법서: 파이어 — 전투 가지)
 	_check(GameState.purchase(GameState.catalog[&"cmb_fire_spell"]), "파이어 구매")
 	_check(GameState.all_attack, "파이어: 전투창 전체 공격 on")

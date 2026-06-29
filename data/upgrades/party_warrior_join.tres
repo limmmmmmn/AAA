@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/sword.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"party_warrior_join"
+display_name = "주점의 전사"
+description = "전사가 파티에 합류한다. (초원 적 8마리 처치 시 등장)"
+icon = ExtResource("2")
+branch = "party"
+node_type = "unlock"
+base_cost = 25
+tree_pos = Vector2i(0, 1)
+tree_links = Array[StringName]([&"core_start"])
+unlock = {
+"region_kills": 8
+}
+effects = {
+"recruit": "knight"
+}

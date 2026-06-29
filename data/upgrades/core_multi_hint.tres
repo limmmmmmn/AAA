@@ -12,7 +12,7 @@ icon = ExtResource("2")
 branch = "core"
 node_type = "unlock"
 base_cost = 55
-tree_pos = Vector2i(1, -3)
+tree_pos = Vector2i(1, -2)
 tree_links = Array[StringName]([&"core_slime_contract"])
 effects = {
 "command_tree_unlocked": true

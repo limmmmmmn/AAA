@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/necklace.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"party_full_formation"
+display_name = "네 명이 한 줄로 걷기"
+description = "네 명이 모이면 파티 피해 +15%."
+icon = ExtResource("2")
+branch = "party"
+node_type = "stat"
+base_cost = 1200
+tree_pos = Vector2i(0, 4)
+tree_links = Array[StringName]([&"party_healer_join"])
+effects = {
+"party_damage_mult": 1.15,
+"full_party_unlocked": true
+}

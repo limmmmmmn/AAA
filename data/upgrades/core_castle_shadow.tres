@@ -12,8 +12,8 @@ icon = ExtResource("2")
 branch = "core"
 node_type = "region"
 base_cost = 9000
-tree_pos = Vector2i(0, -9)
+tree_pos = Vector2i(0, -8)
 tree_links = Array[StringName]([&"core_airship_toy"])
 effects = {
-"set_stage": "stage_castle"
+"unlock_region": "stage_castle"
 }

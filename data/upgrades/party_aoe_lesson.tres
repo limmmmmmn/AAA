@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="UpgradeData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/upgrade_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/mage_staff.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"party_aoe_lesson"
+display_name = "광역 주문 연습"
+description = "마법사가 모든 적을 동시에 친다."
+icon = ExtResource("2")
+branch = "party"
+node_type = "unlock"
+base_cost = 280
+tree_pos = Vector2i(-1, 2)
+tree_links = Array[StringName]([&"party_mage_join"])
+effects = {
+"mage_aoe_enabled": true
+}

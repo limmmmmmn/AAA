@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="MonsterData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/monster_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/enemies/slime.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"king_slime"
+display_name = "킹 슬라임"
+sprite = ExtResource("2")
+max_hp = 260
+attack = 7
+gold_reward = 180
+exp_reward = 30
+move_speed = 14.0
+allow_group = false
+hunt_default = false
+boss = true
+unlock = {
+"survey": 1.0
+}

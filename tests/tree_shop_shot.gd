@@ -27,9 +27,9 @@ func _ready() -> void:
 	_shot("fresh")
 
 	# ③ 경로를 따라 구매 → 끝 노드를 사면 다음 연결 노드가 새로 등장
-	for id in [&"core_start", &"cmb_atk_1", &"cmb_atk_2",
-			&"pot_unlock", &"bonfire", &"bonfire_speed",
-			&"boots_swift", &"luck_charm", &"horde"]:
+	for id in [&"core_start", &"cmb_atk_1", &"cmb_atk_2", &"core_first_gold",
+			&"core_town_permit", &"vlg_pot_1", &"vlg_pot_plus",
+			&"core_slime_contract", &"core_multi_hint"]:
 		GameState.purchase(GameState.catalog[id])
 		await get_tree().create_timer(0.05).timeout
 	await get_tree().create_timer(0.6).timeout

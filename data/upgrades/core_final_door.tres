@@ -12,8 +12,8 @@ icon = ExtResource("2")
 branch = "core"
 node_type = "region"
 base_cost = 60000
-tree_pos = Vector2i(0, -11)
+tree_pos = Vector2i(0, -10)
 tree_links = Array[StringName]([&"core_four_crystals"])
 effects = {
-"set_stage": "stage_final"
+"unlock_region": "stage_final"
 }

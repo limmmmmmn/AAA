@@ -54,7 +54,7 @@ func _ready() -> void:
 	EventBus.party_exited_village.connect(_close)
 	EventBus.request_close_modals.connect(_close) # Esc
 	EventBus.gold_changed.connect(func(_g: int) -> void: if visible: _refresh_all())
-	EventBus.upgrade_purchased.connect(func(_u: UpgradeData) -> void: if visible: _refresh_all())
+	EventBus.upgrade_purchased.connect(_on_upgrade_purchased)
 	EventBus.language_changed.connect(func() -> void: if visible: _rebuild())
 
 
@@ -154,7 +154,9 @@ func _tip_label(parent: Node, fsize: int, col: Color) -> Label:
 func _open() -> void:
 	visible = true
 	_rebuild()
-	_pan = -_tree_center # 트리 전체를 화면 가운데에 두고 시작
+	# '모험의 시작'(core_start) 노드를 화면 가운데에 두고 시작 (트리의 루트)
+	var root := GameState.upgrade_by_id(&"core_start")
+	_pan = -(Vector2(root.tree_pos) * SPACING) if root != null else -_tree_center
 	get_tree().paused = true
 
 
@@ -233,6 +235,16 @@ func _refresh_all() -> void:
 			_schedule_reveal(id, 0.0)
 	if _hover_id != &"":
 		_update_tooltip(_hover_id)
+
+
+## 구매 시: 상태 갱신 + 산 노드를 "퍽!" 팝(구매 연출).
+func _on_upgrade_purchased(up: UpgradeData) -> void:
+	if not visible:
+		return
+	_refresh_all()
+	var node: SkillNode = _node_map.get(up.id)
+	if node != null and node.visible:
+		node.purchase_pop()
 
 
 func _update_node_state(id: StringName) -> void:

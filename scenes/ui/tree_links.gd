@@ -15,6 +15,4 @@ func _draw() -> void:
 			continue # 아직 안 뻗은 선분(숨김 노드)
 		var endp: Vector2 = s.from.lerp(s.to, g) # grow<1이면 "쭈욱" 자라는 중
 		draw_line(s.from, endp, COL_ON if s.on else COL_OFF, 2.0)
-	# 중앙 허브(육각 느낌의 링) — 처음엔 이것만 보인다
-	draw_circle(Vector2.ZERO, 8.0, Color(0.6, 0.85, 0.65))
-	draw_circle(Vector2.ZERO, 5.5, Color(0.12, 0.16, 0.14))
+	# (허브 원 제거 — 이제 'core_start'(모험의 시작) 노드가 트리의 루트이자 중심)

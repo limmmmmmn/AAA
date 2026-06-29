@@ -7,13 +7,14 @@
 script = ExtResource("1")
 id = &"cmd_battle_queue"
 display_name = "전투 대기열"
-description = "적 처치 후 자동으로 다음 전투를 시작한다."
+description = "적을 자동으로 찾아가 처치 후 다음 전투를 시작한다 (자동 이동)."
 icon = ExtResource("2")
 branch = "command"
 node_type = "automation"
 base_cost = 50
-tree_pos = Vector2i(3, -4)
+tree_pos = Vector2i(3, -3)
 tree_links = Array[StringName]([&"cmd_auto_loot"])
 effects = {
-"auto_battle_restart": true
+"auto_battle_restart": true,
+"auto_hunt": true
 }

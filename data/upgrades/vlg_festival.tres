@@ -13,7 +13,7 @@ axis = "field"
 branch = "village"
 node_type = "stat"
 base_cost = 15000
-tree_pos = Vector2i(-14, -6)
+tree_pos = Vector2i(-14, -5)
 tree_links = Array[StringName]([&"vlg_tax_office"])
 effects = {
 "village_gold_mult": 1.5

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="TrinketData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trinket_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/chest.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"t_tactics_book"
+display_name = "낡은 전술서"
+description = "무리전 전술 — 파티 피해 ×1.12. (마법사 장착 시 ×1.12 추가)"
+icon = ExtResource("2")
+effects = {
+"party_damage_mult": 1.12
+}
+tags = Array[StringName]([&"tactics"])
+rarity = 0
+pool = &"common"
+affinity_role = &"mage"
+affinity_bonus = {
+"party_damage_mult": 1.12
+}

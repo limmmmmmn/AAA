@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="TrinketData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trinket_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/ring.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"t_small_bell"
+display_name = "작은 종"
+description = "맑은 종소리가 일격을 벼린다 — 회심 피해 ×1.2. (전사 장착 시 ×1.2 추가)"
+icon = ExtResource("2")
+effects = {
+"crit_damage_mult": 1.2
+}
+tags = Array[StringName]([&"tactics"])
+rarity = 0
+pool = &"common"
+affinity_role = &"warrior"
+affinity_bonus = {
+"crit_damage_mult": 1.2
+}

@@ -61,20 +61,11 @@ func _ready() -> void:
 	_check(GameState._migrate_stage_id(&"stage_cave") == &"stage_cave", "이미 stage id면 그대로")
 	_check(GameState._migrate_stage_id(&"없는것") == &"stage_meadow", "모르는 id → 첫 단계")
 
-	# ── 6. min_region(상점 게이팅)이 단계 번호를 따른다 ──
+	# ── 6. 단계 번호 = region_number (상점 min_region 게이팅의 기준) ──
 	GameState.current_region = &"stage_meadow"
 	_check(GameState.region_number() == 1, "초원 = 단계 1")
-	var has_banner := false
-	for u: UpgradeData in GameState.upgrades_for_axis("field"):
-		if u.id == &"banner_valor":
-			has_banner = true
-	_check(not has_banner, "1단계 상점에 2단계 아이템(용맹의 깃발) 미노출")
-	GameState.current_region = &"stage_forest"
-	has_banner = false
-	for u: UpgradeData in GameState.upgrades_for_axis("field"):
-		if u.id == &"banner_valor":
-			has_banner = true
-	_check(has_banner, "2단계 상점에 용맹의 깃발 노출")
+	GameState.current_region = &"stage_cave"
+	_check(GameState.region_number() == 3, "동굴 = 단계 3")
 
 	print("RESULT: " + ("ALL PASS" if _fails == 0 else "%d FAILED" % _fails))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://save.json"))

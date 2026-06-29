@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="TrinketData" format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/trinket_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/node_icons/gold.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"t_golden_bait"
+display_name = "황금 미끼"
+description = "적이 골드를 더 떨군다 ×1.25. (용사 장착 시 희귀 드랍 +5%)"
+icon = ExtResource("2")
+effects = {
+"enemy_gold_mult": 1.25
+}
+tags = Array[StringName]([&"fortune"])
+rarity = 1
+pool = &"common"
+affinity_role = &"hero"
+affinity_bonus = {
+"rare_trinket_chance": 0.05
+}

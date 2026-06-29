@@ -12,7 +12,7 @@ icon = ExtResource("2")
 branch = "command"
 node_type = "stat"
 base_cost = 850
-tree_pos = Vector2i(9, -6)
+tree_pos = Vector2i(9, -5)
 tree_links = Array[StringName]([&"cmd_window_mini"])
 effects = {
 "party_damage_mult": 1.15

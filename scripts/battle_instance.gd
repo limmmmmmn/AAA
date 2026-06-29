@@ -18,6 +18,7 @@ signal aborted                 # 패배로 강제 종료 (B-2)
 var enemies: Array[Dictionary] = []   # 각 항목: {"data": MonsterData, "hp": int, "hits": int}
 var origin_pos: Vector2
 var window_efficiency: float = 1.0    # 이 전투창의 화력 비율 (1번 창=1.0, 추가 창=extra_window_efficiency)
+var formation_id: StringName = &""    # 이 인카운터의 포메이션 id (보상 배율·조사도용)
 var turns: int = 0
 var elapsed: float = 0.0
 var is_finished: bool = false
@@ -60,7 +61,15 @@ func intro_text() -> String:
 	var d := front_data()
 	var n := group_size()
 	if n > 1:
-		return Locale.t("%s ×%d 나타났다!") % [Locale.t(d.display_name), n]
+		# 같은 종이면 "X ×N", 섞인 무리면 "적 무리(N) 나타났다!"
+		var same := true
+		for e in enemies:
+			if e.data.id != d.id:
+				same = false
+				break
+		if same:
+			return Locale.t("%s ×%d 나타났다!") % [Locale.t(d.display_name), n]
+		return Locale.t("적 무리 ×%d 나타났다!") % n
 	return Locale.t("%s 나타났다!") % _iga(d.display_name)
 
 
@@ -139,8 +148,11 @@ func _member_attack(index: int) -> void:
 	for e in enemies:
 		before.append(int(e.hp))
 	var shown := 0
-	if GameState.all_attack:
-		# 베기라: 살아있는 모든 적을 동시에 공격 (각자 방어력 적용)
+	# 전체 공격: 베기라(all_attack, 모든 멤버) 또는 마법사의 광역 주문(party_aoe_lesson).
+	var member_aoe: bool = GameState.all_attack or \
+		(GameState.member_role(index) == &"mage" and bool(GameState.stat("mage_aoe_enabled")))
+	if member_aoe:
+		# 살아있는 모든 적을 동시에 공격 (각자 방어력 적용)
 		for e in enemies:
 			if e.hp > 0:
 				var d: int = crit_atk if is_crit else maxi(atk - int(e.data.defense), 0)
