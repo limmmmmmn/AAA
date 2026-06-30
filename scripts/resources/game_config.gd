@@ -25,14 +25,6 @@ class_name GameConfig extends Resource
 @export var inn_cost_ratio: float = 0.1   # 숙박료 = 소지금의 이 비율
 @export var inn_min_cost: int = 3         # 숙박료 하한 (돈 적어도 공짜 회복 방지)
 
-@export_group("Recruit NPC")
-@export var recruit_gold_threshold: int = 10  # 이 골드 이상 모이면 마을에 영입 NPC 등장
-
-@export_group("Elder Events")
-@export var elder_battles_threshold: int = 15        # 누적 전투 N회
-@export var elder_seconds_after_sword: float = 300.0 # 또는 동검 구매 후 N초
-@export var elder_second_gold_threshold: int = 250   # 2단계: 보유 골드
-
 @export_group("Metal Slime")
 @export var metal_slime_unlock_gold_earned: int = 300 # 누적 획득 골드 도달 시 등장 시작
 

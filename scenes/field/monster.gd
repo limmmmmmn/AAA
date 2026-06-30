@@ -6,6 +6,10 @@ signal vanished(monster: Monster)
 @export var data: MonsterData
 @export var wander_radius: float = 96.0
 
+## 스폰 시 확정된 무리 (필드 대표 = 이 무리의 가장 강한 적). 접촉 시 이 무리 그대로 전투.
+## {datas: Array[MonsterData], formation_id: StringName}. 비면 단독(data)으로 싸운다.
+var formation: Dictionary = {}
+
 var _origin: Vector2
 var _target: Vector2
 var _wait_time: float = 0.0

@@ -283,7 +283,11 @@ func _check_encounters() -> void:
 func _start_encounter(primary: Monster) -> void:
 	var datas: Array
 	var fid: StringName = &""
-	if primary.data.allow_group:
+	if not primary.formation.is_empty():
+		# 스폰 때 확정한 무리 그대로 — 필드에 보인 대표 적이 곧 전투의 적 무리.
+		datas = primary.formation.get("datas", [])
+		fid = primary.formation.get("formation_id", &"")
+	elif primary.data.allow_group:
 		var roll := GameState.roll_encounter_formation(primary.data)
 		datas = roll["datas"]
 		fid = roll["formation_id"]

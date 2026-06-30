@@ -27,12 +27,8 @@ var companions: Array[CompanionData] = [] # 합류한 동료 (1지역에선 빈 
 var hunt_list: Dictionary = {}          # monster id -> bool (자동 추적 허가, v3 §8)
 var monster_catalog: Dictionary = {}    # monster id -> MonsterData (HuntList 표시용)
 var _retreat_active: bool = false       # 자동 철수 진행 중 (중복 발동 방지)
-var elder_stage: int = 0                # 0: 미해금, 1: 멀티창2, 2: 멀티창3
-var can_move_in_battle: bool = false
-var elder_window_bonus: int = 0
 var dual_battle_celebrated: bool = false
 var gate_paid: bool = false
-var first_sword_time: float = -1.0      # 동검 첫 구매 시점 (play_time 기준)
 
 # ─── PART B: 멤버별 HP / 지역 / 의뢰 (저장 대상) ───
 var member_hps: Array[int] = []         # 멤버별 현재 HP (0=용사, 1+=동료 순서)
@@ -706,6 +702,31 @@ func max_enemies_per_encounter() -> int:
 
 ## 현재 지역의 해금된 포메이션을 가중 추첨해 적 무리를 만든다.
 ## 반환: {"datas": Array[MonsterData], "formation_id": StringName}. 폴백은 primary 1마리.
+## 적 강함 점수 (필드 대표 선정용). 보스 > 희귀 > (체력×2 + 공격) 합산.
+func monster_strength(md: MonsterData) -> int:
+	if md == null:
+		return -1
+	var s := md.max_hp * 2 + md.attack
+	if md.rare:
+		s += 5000
+	if md.boss:
+		s += 10000
+	return s
+
+
+## 적 무리에서 가장 강한 적 (필드 대표 스프라이트로 세운다 — 섞이면 강한 놈이 대표).
+func strongest_of(datas: Array) -> MonsterData:
+	var best: MonsterData = null
+	var best_s := -1
+	for d: Variant in datas:
+		var md: MonsterData = d
+		var s := monster_strength(md)
+		if s > best_s:
+			best_s = s
+			best = md
+	return best
+
+
 func roll_encounter_formation(primary_data: MonsterData) -> Dictionary:
 	var pool: Array[EncounterFormationDef] = []
 	var total := 0.0
@@ -835,8 +856,6 @@ func purchase(upgrade: UpgradeData) -> bool:
 	EventBus.gold_changed.emit(gold)
 	purchases[upgrade.id] = owned_count(upgrade) + 1
 	last_purchase_time = play_time
-	if upgrade.id == &"cmb_atk_1" and first_sword_time < 0.0:
-		first_sword_time = play_time # 첫 전투 업글 시점 (촌장 이벤트 타이밍)
 	recalculate_stats() # recalc가 구매한 지역 노드에서 unlocked_regions를 재구성한다
 	# core 스파인의 지역 노드: 사면 그 지역을 "이동 가능"하게 연다 (실제 이동은 마을 표지판 — v1)
 	if upgrade.effects.has("unlock_region"):
@@ -1734,7 +1753,7 @@ func recalculate_stats() -> void:
 	move_speed = config.base_move_speed
 	respawn_delay_mult = 1.0
 	spawn_count_bonus = 0
-	max_battle_windows = config.initial_max_battle_windows + elder_window_bonus
+	max_battle_windows = config.initial_max_battle_windows # 멀티창은 지휘 트리 combat_slots로 늘린다
 	auto_hunt_unlocked = false
 	crit_chance = config.base_crit_chance
 	damage_reduction_mult = 1.0
@@ -1880,18 +1899,6 @@ func recalculate_stats() -> void:
 	EventBus.stats_changed.emit()
 
 
-func advance_elder_stage() -> void:
-	elder_stage += 1
-	if elder_stage == 1:
-		can_move_in_battle = true
-		elder_window_bonus = 1
-		EventBus.show_toast.emit("전수 완료! 이제 전투 중에도 걸을 수 있다 (동시 전투 2)")
-	elif elder_stage == 2:
-		elder_window_bonus = 2
-		EventBus.show_toast.emit("동시 전투창이 3개로 늘었다!")
-	recalculate_stats()
-
-
 # ─── 처음부터 다시하기 (메뉴) ───
 ## 세이브를 지우고 모든 상태를 기본값으로 되돌린다. 오토로드는 씬 리로드로 재초기화되지
 ## 않으므로 여기서 직접 리셋한다. 호출 후 호출측이 get_tree().reload_current_scene()로 재구성.
@@ -1909,12 +1916,8 @@ func reset_to_new_game() -> void:
 	companions.clear()
 	hunt_list.clear()
 	monster_catalog.clear()
-	elder_stage = 0
-	can_move_in_battle = false
-	elder_window_bonus = 0
 	dual_battle_celebrated = false
 	gate_paid = false
-	first_sword_time = -1.0
 	# 멤버 HP / 지역 / 의뢰 / 전술
 	member_hps.clear()
 	member_max_hps.clear()
@@ -2009,12 +2012,8 @@ func save_game() -> void:
 		"purchases": purchases_out,
 		"kill_count": kills_out,
 		"companions": companions_out,
-		"elder_stage": elder_stage,
-		"can_move_in_battle": can_move_in_battle,
-		"elder_window_bonus": elder_window_bonus,
 		"dual_battle_celebrated": dual_battle_celebrated,
 		"gate_paid": gate_paid,
-		"first_sword_time": first_sword_time,
 		"member_hps": member_hps.duplicate(),
 		"damage_enabled": damage_enabled,
 		"current_region": String(current_region),
@@ -2067,12 +2066,8 @@ func load_game() -> void:
 	total_exp = int(data.get("total_exp", 0))
 	total_battles_won = int(data.get("total_battles_won", 0))
 	play_time = float(data.get("play_time", 0.0))
-	elder_stage = int(data.get("elder_stage", 0))
-	can_move_in_battle = bool(data.get("can_move_in_battle", false))
-	elder_window_bonus = int(data.get("elder_window_bonus", 0))
 	dual_battle_celebrated = bool(data.get("dual_battle_celebrated", false))
 	gate_paid = bool(data.get("gate_paid", false))
-	first_sword_time = float(data.get("first_sword_time", -1.0))
 	member_hps.clear()
 	for h in data.get("member_hps", []):
 		member_hps.append(int(h)) # _ensure_member_hp가 멤버 수에 맞춰 정리

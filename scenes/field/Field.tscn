@@ -7,9 +7,7 @@
 [ext_resource type="Script" uid="uid://b6qbxurki0n65" path="res://scenes/field/spawn_zone.gd" id="5"]
 [ext_resource type="Script" uid="uid://dilgfv1ms8kky" path="res://scenes/field/metal_slime_spawner.gd" id="6"]
 [ext_resource type="Script" uid="uid://b5tip1c3aghvv" path="res://scenes/field/shop_building.gd" id="7"]
-[ext_resource type="Script" uid="uid://of2ym1o30h8e" path="res://scenes/field/elder_npc.gd" id="8"]
 [ext_resource type="Texture2D" uid="uid://b14nrn4t4axk6" path="res://assets/objects/shop_1.png" id="9"]
-[ext_resource type="Texture2D" uid="uid://c1hailhtq52e5" path="res://assets/NPCs/village_chief.png" id="10"]
 [ext_resource type="Resource" path="res://data/monsters/slime.tres" id="11"]
 [ext_resource type="Resource" path="res://data/monsters/bat.tres" id="12"]
 [ext_resource type="Resource" path="res://data/monsters/elite_bat.tres" id="13"]
@@ -22,14 +20,10 @@
 [ext_resource type="PackedScene" path="res://scenes/field/Blacksmith.tscn" id="20"]
 [ext_resource type="PackedScene" path="res://scenes/field/SparkleGround.tscn" id="21"]
 [ext_resource type="PackedScene" path="res://scenes/field/Bonfire.tscn" id="22"]
-[ext_resource type="PackedScene" path="res://scenes/field/RecruitNPC.tscn" id="23"]
 [ext_resource type="PackedScene" path="res://scenes/field/InnBuilding.tscn" id="24"]
 
 [sub_resource type="RectangleShape2D" id="shop_rect"]
 size = Vector2(88, 72)
-
-[sub_resource type="CircleShape2D" id="elder_circle"]
-radius = 26.0
 
 [sub_resource type="RectangleShape2D" id="slime_h"]
 size = Vector2(512, 128)
@@ -88,28 +82,6 @@ focus_mode = 0
 theme_override_font_sizes/font_size = 8
 text = "상점 열기 [Space]"
 
-[node name="ElderNPC" type="Area2D" parent="Village" unique_id=1495249827]
-position = Vector2(83, -86)
-collision_layer = 0
-script = ExtResource("8")
-
-[node name="Sprite2D" type="Sprite2D" parent="Village/ElderNPC" unique_id=1304245657]
-texture = ExtResource("10")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Village/ElderNPC" unique_id=3045962]
-shape = SubResource("elder_circle")
-
-[node name="Mark" type="Label" parent="Village/ElderNPC" unique_id=1378950113]
-offset_left = -4.0
-offset_top = -42.0
-offset_right = 14.0
-offset_bottom = -14.0
-theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
-theme_override_colors/font_outline_color = Color(0.2, 0.12, 0, 1)
-theme_override_constants/outline_size = 6
-theme_override_font_sizes/font_size = 24
-text = "!"
-
 [node name="Pot" parent="Village" unique_id=224928128 instance=ExtResource("18")]
 position = Vector2(-74, 30)
 
@@ -144,9 +116,6 @@ position = Vector2(-90, 90)
 
 [node name="Bonfire" parent="Village" unique_id=214186929 instance=ExtResource("22")]
 position = Vector2(62, 82)
-
-[node name="RecruitNPC" parent="Village" unique_id=1284137790 instance=ExtResource("23")]
-position = Vector2(-43, -68)
 
 [node name="InnBuilding" parent="Village" unique_id=201785827 instance=ExtResource("24")]
 position = Vector2(29, -101)
@@ -271,7 +240,7 @@ monster_data = ExtResource("14")
 spawn_rect = Rect2(96, 800, 1216, 150)
 
 [node name="BridgeGate" parent="." unique_id=1304807167 instance=ExtResource("4")]
-position = Vector2(300, 460)
+position = Vector2(431, 435)
 
 [node name="CompanionPreview" type="Node2D" parent="." unique_id=1282605420]
 position = Vector2(720, 1046)

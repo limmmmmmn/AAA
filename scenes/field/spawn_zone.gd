@@ -94,6 +94,14 @@ func _spawn() -> void:
 		return
 	var monster: Monster = MONSTER_SCENE.instantiate()
 	monster.data = md
+	# 무리 출현 가능한 적은 스폰 시점에 포메이션을 확정 → 가장 강한 적을 필드 대표로 세운다.
+	# 필드에 보이는 적 == 전투에서 마주칠 무리의 대표(섞이면 가장 센 놈). 단독형(메탈 등)은 그대로.
+	if md.allow_group:
+		var roll := GameState.roll_encounter_formation(md)
+		var rep: MonsterData = GameState.strongest_of(roll.get("datas", []))
+		if rep != null:
+			monster.data = rep
+			monster.formation = roll
 	monster.vanished.connect(_on_monster_vanished)
 	_monsters.append(monster)
 	# 지역 루트(y_sort_enabled)에 직접 붙여 파티·오브젝트와 함께 깊이 정렬되게 한다.

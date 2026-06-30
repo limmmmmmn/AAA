@@ -38,7 +38,7 @@ func _on_body_exited(body: Node2D) -> void:
 
 
 func _refresh_sign() -> void:
-	_sign.text = Locale.t("지역 이동 ▲\n[Space]") if _in_range else Locale.t("마을 표지판")
+	_sign.text = Locale.t("지역 이동 ▲\n[Space]") if _in_range else Locale.t("촌장")
 
 
 ## 다음 해금 지역으로의 이동을 제안. 갈 곳이 없으면 토스트만.
